@@ -1,0 +1,1 @@
+// Recent scans list widget
