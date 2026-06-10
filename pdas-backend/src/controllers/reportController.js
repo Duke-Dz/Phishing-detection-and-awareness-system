@@ -35,6 +35,7 @@ const createReport = async (req, res) => {
     risk_score: analysis.risk_score,
     classification: analysis.classification,
     detection_details: analysis.detection_details,
+    engine_version: analysis.detection_details?.engine_version,
   });
 
   await createScanNotification({

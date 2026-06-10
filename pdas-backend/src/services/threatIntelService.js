@@ -7,6 +7,14 @@ const builtInBlacklistedDomains = new Set([
   "bank-verification-now.com",
 ]);
 
+const buildBuiltInThreat = (domain) => ({
+  domain,
+  reputation_score: 95,
+  is_blacklisted: true,
+  blacklist_sources: ["built-in-feed"],
+  threat_type: "phishing",
+});
+
 const extractDomain = (rawUrl) => {
   try {
     return new URL(rawUrl).hostname.replace(/^www\./, "").toLowerCase();
@@ -18,20 +26,22 @@ const extractDomain = (rawUrl) => {
 const lookupDomain = async (domain) => {
   if (!domain) return null;
 
-  const databaseRecord = await ThreatIntelligence.findOne({ where: { domain } });
-  if (databaseRecord) return databaseRecord;
+  const builtInThreat = builtInBlacklistedDomains.has(domain)
+    ? buildBuiltInThreat(domain)
+    : null;
 
-  if (builtInBlacklistedDomains.has(domain)) {
-    return ThreatIntelligence.create({
-      domain,
-      reputation_score: 95,
-      is_blacklisted: true,
-      blacklist_sources: ["built-in-feed"],
-      threat_type: "phishing",
-    });
+  try {
+    const databaseRecord = await ThreatIntelligence.findOne({ where: { domain } });
+    if (databaseRecord) return databaseRecord;
+
+    if (builtInThreat) {
+      return ThreatIntelligence.create(builtInThreat);
+    }
+  } catch (_error) {
+    return builtInThreat;
   }
 
-  return null;
+  return builtInThreat;
 };
 
 module.exports = { extractDomain, lookupDomain };

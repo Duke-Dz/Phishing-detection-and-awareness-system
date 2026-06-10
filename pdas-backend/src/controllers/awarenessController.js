@@ -54,6 +54,7 @@ const createAwarenessContent = async (req, res) => {
     difficulty: req.body.difficulty || "beginner",
     duration_minutes: req.body.duration_minutes || 5,
     is_published: Boolean(req.body.is_published),
+    created_by: req.user.user_id,
   });
 
   res.status(201).json({

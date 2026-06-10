@@ -1,21 +1,14 @@
 const { ScanJob, ScanResult } = require("../models");
 const { analyzeMessage, analyzeUrl } = require("../services/detectionService");
 const { createScanNotification } = require("../services/notificationService");
+const { persistScanResult } = require("../services/scanPersistenceService");
 const { createScanJob } = require("../services/scanJobService");
 const { createError, requireFields, validateUrl } = require("../utils/validators");
 
 const persistScan = async ({ user_id, report_id = null, analysis }) => {
-  const scanResult = await ScanResult.create({
-    user_id,
-    report_id,
-    target: analysis.target,
-    scan_type: analysis.scan_type,
-    risk_score: analysis.risk_score,
-    classification: analysis.classification,
-    detection_details: analysis.detection_details,
-  });
+  const scanResult = await persistScanResult({ user_id, report_id, analysis });
 
-  await createScanNotification({ user_id, scanResult, report_id });
+  await createScanNotification({ user_id, scanResult, report_id: scanResult.report_id });
   return scanResult;
 };
 

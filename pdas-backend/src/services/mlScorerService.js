@@ -19,6 +19,11 @@ const SENSITIVE_WORDS = [
   'bank account', 'login', 'credential', 'verify',
 ];
 
+const URL_CREDENTIAL_WORDS = [
+  'login', 'verify', 'password', 'account', 'secure',
+  'update', 'confirm', 'credential', 'signin', 'auth',
+];
+
 const SUSPICIOUS_PATTERNS = [
   /click\s+here/i,
   /act\s+now/i,
@@ -32,12 +37,16 @@ const IP_ADDRESS_RE = /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/;
 /** Weights derived from common phishing URL characteristics. */
 const URL_WEIGHTS = {
   urlLength:      { threshold: 75,  weight: 8,  direction: 'above' },
+  domainLength:   { threshold: 15,  weight: 10, direction: 'above' },
   domainDotCount: { threshold: 3,   weight: 12, direction: 'above' },
-  hyphenCount:    { threshold: 2,   weight: 10, direction: 'above' },
+  hyphenCount:    { threshold: 1,   weight: 10, direction: 'above_eq' },
   specialCharCount: { threshold: 1, weight: 8,  direction: 'above' },
+  digitCount:     { threshold: 1,   weight: 20, direction: 'above_eq' },
   digitRatio:     { threshold: 0.3, weight: 15, direction: 'above' },
-  pathSegments:   { threshold: 4,   weight: 6,  direction: 'above' },
-  hasHttps:       { threshold: 0,   weight: 10, direction: 'equals' },
+  pathLength:     { threshold: 15,  weight: 15, direction: 'above' },
+  pathSegments:   { threshold: 2,   weight: 10, direction: 'above_eq' },
+  credentialPathKeywordCount: { threshold: 2, weight: 20, direction: 'above_eq' },
+  hasHttps:       { threshold: 0,   weight: 25, direction: 'equals' },
   hasAtSymbol:    { threshold: 1,   weight: 15, direction: 'equals' },
   hasIpAddress:   { threshold: 1,   weight: 18, direction: 'equals' },
   subdomainCount: { threshold: 3,   weight: 8,  direction: 'above' },
@@ -107,7 +116,8 @@ const countSubstring = (haystack, needle) => {
  *   hasAtSymbol: number,
  *   hasIpAddress: number,
  *   subdomainCount: number,
- *   queryParamCount: number
+ *   queryParamCount: number,
+ *   credentialPathKeywordCount: number
  * }}
  */
 const extractUrlFeatures = (url) => {
@@ -127,6 +137,7 @@ const extractUrlFeatures = (url) => {
     hasIpAddress: 0,
     subdomainCount: 0,
     queryParamCount: 0,
+    credentialPathKeywordCount: 0,
   };
 
   if (!url || typeof url !== 'string') return defaults;
@@ -151,6 +162,10 @@ const extractUrlFeatures = (url) => {
 
   // Path analysis
   const pathSegments = path.split('/').filter((s) => s.length > 0).length;
+  const credentialPathKeywordCount = URL_CREDENTIAL_WORDS.reduce(
+    (total, word) => total + countSubstring(path, word),
+    0,
+  );
 
   // Protocol / special markers
   const hasHttps = parsed.protocol === 'https:' ? 1 : 0;
@@ -180,6 +195,7 @@ const extractUrlFeatures = (url) => {
     hasIpAddress,
     subdomainCount,
     queryParamCount,
+    credentialPathKeywordCount,
   };
 };
 

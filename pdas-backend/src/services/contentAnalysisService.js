@@ -22,6 +22,7 @@ const dnsLookup = promisify(dns.lookup);
 
 /** Per-hop timeout in milliseconds. */
 const REQUEST_TIMEOUT_MS = 5000;
+const MAX_HTML_BYTES = 512 * 1024;
 
 /** Known URL shortener domains. */
 const SHORTENER_DOMAINS = new Set([
@@ -119,6 +120,33 @@ const safeGet = (targetUrl) =>
     });
   });
 
+const readResponseBody = (res, maxBytes = MAX_HTML_BYTES) =>
+  new Promise((resolve, reject) => {
+    let totalBytes = 0;
+    const chunks = [];
+    let resolved = false;
+
+    const finish = () => {
+      if (resolved) return;
+      resolved = true;
+      resolve(Buffer.concat(chunks).toString('utf8'));
+    };
+
+    res.on('data', (chunk) => {
+      if (resolved) return;
+      totalBytes += chunk.length;
+      if (totalBytes > maxBytes) {
+        finish();
+        res.destroy();
+        return;
+      }
+      chunks.push(chunk);
+    });
+
+    res.on('end', finish);
+    res.on('error', reject);
+  });
+
 // ───────────────── redirect following ────────────────────────
 
 /**
@@ -137,6 +165,7 @@ const followRedirects = async (url, maxHops = 5) => {
   const chain = [];
   let currentUrl = url;
   let timedOut = false;
+  let html = null;
 
   for (let i = 0; i < maxHops; i++) {
     try {
@@ -146,12 +175,18 @@ const followRedirects = async (url, maxHops = 5) => {
       chain.push({ url: currentUrl, statusCode });
 
       // Consume the response body so the socket is freed
-      res.resume();
+      const contentType = String(res.headers['content-type'] || '').toLowerCase();
 
       if (statusCode >= 300 && statusCode < 400 && res.headers.location) {
+        res.resume();
         // Resolve relative redirects
         currentUrl = new URL(res.headers.location, currentUrl).href;
       } else {
+        if (contentType.includes('text/html')) {
+          html = await readResponseBody(res);
+        } else {
+          res.resume();
+        }
         // Non-redirect response — we're done
         break;
       }
@@ -172,6 +207,7 @@ const followRedirects = async (url, maxHops = 5) => {
     finalUrl,
     hopCount: chain.length,
     timedOut,
+    html,
   };
 };
 

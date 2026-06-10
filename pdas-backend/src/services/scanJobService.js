@@ -2,6 +2,7 @@ const { Op } = require("sequelize");
 const { ScanJob } = require("../models");
 const { analyzeMessage, analyzeUrl } = require("./detectionService");
 const { createScanNotification } = require("./notificationService");
+const { persistScanResult } = require("./scanPersistenceService");
 const logger = require("../utils/logger");
 
 let workerTimer = null;
@@ -31,21 +32,16 @@ const processJob = async (job) => {
 
   try {
     const analysis = await runAnalysis(job);
-    const { ScanResult } = require("../models");
-    const scanResult = await ScanResult.create({
+    const scanResult = await persistScanResult({
       user_id: job.user_id,
       report_id: job.report_id,
-      target: analysis.target,
-      scan_type: analysis.scan_type,
-      risk_score: analysis.risk_score,
-      classification: analysis.classification,
-      detection_details: analysis.detection_details,
+      analysis,
     });
 
     await createScanNotification({
       user_id: job.user_id,
       scanResult,
-      report_id: job.report_id,
+      report_id: scanResult.report_id,
     });
 
     job.status = "completed";

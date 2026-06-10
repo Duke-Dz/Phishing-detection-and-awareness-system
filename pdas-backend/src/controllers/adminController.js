@@ -10,6 +10,7 @@ const {
 } = require("../models");
 const { createError, requireFields } = require("../utils/validators");
 const { buildPaginationMeta, getPagination } = require("../utils/pagination");
+const { getApiStatus } = require("../services/externalThreatService");
 
 const getDashboardStats = async (_req, res) => {
   const [
@@ -137,8 +138,16 @@ const createThreatIntel = async (req, res) => {
   });
 };
 
+const getExternalApiStatus = async (_req, res) => {
+  res.json({
+    success: true,
+    data: getApiStatus(),
+  });
+};
+
 module.exports = {
   getDashboardStats,
+  getExternalApiStatus,
   listUsers,
   updateUser,
   listThreatIntel,

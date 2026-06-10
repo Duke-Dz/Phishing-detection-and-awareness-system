@@ -63,5 +63,6 @@ module.exports = {
   // Optional API keys — system works without them (graceful degradation)
   apis: {
     googleSafeBrowsingKey: process.env.GOOGLE_SAFE_BROWSING_API_KEY || "",
+    virusTotalApiKey: process.env.VIRUSTOTAL_API_KEY || "",
   },
 };

@@ -1,5 +1,6 @@
 const { DataTypes } = require("sequelize");
 const { sequelize } = require("../config/sequelize");
+const { ENGINE_VERSION } = require("../services/detectionConstants");
 
 const ScanResult = sequelize.define(
   "ScanResult",
@@ -51,7 +52,7 @@ const ScanResult = sequelize.define(
     },
     engine_version: {
       type: DataTypes.STRING(20),
-      defaultValue: "1.0.0",
+      defaultValue: ENGINE_VERSION,
     },
     analyzed_at: {
       type: DataTypes.DATE,
