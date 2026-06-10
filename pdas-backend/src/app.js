@@ -55,12 +55,63 @@ app.use(
   }),
 );
 
+// ── Layered Rate Limiting ──────────────────────────────────────────────
+// Global limiter — applies to everything (tightened from 300)
 app.use(
   rateLimit({
     windowMs: 15 * 60 * 1000,
-    limit: 300,
+    limit: 100,
     standardHeaders: true,
     legacyHeaders: false,
+    message: { success: false, message: "Too many requests, please slow down." },
+  }),
+);
+
+// Auth-specific: strict limits on login (prevents brute-force password guessing)
+app.use(
+  "/api/auth/login",
+  rateLimit({
+    windowMs: 15 * 60 * 1000,
+    limit: 10,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { success: false, message: "Too many login attempts, try again later." },
+  }),
+);
+
+// Auth-specific: strict limits on registration (prevents mass account creation)
+app.use(
+  "/api/auth/register",
+  rateLimit({
+    windowMs: 60 * 60 * 1000,
+    limit: 5,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { success: false, message: "Too many accounts created from this IP." },
+  }),
+);
+
+// Heavy routes: scans call external APIs so must be limited
+app.use(
+  "/api/scan",
+  rateLimit({
+    windowMs: 60 * 1000,
+    limit: 20,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { success: false, message: "Too many scan requests, slow down." },
+  }),
+);
+
+// Heavy routes: reports trigger scans internally
+app.use(
+  "/api/reports",
+  rateLimit({
+    windowMs: 60 * 1000,
+    limit: 20,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { success: false, message: "Too many report requests, slow down." },
   }),
 );
 

@@ -1,7 +1,7 @@
 const { analyzeMessage } = require("../services/detectionService");
 const { createError, requireFields } = require("../utils/validators");
-const { ScanResult } = require("../models");
 const { createScanNotification } = require("../services/notificationService");
+const { persistScanResult } = require("../services/scanPersistenceService");
 const { createScanJob } = require("../services/scanJobService");
 
 const analyzeEmail = async (req, res) => {
@@ -22,16 +22,12 @@ const analyzeEmail = async (req, res) => {
   }
 
   const analysis = await analyzeMessage(req.body.content, "email");
-  const scanResult = await ScanResult.create({
+  const scanResult = await persistScanResult({
     user_id: req.user.user_id,
-    target: analysis.target,
-    scan_type: "email",
-    risk_score: analysis.risk_score,
-    classification: analysis.classification,
-    detection_details: analysis.detection_details,
+    analysis,
   });
 
-  await createScanNotification({ user_id: req.user.user_id, scanResult });
+  await createScanNotification({ user_id: req.user.user_id, scanResult, report_id: scanResult.report_id });
 
   res.status(201).json({
     success: true,

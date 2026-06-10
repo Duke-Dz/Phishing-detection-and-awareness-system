@@ -7,24 +7,38 @@ const AwarenessContent = require("./AwarenessContent");
 const RefreshToken = require("./RefreshToken");
 const ScanJob = require("./ScanJob");
 
-User.hasMany(Report, { foreignKey: "user_id", as: "reports" });
+// ── User → Reports (cascade: delete user = delete their reports) ──
+User.hasMany(Report, { foreignKey: "user_id", as: "reports", onDelete: "CASCADE" });
 Report.belongsTo(User, { foreignKey: "user_id", as: "author" });
 
-Report.hasOne(ScanResult, { foreignKey: "report_id", as: "scanResult" });
+// ── Report → ScanResult (set null: keep scan data for analytics) ──
+Report.hasOne(ScanResult, { foreignKey: "report_id", as: "scanResult", onDelete: "SET NULL" });
 ScanResult.belongsTo(Report, { foreignKey: "report_id", as: "report" });
-User.hasMany(ScanResult, { foreignKey: "user_id", as: "scanResults" });
+
+// ── User → ScanResults (set null: preserve scan data for analytics) ──
+User.hasMany(ScanResult, { foreignKey: "user_id", as: "scanResults", onDelete: "SET NULL" });
 ScanResult.belongsTo(User, { foreignKey: "user_id", as: "user" });
 
-User.hasMany(Notification, { foreignKey: "user_id", as: "notifications" });
+// ── User → Notifications (cascade: no need to keep orphaned notifications) ──
+User.hasMany(Notification, { foreignKey: "user_id", as: "notifications", onDelete: "CASCADE" });
 Notification.belongsTo(User, { foreignKey: "user_id", as: "user" });
 
-User.hasMany(RefreshToken, { foreignKey: "user_id", as: "refreshTokens" });
+// ── Notification → Report (set null: keep notification even if report deleted) ──
+Notification.belongsTo(Report, { foreignKey: "related_report_id", as: "relatedReport", onDelete: "SET NULL" });
+
+// ── User → RefreshTokens (cascade: tokens meaningless without user) ──
+User.hasMany(RefreshToken, { foreignKey: "user_id", as: "refreshTokens", onDelete: "CASCADE" });
 RefreshToken.belongsTo(User, { foreignKey: "user_id", as: "user" });
 
-User.hasMany(ScanJob, { foreignKey: "user_id", as: "scanJobs" });
+// ── User → ScanJobs (set null: preserve job history) ──
+User.hasMany(ScanJob, { foreignKey: "user_id", as: "scanJobs", onDelete: "SET NULL" });
 ScanJob.belongsTo(User, { foreignKey: "user_id", as: "user" });
-ScanJob.belongsTo(Report, { foreignKey: "report_id", as: "report" });
-ScanJob.belongsTo(ScanResult, { foreignKey: "scan_id", as: "scanResult" });
+ScanJob.belongsTo(Report, { foreignKey: "report_id", as: "report", onDelete: "SET NULL" });
+ScanJob.belongsTo(ScanResult, { foreignKey: "scan_id", as: "scanResult", onDelete: "SET NULL" });
+
+// ── User → AwarenessContent (set null: preserve content if creator deleted) ──
+User.hasMany(AwarenessContent, { foreignKey: "created_by", as: "createdContent", onDelete: "SET NULL" });
+AwarenessContent.belongsTo(User, { foreignKey: "created_by", as: "creator" });
 
 module.exports = {
   User,

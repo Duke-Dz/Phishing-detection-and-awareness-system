@@ -1,0 +1,587 @@
+{
+  "info": {
+    "name": "PDAS - Phishing Detection & Awareness System",
+    "description": "Complete API collection for the PDAS backend. Covers all 29 endpoints across auth, scanning, reports, notifications, awareness, and admin routes.\n\n## Setup\n1. Import the PDAS_Environment.json file\n2. Set `base_url` to your server (default: localhost:5000)\n3. Run 'Register Admin' or 'Login' first — tokens auto-save\n\n## Test Flow\n1. Register → Login → Scan URL → Check Notifications → Create Report",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Health & Status",
+      "item": [
+        {
+          "name": "API Root",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "http://{{base_url}}/", "host": ["{{base_url}}"], "path": [""] , "protocol": "http" }
+          }
+        },
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "http://{{base_url}}/api/health", "host": ["{{base_url}}"], "path": ["api", "health"], "protocol": "http" }
+          }
+        },
+        {
+          "name": "Readiness Check",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "http://{{base_url}}/api/ready", "host": ["{{base_url}}"], "path": ["api", "ready"], "protocol": "http" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var json = pm.response.json();",
+                  "    pm.environment.set('token', json.token);",
+                  "    pm.environment.set('refreshToken', json.refreshToken);",
+                  "    pm.environment.set('test_user_id', json.data.user_id);",
+                  "    if (json.data.role === 'admin') { pm.environment.set('admin_token', json.token); }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"full_name\": \"Test User\",\n  \"email\": \"user1@test.com\",\n  \"password\": \"Password123!\"\n}"
+            },
+            "url": { "raw": "http://{{base_url}}/api/auth/register", "host": ["{{base_url}}"], "path": ["api", "auth", "register"], "protocol": "http" }
+          }
+        },
+        {
+          "name": "Register Admin (First User)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var json = pm.response.json();",
+                  "    pm.environment.set('token', json.token);",
+                  "    pm.environment.set('admin_token', json.token);",
+                  "    pm.environment.set('refreshToken', json.refreshToken);",
+                  "    pm.environment.set('test_user_id', json.data.user_id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"full_name\": \"Admin User\",\n  \"email\": \"admin@test.com\",\n  \"password\": \"Admin123!\"\n}"
+            },
+            "url": { "raw": "http://{{base_url}}/api/auth/register", "host": ["{{base_url}}"], "path": ["api", "auth", "register"], "protocol": "http" }
+          }
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var json = pm.response.json();",
+                  "    pm.environment.set('token', json.token);",
+                  "    pm.environment.set('refreshToken', json.refreshToken);",
+                  "    pm.environment.set('test_user_id', json.data.user_id);",
+                  "    if (json.data.role === 'admin') { pm.environment.set('admin_token', json.token); }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@test.com\",\n  \"password\": \"Admin123!\"\n}"
+            },
+            "url": { "raw": "http://{{base_url}}/api/auth/login", "host": ["{{base_url}}"], "path": ["api", "auth", "login"], "protocol": "http" }
+          }
+        },
+        {
+          "name": "Get Current User",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "http://{{base_url}}/api/auth/me", "host": ["{{base_url}}"], "path": ["api", "auth", "me"], "protocol": "http" }
+          }
+        },
+        {
+          "name": "Refresh Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var json = pm.response.json();",
+                  "    pm.environment.set('token', json.token);",
+                  "    pm.environment.set('refreshToken', json.refreshToken);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+            },
+            "url": { "raw": "http://{{base_url}}/api/auth/refresh", "host": ["{{base_url}}"], "path": ["api", "auth", "refresh"], "protocol": "http" }
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+            },
+            "url": { "raw": "http://{{base_url}}/api/auth/logout", "host": ["{{base_url}}"], "path": ["api", "auth", "logout"], "protocol": "http" }
+          }
+        },
+        {
+          "name": "Setup MFA",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "http://{{base_url}}/api/auth/mfa/setup", "host": ["{{base_url}}"], "path": ["api", "auth", "mfa", "setup"], "protocol": "http" }
+          }
+        },
+        {
+          "name": "Enable MFA",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"mfa_code\": \"123456\"\n}"
+            },
+            "url": { "raw": "http://{{base_url}}/api/auth/mfa/enable", "host": ["{{base_url}}"], "path": ["api", "auth", "mfa", "enable"], "protocol": "http" }
+          }
+        },
+        {
+          "name": "Disable MFA",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"mfa_code\": \"123456\"\n}"
+            },
+            "url": { "raw": "http://{{base_url}}/api/auth/mfa/disable", "host": ["{{base_url}}"], "path": ["api", "auth", "mfa", "disable"], "protocol": "http" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Scanning",
+      "item": [
+        {
+          "name": "Scan URL (Safe Site)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var json = pm.response.json();",
+                  "    pm.environment.set('test_scan_id', json.data.scan_id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"url\": \"https://www.google.com\"\n}"
+            },
+            "url": { "raw": "http://{{base_url}}/api/scan/url", "host": ["{{base_url}}"], "path": ["api", "scan", "url"], "protocol": "http" }
+          }
+        },
+        {
+          "name": "Scan URL (Known Phishing)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"url\": \"http://paypa1-secure.com/login\"\n}"
+            },
+            "url": { "raw": "http://{{base_url}}/api/scan/url", "host": ["{{base_url}}"], "path": ["api", "scan", "url"], "protocol": "http" }
+          }
+        },
+        {
+          "name": "Scan URL (Async)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"url\": \"https://www.example.com\",\n  \"async\": true\n}"
+            },
+            "url": { "raw": "http://{{base_url}}/api/scan/url", "host": ["{{base_url}}"], "path": ["api", "scan", "url"], "protocol": "http" }
+          }
+        },
+        {
+          "name": "Scan SMS",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"content\": \"URGENT: Your M-Pesa account has been suspended. Verify immediately at http://mpesa-verify.xyz/login to avoid losing your funds. Act now!\"\n}"
+            },
+            "url": { "raw": "http://{{base_url}}/api/scan/sms", "host": ["{{base_url}}"], "path": ["api", "scan", "sms"], "protocol": "http" }
+          }
+        },
+        {
+          "name": "Get Scan Result",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "http://{{base_url}}/api/scan/{{test_scan_id}}", "host": ["{{base_url}}"], "path": ["api", "scan", "{{test_scan_id}}"], "protocol": "http" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Email Analysis",
+      "item": [
+        {
+          "name": "Analyze Email",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"content\": \"From: security@paypa1.com\\nSubject: Your account has been compromised\\n\\nDear Customer,\\n\\nWe detected unusual activity on your account. Click here immediately to verify your identity: http://paypa1-secure.com/verify\\n\\nYour account will be suspended within 24 hours if you do not act now.\\n\\nPayPal Security Team\"\n}"
+            },
+            "url": { "raw": "http://{{base_url}}/api/email/analyze", "host": ["{{base_url}}"], "path": ["api", "email", "analyze"], "protocol": "http" }
+          }
+        },
+        {
+          "name": "Parse Email Headers",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"headers\": \"From: security@paypa1.com\\nTo: victim@example.com\\nSubject: Account Verification Required\\nDate: Mon, 10 Jun 2026 10:00:00 +0000\\nContent-Type: text/html\"\n}"
+            },
+            "url": { "raw": "http://{{base_url}}/api/email/headers", "host": ["{{base_url}}"], "path": ["api", "email", "headers"], "protocol": "http" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reports",
+      "item": [
+        {
+          "name": "Create Report (URL)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var json = pm.response.json();",
+                  "    pm.environment.set('test_report_id', json.data.report.report_id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"report_type\": \"url\",\n  \"content\": \"http://secure-login-verification.com/banking\",\n  \"notes\": \"Received this link via SMS claiming to be from my bank\"\n}"
+            },
+            "url": { "raw": "http://{{base_url}}/api/reports", "host": ["{{base_url}}"], "path": ["api", "reports"], "protocol": "http" }
+          }
+        },
+        {
+          "name": "List Reports",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "http://{{base_url}}/api/reports?page=1&limit=10", "host": ["{{base_url}}"], "path": ["api", "reports"], "query": [{"key": "page", "value": "1"}, {"key": "limit", "value": "10"}], "protocol": "http" }
+          }
+        },
+        {
+          "name": "Get Single Report",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "http://{{base_url}}/api/reports/{{test_report_id}}", "host": ["{{base_url}}"], "path": ["api", "reports", "{{test_report_id}}"], "protocol": "http" }
+          }
+        },
+        {
+          "name": "Update Report Status (Analyst/Admin)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"confirmed\"\n}"
+            },
+            "url": { "raw": "http://{{base_url}}/api/reports/{{test_report_id}}/status", "host": ["{{base_url}}"], "path": ["api", "reports", "{{test_report_id}}", "status"], "protocol": "http" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Notifications",
+      "item": [
+        {
+          "name": "List Notifications",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var json = pm.response.json();",
+                  "    if (json.data && json.data.length > 0) {",
+                  "        pm.environment.set('test_notification_id', json.data[0].notification_id);",
+                  "    }",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "http://{{base_url}}/api/notifications", "host": ["{{base_url}}"], "path": ["api", "notifications"], "protocol": "http" }
+          }
+        },
+        {
+          "name": "Mark Notification Read",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "http://{{base_url}}/api/notifications/{{test_notification_id}}/read", "host": ["{{base_url}}"], "path": ["api", "notifications", "{{test_notification_id}}", "read"], "protocol": "http" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Awareness Content",
+      "item": [
+        {
+          "name": "List Awareness Content",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "http://{{base_url}}/api/awareness", "host": ["{{base_url}}"], "path": ["api", "awareness"], "protocol": "http" }
+          }
+        },
+        {
+          "name": "Create Awareness Content (Analyst/Admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "    var json = pm.response.json();",
+                  "    pm.environment.set('test_content_id', json.data.content_id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Password Security Best Practices\",\n  \"category\": \"security\",\n  \"description\": \"Learn how to create strong passwords and manage them securely.\",\n  \"body\": \"A strong password is your first line of defence...\",\n  \"difficulty\": \"beginner\",\n  \"duration_minutes\": 10,\n  \"is_published\": true\n}"
+            },
+            "url": { "raw": "http://{{base_url}}/api/awareness", "host": ["{{base_url}}"], "path": ["api", "awareness"], "protocol": "http" }
+          }
+        },
+        {
+          "name": "Get Single Content",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "http://{{base_url}}/api/awareness/{{test_content_id}}", "host": ["{{base_url}}"], "path": ["api", "awareness", "{{test_content_id}}"], "protocol": "http" }
+          }
+        },
+        {
+          "name": "Update Content",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"is_published\": false\n}"
+            },
+            "url": { "raw": "http://{{base_url}}/api/awareness/{{test_content_id}}", "host": ["{{base_url}}"], "path": ["api", "awareness", "{{test_content_id}}"], "protocol": "http" }
+          }
+        },
+        {
+          "name": "Delete Content (Admin)",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{admin_token}}" }],
+            "url": { "raw": "http://{{base_url}}/api/awareness/{{test_content_id}}", "host": ["{{base_url}}"], "path": ["api", "awareness", "{{test_content_id}}"], "protocol": "http" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin",
+      "item": [
+        {
+          "name": "Dashboard Stats",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{admin_token}}" }],
+            "url": { "raw": "http://{{base_url}}/api/admin/stats", "host": ["{{base_url}}"], "path": ["api", "admin", "stats"], "protocol": "http" }
+          }
+        },
+        {
+          "name": "List Users",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{admin_token}}" }],
+            "url": { "raw": "http://{{base_url}}/api/admin/users?page=1&limit=10", "host": ["{{base_url}}"], "path": ["api", "admin", "users"], "query": [{"key": "page", "value": "1"}, {"key": "limit", "value": "10"}], "protocol": "http" }
+          }
+        },
+        {
+          "name": "Update User Role",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"role\": \"analyst\"\n}"
+            },
+            "url": { "raw": "http://{{base_url}}/api/admin/users/{{test_user_id}}", "host": ["{{base_url}}"], "path": ["api", "admin", "users", "{{test_user_id}}"], "protocol": "http" }
+          }
+        },
+        {
+          "name": "List Threat Intelligence",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{admin_token}}" }],
+            "url": { "raw": "http://{{base_url}}/api/admin/threat-intel", "host": ["{{base_url}}"], "path": ["api", "admin", "threat-intel"], "protocol": "http" }
+          }
+        },
+        {
+          "name": "Create Threat Intel Entry",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{admin_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"domain\": \"fake-banking-portal.xyz\",\n  \"reputation_score\": 95,\n  \"is_blacklisted\": true,\n  \"threat_type\": \"phishing\",\n  \"blacklist_sources\": [\"manual\"]\n}"
+            },
+            "url": { "raw": "http://{{base_url}}/api/admin/threat-intel", "host": ["{{base_url}}"], "path": ["api", "admin", "threat-intel"], "protocol": "http" }
+          }
+        },
+        {
+          "name": "API Key Status (Validate Keys)",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{admin_token}}" }],
+            "url": { "raw": "http://{{base_url}}/api/admin/api-status", "host": ["{{base_url}}"], "path": ["api", "admin", "api-status"], "protocol": "http" }
+          }
+        },
+        {
+          "name": "Metrics",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{admin_token}}" }],
+            "url": { "raw": "http://{{base_url}}/api/metrics", "host": ["{{base_url}}"], "path": ["api", "metrics"], "protocol": "http" }
+          }
+        }
+      ]
+    }
+  ]
+}

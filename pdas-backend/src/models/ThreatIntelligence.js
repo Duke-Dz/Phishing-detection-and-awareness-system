@@ -51,6 +51,13 @@ const ThreatIntelligence = sequelize.define(
     tableName: "threat_intelligence",
     timestamps: true,
     underscored: true,
+    indexes: [
+      { fields: ["domain"], unique: true },
+      { fields: ["is_blacklisted"] },
+      { fields: ["threat_type"] },
+      { fields: ["last_checked"] },
+      { fields: ["reputation_score"] },
+    ],
   },
 );
 

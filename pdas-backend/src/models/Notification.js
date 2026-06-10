@@ -36,6 +36,10 @@ const Notification = sequelize.define(
     related_report_id: {
       type: DataTypes.UUID,
       allowNull: true,
+      references: {
+        model: "reports",
+        key: "report_id",
+      },
     },
   },
   {

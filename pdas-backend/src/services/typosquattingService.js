@@ -142,6 +142,21 @@ const extractBaseName = (domain) => {
   return parts.slice(0, -1).join(".");
 };
 
+const getBrandTokens = (value) => normalizeSubstitutions(value)
+  .split(/[^a-z0-9]+/)
+  .filter(Boolean);
+
+const buildCandidates = (baseName) => {
+  const labels = baseName.split(/[^a-z0-9]+/).filter(Boolean);
+  const candidates = [{ raw: baseName, normalized: normalizeSubstitutions(baseName) }];
+
+  labels.forEach((label) => {
+    candidates.push({ raw: label, normalized: normalizeSubstitutions(label) });
+  });
+
+  return candidates;
+};
+
 /**
  * Checks whether a domain is a typosquat of a known trusted brand.
  * Strips the TLD, applies character substitution normalization, then
@@ -160,12 +175,44 @@ const checkTyposquatting = (domain) => {
   if (!baseName) return safe;
 
   const normalized = normalizeSubstitutions(baseName);
+  const normalizedTokens = getBrandTokens(baseName);
+  const candidates = buildCandidates(baseName);
 
   let bestMatch = null;
   let bestDistance = Infinity;
   let attackType = null;
 
   for (const brand of trustedBrands) {
+    for (const candidate of candidates) {
+      const normalizedDistance = levenshteinDistance(candidate.normalized, brand);
+      const rawDistance = levenshteinDistance(candidate.raw, brand);
+
+      if (normalizedDistance === 0 && candidate.raw !== brand) {
+        return {
+          isTyposquat: true,
+          matchedBrand: brand,
+          editDistance: rawDistance,
+          attackType: "character_substitution",
+        };
+      }
+
+      if (
+        normalizedDistance >= 1 &&
+        normalizedDistance <= 2 &&
+        normalizedDistance < bestDistance
+      ) {
+        bestDistance = normalizedDistance;
+        bestMatch = brand;
+        attackType = "typosquatting";
+      }
+    }
+
+    if (normalizedTokens.includes(brand) && normalized !== brand && !bestMatch) {
+      bestMatch = brand;
+      bestDistance = levenshteinDistance(baseName, brand);
+      attackType = "brand_impersonation";
+    }
+
     // Check 1: Character substitution attack
     // The normalized form matches exactly, but the raw domain is different
     // e.g., "paypa1" normalizes to "paypal" (distance 0), but "paypa1" !== "paypal"

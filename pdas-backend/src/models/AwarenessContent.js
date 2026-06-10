@@ -37,11 +37,25 @@ const AwarenessContent = sequelize.define(
       type: DataTypes.BOOLEAN,
       defaultValue: false,
     },
+    created_by: {
+      type: DataTypes.UUID,
+      allowNull: true,
+      references: {
+        model: "users",
+        key: "user_id",
+      },
+    },
   },
   {
     tableName: "awareness_content",
     timestamps: true,
     underscored: true,
+    indexes: [
+      { fields: ["category"] },
+      { fields: ["difficulty"] },
+      { fields: ["is_published"] },
+      { fields: ["created_by"] },
+    ],
   },
 );
 
