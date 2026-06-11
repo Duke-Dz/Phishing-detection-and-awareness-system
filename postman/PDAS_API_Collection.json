@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "PDAS - Phishing Detection & Awareness System",
-    "description": "Complete API collection for the PDAS backend. Covers all 29 endpoints across auth, scanning, reports, notifications, awareness, and admin routes.\n\n## Setup\n1. Import the PDAS_Environment.json file\n2. Set `base_url` to your server (default: localhost:5000)\n3. Run 'Register Admin' or 'Login' first — tokens auto-save\n\n## Test Flow\n1. Register → Login → Scan URL → Check Notifications → Create Report",
+    "description": "Complete API collection for the PDAS backend. Covers auth, scanning, reports, notifications, awareness, and admin routes.\n\n## Setup\n1. Import this collection from the project root `postman/` folder\n2. Copy `PDAS_Environment.example.json` to `PDAS_Environment.json` and import it\n3. Set `base_url` to your server (default: localhost:5000)\n4. Run 'Register Admin' or 'Login' first — tokens auto-save\n\n## Test Flow\n1. Register → Login → Scan URL → Check Notifications → Create Report",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
