@@ -38,4 +38,17 @@ const markNotificationRead = async (req, res) => {
   });
 };
 
-module.exports = { listNotifications, markNotificationRead };
+const markAllNotificationsRead = async (req, res) => {
+  const [updatedCount] = await Notification.update(
+    { is_read: true },
+    { where: { user_id: req.user.user_id, is_read: false } },
+  );
+
+  res.json({
+    success: true,
+    message: `${updatedCount} notification(s) marked as read.`,
+    data: { updated_count: updatedCount },
+  });
+};
+
+module.exports = { listNotifications, markNotificationRead, markAllNotificationsRead };

@@ -7,6 +7,7 @@ const rateLimit = require("express-rate-limit");
 const adminRoutes = require("./routes/adminRoutes");
 const authRoutes = require("./routes/authRoutes");
 const awarenessRoutes = require("./routes/awarenessRoutes");
+const dashboardRoutes = require("./routes/dashboardRoutes");
 const emailRoutes = require("./routes/emailRoutes");
 const notificationRoutes = require("./routes/notificationRoutes");
 const reportRoutes = require("./routes/reportRoutes");
@@ -91,6 +92,18 @@ app.use(
   }),
 );
 
+// Auth-specific: strict limits on forgot-password (prevents abuse)
+app.use(
+  "/api/auth/forgot-password",
+  rateLimit({
+    windowMs: 60 * 60 * 1000,
+    limit: 3,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { success: false, message: "Too many password reset requests, try again later." },
+  }),
+);
+
 // Heavy routes: scans call external APIs so must be limited
 app.use(
   "/api/scan",
@@ -170,6 +183,7 @@ app.use("/api/reports", reportRoutes);
 app.use("/api/awareness", awarenessRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/notifications", notificationRoutes);
+app.use("/api/dashboard", dashboardRoutes);
 
 app.use(notFound);
 app.use(errorHandler);

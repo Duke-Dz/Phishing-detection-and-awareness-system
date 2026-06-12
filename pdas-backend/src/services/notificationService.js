@@ -1,4 +1,7 @@
-const { Notification } = require("../models");
+const { Notification, User } = require("../models");
+const { sendMail } = require("./mailService");
+const emailTemplates = require("../templates/emailTemplates");
+const config = require("../config/env");
 
 const createNotification = async ({ user_id, title, message, type = "info", related_report_id }) =>
   Notification.create({
@@ -13,13 +16,35 @@ const createScanNotification = async ({ user_id, scanResult, report_id }) => {
   if (!user_id) return null;
 
   const type = scanResult.classification === "phishing" ? "alert" : "info";
-  return createNotification({
+  const notification = await createNotification({
     user_id,
     title: "Scan completed",
     message: `Your ${scanResult.scan_type} scan was classified as ${scanResult.classification} with a risk score of ${scanResult.risk_score}.`,
     type,
     related_report_id: report_id,
   });
+
+  // Send phishing alert email
+  if (scanResult.classification === "phishing") {
+    try {
+      const user = await User.findByPk(user_id);
+      if (user) {
+        const template = emailTemplates.phishingAlert({
+          userName: user.full_name,
+          target: scanResult.target,
+          riskScore: scanResult.risk_score,
+          classification: scanResult.classification,
+          scanId: scanResult.scan_id,
+          frontendUrl: config.frontendUrl,
+        });
+        sendMail({ to: user.email, ...template }).catch(() => {});
+      }
+    } catch (_error) {
+      // Email sending should never break the scan flow
+    }
+  }
+
+  return notification;
 };
 
 module.exports = { createNotification, createScanNotification };

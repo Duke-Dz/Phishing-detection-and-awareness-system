@@ -39,6 +39,11 @@ const contentScanValidator = [
     .withMessage("Content must be a string")
     .isLength({ min: 1, max: 50000 })
     .withMessage("Content must be between 1 and 50,000 characters"),
+  body("sender")
+    .optional()
+    .trim()
+    .isLength({ max: 50 })
+    .withMessage("Sender must be under 50 characters"),
 ];
 
 module.exports = { urlScanValidator, contentScanValidator };

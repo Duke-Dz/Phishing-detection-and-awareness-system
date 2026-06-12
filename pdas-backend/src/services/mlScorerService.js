@@ -54,12 +54,19 @@ const URL_WEIGHTS = {
 
 /** Weights for message-level phishing indicators. */
 const MSG_WEIGHTS = {
-  urlCount:              { threshold: 1,   weight: 10, direction: 'above_eq' },
-  urgencyWordCount:      { threshold: 2,   weight: 15, direction: 'above_eq' },
-  sensitiveWordCount:    { threshold: 2,   weight: 20, direction: 'above_eq' },
-  exclamationCount:      { threshold: 3,   weight: 8,  direction: 'above' },
-  capsRatio:             { threshold: 0.3, weight: 12, direction: 'above' },
-  suspiciousPatternCount: { threshold: 1,  weight: 15, direction: 'above_eq' },
+  urlCount:               { threshold: 1,    weight: 15, direction: 'above_eq' },
+  urgencyWordCount:       { threshold: 2,    weight: 20, direction: 'above_eq' },
+  sensitiveWordCount:     { threshold: 3,    weight: 20, direction: 'above_eq' },
+  exclamationCount:       { threshold: 3,    weight: 8,  direction: 'above' },
+  capsRatio:              { threshold: 0.08, weight: 10, direction: 'above' },
+  suspiciousPatternCount: { threshold: 1,    weight: 15, direction: 'above_eq' },
+  allCapsWordCount:       { threshold: 1,    weight: 10, direction: 'above_eq' },
+  hasHttpOnly:            { threshold: 1,    weight: 20, direction: 'equals' },
+  hasSuspiciousDomain:    { threshold: 1,    weight: 15, direction: 'equals' },
+  claimsCompromised:      { threshold: 1,    weight: 25, direction: 'equals' },
+  claimsPrize:            { threshold: 1,    weight: 20, direction: 'equals' },
+  mentionsDeadline:       { threshold: 1,    weight: 10, direction: 'equals' },
+  hasBankKeywordWithUrl:  { threshold: 1,    weight: 15, direction: 'equals' },
 };
 
 // ───────────────────── helper utilities ──────────────────────
@@ -226,6 +233,13 @@ const extractMessageFeatures = (text) => {
     exclamationCount: 0,
     capsRatio: 0,
     suspiciousPatternCount: 0,
+    allCapsWordCount: 0,
+    hasHttpOnly: 0,
+    hasSuspiciousDomain: 0,
+    claimsCompromised: 0,
+    claimsPrize: 0,
+    mentionsDeadline: 0,
+    hasBankKeywordWithUrl: 0,
   };
 
   if (!text || typeof text !== 'string') return defaults;
@@ -266,6 +280,15 @@ const extractMessageFeatures = (text) => {
     suspiciousPatternCount += matches.length;
   }
 
+  const allCapsWordCount = words.filter((w) => w.length > 2 && w === w.toUpperCase()).length;
+  const hasHttpOnly = /http:\/\//i.test(text) && !/https:\/\//i.test(text) ? 1 : 0;
+  const hasSuspiciousDomain = /\b\w+(-\w+){2,}\.(com|net|org)/i.test(text) ? 1 : 0;
+  const claimsCompromised = /compromised|hacked|unauthorized|unauthorised|suspicious.activity/i.test(text) ? 1 : 0;
+  const claimsPrize = /won|winner|prize|reward|congratulations|selected/i.test(text) ? 1 : 0;
+  const hasBankKeyword = /bank|mpesa|equity|kcb|account|wallet/i.test(text) ? 1 : 0;
+  const mentionsDeadline = /expire|hours?|today|immediately|before it|deadline/i.test(text) ? 1 : 0;
+  const hasBankKeywordWithUrl = hasBankKeyword && urlCount > 0 ? 1 : 0;
+
   return {
     textLength,
     wordCount,
@@ -275,6 +298,13 @@ const extractMessageFeatures = (text) => {
     exclamationCount,
     capsRatio,
     suspiciousPatternCount,
+    allCapsWordCount,
+    hasHttpOnly,
+    hasSuspiciousDomain,
+    claimsCompromised,
+    claimsPrize,
+    mentionsDeadline,
+    hasBankKeywordWithUrl,
   };
 };
 

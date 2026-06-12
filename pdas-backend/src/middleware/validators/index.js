@@ -1,5 +1,15 @@
 const validate = require("./validate");
-const { registerValidator, loginValidator, refreshValidator, mfaCodeValidator } = require("./authValidators");
+const {
+  registerValidator,
+  loginValidator,
+  refreshValidator,
+  mfaCodeValidator,
+  forgotPasswordValidator,
+  resetPasswordValidator,
+  changePasswordValidator,
+  verifyEmailValidator,
+  resendVerificationValidator,
+} = require("./authValidators");
 const { urlScanValidator, contentScanValidator } = require("./scanValidators");
 const { createReportValidator, updateReportStatusValidator } = require("./reportValidators");
 const { updateUserValidator, createThreatIntelValidator } = require("./adminValidators");
@@ -11,6 +21,11 @@ module.exports = {
   loginValidator,
   refreshValidator,
   mfaCodeValidator,
+  forgotPasswordValidator,
+  resetPasswordValidator,
+  changePasswordValidator,
+  verifyEmailValidator,
+  resendVerificationValidator,
   urlScanValidator,
   contentScanValidator,
   createReportValidator,

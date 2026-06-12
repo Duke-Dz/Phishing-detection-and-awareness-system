@@ -1,10 +1,13 @@
 const express = require("express");
 const {
   createThreatIntel,
+  deleteThreatIntel,
+  getAnalytics,
   getDashboardStats,
   getExternalApiStatus,
   listThreatIntel,
   listUsers,
+  updateThreatIntel,
   updateUser,
 } = require("../controllers/adminController");
 const { asyncHandler } = require("../middleware/errorHandler");
@@ -22,6 +25,9 @@ router.get("/users", asyncHandler(listUsers));
 router.patch("/users/:userId", updateUserValidator, validate, asyncHandler(updateUser));
 router.get("/threat-intel", asyncHandler(listThreatIntel));
 router.post("/threat-intel", createThreatIntelValidator, validate, asyncHandler(createThreatIntel));
+router.patch("/threat-intel/:threatId", asyncHandler(updateThreatIntel));
+router.delete("/threat-intel/:threatId", asyncHandler(deleteThreatIntel));
+router.get("/analytics", asyncHandler(getAnalytics));
 router.get("/api-status", asyncHandler(getExternalApiStatus));
 
 module.exports = router;

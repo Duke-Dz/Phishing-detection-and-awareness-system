@@ -1,9 +1,11 @@
+const { Op } = require("sequelize");
 const { ScanJob, ScanResult } = require("../models");
 const { analyzeMessage, analyzeUrl } = require("../services/detectionService");
 const { createScanNotification } = require("../services/notificationService");
 const { persistScanResult } = require("../services/scanPersistenceService");
 const { createScanJob } = require("../services/scanJobService");
 const { createError, requireFields, validateUrl } = require("../utils/validators");
+const { buildPaginationMeta, getPagination } = require("../utils/pagination");
 
 const persistScan = async ({ user_id, report_id = null, analysis }) => {
   const scanResult = await persistScanResult({ user_id, report_id, analysis });
@@ -56,7 +58,9 @@ const scanSms = async (req, res) => {
     });
   }
 
-  const analysis = await analyzeMessage(req.body.content, "sms");
+  const analysis = await analyzeMessage(req.body.content, "sms", {
+    sender: req.body.sender || null,
+  });
   const scanResult = await persistScan({ user_id: req.user.user_id, analysis });
 
   res.status(201).json({
@@ -104,4 +108,43 @@ const getScanJob = async (req, res) => {
   });
 };
 
-module.exports = { scanUrl, scanSms, getScan, getScanJob, persistScan };
+const listScans = async (req, res) => {
+  const pagination = getPagination(req.query);
+  const where = ["admin", "analyst"].includes(req.user.role)
+    ? {}
+    : { user_id: req.user.user_id };
+
+  // Optional filters
+  if (req.query.scan_type) {
+    where.scan_type = req.query.scan_type;
+  }
+  if (req.query.classification) {
+    where.classification = req.query.classification;
+  }
+  if (req.query.date_from || req.query.date_to) {
+    where.analyzed_at = {};
+    if (req.query.date_from) {
+      where.analyzed_at[Op.gte] = new Date(req.query.date_from);
+    }
+    if (req.query.date_to) {
+      where.analyzed_at[Op.lte] = new Date(req.query.date_to);
+    }
+  }
+
+  const { count, rows: scans } = await ScanResult.findAndCountAll({
+    where,
+    order: [["analyzed_at", "DESC"]],
+    limit: pagination.limit,
+    offset: pagination.offset,
+    attributes: ["scan_id", "target", "scan_type", "risk_score", "classification", "engine_version", "analyzed_at"],
+  });
+
+  res.json({
+    success: true,
+    count: scans.length,
+    pagination: buildPaginationMeta({ count, ...pagination }),
+    data: scans,
+  });
+};
+
+module.exports = { listScans, scanUrl, scanSms, getScan, getScanJob, persistScan };
