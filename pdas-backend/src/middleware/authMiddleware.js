@@ -1,10 +1,13 @@
 const jwt = require("jsonwebtoken");
 const { User } = require("../models");
 
+<<<<<<< HEAD
 // ── In-memory user cache (60-second TTL) ─────────────────────────────────────
 const userCache = new Map();
 const USER_CACHE_TTL_MS = 60 * 1000; // 60 seconds
 
+=======
+>>>>>>> d4e7d0431a4ad3c2532f837939f478298ab505bf
 const protect = async (req, _res, next) => {
   try {
     const header = req.headers.authorization || "";
@@ -17,6 +20,7 @@ const protect = async (req, _res, next) => {
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+<<<<<<< HEAD
 
     // Check user cache first
     const cached = userCache.get(decoded.user_id);
@@ -25,6 +29,8 @@ const protect = async (req, _res, next) => {
       return next();
     }
 
+=======
+>>>>>>> d4e7d0431a4ad3c2532f837939f478298ab505bf
     const user = await User.findByPk(decoded.user_id);
 
     if (!user || !user.is_active) {
@@ -33,12 +39,15 @@ const protect = async (req, _res, next) => {
       throw error;
     }
 
+<<<<<<< HEAD
     // Store in cache
     userCache.set(decoded.user_id, {
       user,
       expires: Date.now() + USER_CACHE_TTL_MS,
     });
 
+=======
+>>>>>>> d4e7d0431a4ad3c2532f837939f478298ab505bf
     req.user = user;
     next();
   } catch (error) {
@@ -48,6 +57,7 @@ const protect = async (req, _res, next) => {
   }
 };
 
+<<<<<<< HEAD
 const clearUserCache = (userId) => {
   if (userId) {
     userCache.delete(userId);
@@ -57,3 +67,6 @@ const clearUserCache = (userId) => {
 };
 
 module.exports = { protect, clearUserCache };
+=======
+module.exports = { protect };
+>>>>>>> d4e7d0431a4ad3c2532f837939f478298ab505bf

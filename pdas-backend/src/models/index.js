@@ -6,8 +6,11 @@ const Notification = require("./Notification");
 const AwarenessContent = require("./AwarenessContent");
 const RefreshToken = require("./RefreshToken");
 const ScanJob = require("./ScanJob");
+<<<<<<< HEAD
 const PasswordResetToken = require("./PasswordResetToken");
 const EmailVerificationToken = require("./EmailVerificationToken");
+=======
+>>>>>>> d4e7d0431a4ad3c2532f837939f478298ab505bf
 
 // ── User → Reports (cascade: delete user = delete their reports) ──
 User.hasMany(Report, { foreignKey: "user_id", as: "reports", onDelete: "CASCADE" });
@@ -42,6 +45,7 @@ ScanJob.belongsTo(ScanResult, { foreignKey: "scan_id", as: "scanResult", onDelet
 User.hasMany(AwarenessContent, { foreignKey: "created_by", as: "createdContent", onDelete: "SET NULL" });
 AwarenessContent.belongsTo(User, { foreignKey: "created_by", as: "creator" });
 
+<<<<<<< HEAD
 // ── User → PasswordResetTokens (cascade: tokens meaningless without user) ──
 User.hasMany(PasswordResetToken, { foreignKey: "user_id", as: "passwordResetTokens", onDelete: "CASCADE" });
 PasswordResetToken.belongsTo(User, { foreignKey: "user_id", as: "user" });
@@ -50,6 +54,8 @@ PasswordResetToken.belongsTo(User, { foreignKey: "user_id", as: "user" });
 User.hasMany(EmailVerificationToken, { foreignKey: "user_id", as: "emailVerificationTokens", onDelete: "CASCADE" });
 EmailVerificationToken.belongsTo(User, { foreignKey: "user_id", as: "user" });
 
+=======
+>>>>>>> d4e7d0431a4ad3c2532f837939f478298ab505bf
 module.exports = {
   User,
   Report,
@@ -59,6 +65,9 @@ module.exports = {
   AwarenessContent,
   RefreshToken,
   ScanJob,
+<<<<<<< HEAD
   PasswordResetToken,
   EmailVerificationToken,
+=======
+>>>>>>> d4e7d0431a4ad3c2532f837939f478298ab505bf
 };

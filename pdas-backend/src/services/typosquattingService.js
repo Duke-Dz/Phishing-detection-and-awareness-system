@@ -142,6 +142,7 @@ const extractBaseName = (domain) => {
   return parts.slice(0, -1).join(".");
 };
 
+<<<<<<< HEAD
 /**
  * Checks whether a domain is a typosquat of a known trusted brand.
  * Strips the TLD, applies character substitution normalization (look-alike
@@ -151,12 +152,38 @@ const extractBaseName = (domain) => {
  *
  * @param {string} domain - The domain to check (e.g., "paypa1.com")
  * @returns {{ isTyposquat: boolean, matchedBrand: string|null, editDistance: number|null, attackType: string|null }}
+=======
+const getBrandTokens = (value) => normalizeSubstitutions(value)
+  .split(/[^a-z0-9]+/)
+  .filter(Boolean);
+
+const buildCandidates = (baseName) => {
+  const labels = baseName.split(/[^a-z0-9]+/).filter(Boolean);
+  const candidates = [{ raw: baseName, normalized: normalizeSubstitutions(baseName) }];
+
+  labels.forEach((label) => {
+    candidates.push({ raw: label, normalized: normalizeSubstitutions(label) });
+  });
+
+  return candidates;
+};
+
+/**
+ * Checks whether a domain is a typosquat of a known trusted brand.
+ * Strips the TLD, applies character substitution normalization, then
+ * compares against each trusted brand using Levenshtein distance.
+ * A distance of 1–2 (but not 0, which is an exact match) is flagged.
+ *
+ * @param {string} domain - The domain to check (e.g., "paypa1.com")
+ * @returns {{ isTyposquat: boolean, matchedBrand: string|null, editDistance: number|null }}
+>>>>>>> d4e7d0431a4ad3c2532f837939f478298ab505bf
  */
 const checkTyposquatting = (domain) => {
   const safe = { isTyposquat: false, matchedBrand: null, editDistance: null, attackType: null };
 
   if (!domain || typeof domain !== "string") return safe;
 
+<<<<<<< HEAD
   const withoutTld = extractBaseName(domain);
   if (!withoutTld) return safe;
 
@@ -165,17 +192,33 @@ const checkTyposquatting = (domain) => {
     { str: normalizeSubstitutions(withoutTld), raw: withoutTld, label: "full" },
     { str: normalizeSubstitutions(baseDomain), raw: baseDomain, label: "base" },
   ];
+=======
+  const baseName = extractBaseName(domain);
+  if (!baseName) return safe;
+
+  const normalized = normalizeSubstitutions(baseName);
+  const normalizedTokens = getBrandTokens(baseName);
+  const candidates = buildCandidates(baseName);
+>>>>>>> d4e7d0431a4ad3c2532f837939f478298ab505bf
 
   let bestMatch = null;
   let bestDistance = Infinity;
   let attackType = null;
 
   for (const brand of trustedBrands) {
+<<<<<<< HEAD
     for (const { str, raw, label } of candidates) {
       const distance = levenshteinDistance(str, brand);
       const rawDistance = levenshteinDistance(raw, brand);
 
       if (distance === 0 && label === "base" && raw !== brand) {
+=======
+    for (const candidate of candidates) {
+      const normalizedDistance = levenshteinDistance(candidate.normalized, brand);
+      const rawDistance = levenshteinDistance(candidate.raw, brand);
+
+      if (normalizedDistance === 0 && candidate.raw !== brand) {
+>>>>>>> d4e7d0431a4ad3c2532f837939f478298ab505bf
         return {
           isTyposquat: true,
           matchedBrand: brand,
@@ -184,12 +227,51 @@ const checkTyposquatting = (domain) => {
         };
       }
 
+<<<<<<< HEAD
       if (distance >= 1 && distance <= 2 && distance < bestDistance) {
         bestDistance = distance;
+=======
+      if (
+        normalizedDistance >= 1 &&
+        normalizedDistance <= 2 &&
+        normalizedDistance < bestDistance
+      ) {
+        bestDistance = normalizedDistance;
+>>>>>>> d4e7d0431a4ad3c2532f837939f478298ab505bf
         bestMatch = brand;
         attackType = "typosquatting";
       }
     }
+<<<<<<< HEAD
+=======
+
+    if (normalizedTokens.includes(brand) && normalized !== brand && !bestMatch) {
+      bestMatch = brand;
+      bestDistance = levenshteinDistance(baseName, brand);
+      attackType = "brand_impersonation";
+    }
+
+    // Check 1: Character substitution attack
+    // The normalized form matches exactly, but the raw domain is different
+    // e.g., "paypa1" normalizes to "paypal" (distance 0), but "paypa1" !== "paypal"
+    if (normalized === brand && baseName !== brand) {
+      return {
+        isTyposquat: true,
+        matchedBrand: brand,
+        editDistance: 0,
+        attackType: "character_substitution",
+      };
+    }
+
+    // Check 2: Classic typosquatting (misspelling)
+    // Distance 1–2 after normalization indicates a likely typosquat attempt
+    const distance = levenshteinDistance(normalized, brand);
+    if (distance >= 1 && distance <= 2 && distance < bestDistance) {
+      bestDistance = distance;
+      bestMatch = brand;
+      attackType = "typosquatting";
+    }
+>>>>>>> d4e7d0431a4ad3c2532f837939f478298ab505bf
   }
 
   if (bestMatch) {

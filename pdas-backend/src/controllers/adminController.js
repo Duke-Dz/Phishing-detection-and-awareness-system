@@ -1,5 +1,8 @@
 const { Op } = require("sequelize");
+<<<<<<< HEAD
 const { sequelize } = require("../config/sequelize");
+=======
+>>>>>>> d4e7d0431a4ad3c2532f837939f478298ab505bf
 const {
   AwarenessContent,
   Notification,
@@ -139,6 +142,7 @@ const createThreatIntel = async (req, res) => {
   });
 };
 
+<<<<<<< HEAD
 const updateThreatIntel = async (req, res) => {
   const threat = await ThreatIntelligence.findByPk(req.params.threatId);
   if (!threat) {
@@ -242,6 +246,8 @@ const getAnalytics = async (_req, res) => {
   });
 };
 
+=======
+>>>>>>> d4e7d0431a4ad3c2532f837939f478298ab505bf
 const getExternalApiStatus = async (_req, res) => {
   res.json({
     success: true,
@@ -250,13 +256,20 @@ const getExternalApiStatus = async (_req, res) => {
 };
 
 module.exports = {
+<<<<<<< HEAD
   createThreatIntel,
   deleteThreatIntel,
   getAnalytics,
+=======
+>>>>>>> d4e7d0431a4ad3c2532f837939f478298ab505bf
   getDashboardStats,
   getExternalApiStatus,
   listUsers,
   updateUser,
   listThreatIntel,
+<<<<<<< HEAD
   updateThreatIntel,
+=======
+  createThreatIntel,
+>>>>>>> d4e7d0431a4ad3c2532f837939f478298ab505bf
 };

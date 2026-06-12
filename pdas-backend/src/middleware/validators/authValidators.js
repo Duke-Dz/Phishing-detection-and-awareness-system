@@ -69,6 +69,7 @@ const mfaCodeValidator = [
     .withMessage("MFA code must contain only digits"),
 ];
 
+<<<<<<< HEAD
 const forgotPasswordValidator = [
   body("email")
     .trim()
@@ -178,3 +179,6 @@ module.exports = {
   verifyEmailValidator,
   resendVerificationValidator,
 };
+=======
+module.exports = { registerValidator, loginValidator, refreshValidator, mfaCodeValidator };
+>>>>>>> d4e7d0431a4ad3c2532f837939f478298ab505bf

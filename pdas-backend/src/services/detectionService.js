@@ -19,8 +19,11 @@ const { parseAuthenticationResults, checkDisplayNameSpoofing, checkEmbeddedLinkM
 const { checkKenyanImpersonation, checkKenyanPhishingPhrases } = require("../data/kenyanPatterns");
 const { extractUrlFeatures, extractMessageFeatures, scoreUrlFeatures, scoreMessageFeatures } = require("./mlScorerService");
 const { expandShortUrl, followRedirects, analyzePageContent } = require("./contentAnalysisService");
+<<<<<<< HEAD
 const { analyzeSender, analyzeReplyBehaviour } = require("../utils/senderAnalyzer");
 const { generateUserGuide } = require("../utils/userGuideGenerator");
+=======
+>>>>>>> d4e7d0431a4ad3c2532f837939f478298ab505bf
 const { ENGINE_VERSION } = require("./detectionConstants");
 const logger = require("../utils/logger");
 
@@ -129,6 +132,7 @@ const getEffectiveWeights = (layerWeights, activeLayers) => {
   );
 };
 
+<<<<<<< HEAD
 const SCORING_WEIGHTS = {
   rules_escalation: { rules: 0.55, ml: 0.45 },
   blacklist_confirmed: { rules: 0.50, blacklist: 0.35, ml: 0.15 },
@@ -184,6 +188,8 @@ const computeMessageScore = (rulesScore, blacklistScore, mlScore, threatIntel = 
   };
 };
 
+=======
+>>>>>>> d4e7d0431a4ad3c2532f837939f478298ab505bf
 /**
  * Normalise a layer's raw signal points into a 0-100 scale.
  * @param {number} rawPoints - Sum of signal points for this layer
@@ -619,6 +625,7 @@ const mergeEmbeddedUrlSignals = async (messageLayer, urls) => {
   const embeddedAnalyses = [];
   const layer2 = { score: 0, signals: [], threatIntel: null };
 
+<<<<<<< HEAD
   const embeddedResults = await Promise.all(
     urls.slice(0, 3).map(async (embeddedUrl) => {
       const embeddedDomain = extractDomain(embeddedUrl);
@@ -654,6 +661,13 @@ const mergeEmbeddedUrlSignals = async (messageLayer, urls) => {
 
     const { embeddedUrl, embeddedDomain, urlRules, urlMl, blacklistResult, embeddedScore } = result;
 
+=======
+  for (const embeddedUrl of urls.slice(0, 3)) {
+    const embeddedDomain = extractDomain(embeddedUrl);
+    if (!embeddedDomain) continue;
+
+    const urlRules = runUrlRules(embeddedUrl, embeddedDomain);
+>>>>>>> d4e7d0431a4ad3c2532f837939f478298ab505bf
     urlRules.signals.forEach((signal) => {
       addSignal(
         messageLayer.signals,
@@ -663,6 +677,10 @@ const mergeEmbeddedUrlSignals = async (messageLayer, urls) => {
       );
     });
 
+<<<<<<< HEAD
+=======
+    const urlMl = runUrlMlScoring(embeddedUrl);
+>>>>>>> d4e7d0431a4ad3c2532f837939f478298ab505bf
     if (urlMl.score >= 60) {
       addSignal(
         messageLayer.signals,
@@ -672,6 +690,10 @@ const mergeEmbeddedUrlSignals = async (messageLayer, urls) => {
       );
     }
 
+<<<<<<< HEAD
+=======
+    const blacklistResult = await runBlacklistChecks(embeddedUrl, embeddedDomain);
+>>>>>>> d4e7d0431a4ad3c2532f837939f478298ab505bf
     if (blacklistResult.score > layer2.score) {
       layer2.score = blacklistResult.score;
       layer2.threatIntel = blacklistResult.threatIntel;
@@ -683,6 +705,19 @@ const mergeEmbeddedUrlSignals = async (messageLayer, urls) => {
       });
     });
 
+<<<<<<< HEAD
+=======
+    const embeddedActiveLayers = blacklistResult.signals.length > 0
+      ? ["rules", "blacklist", "ml"]
+      : ["rules", "ml"];
+    const embeddedScore = computeFinalScore(
+      { rules: urlRules.score, blacklist: blacklistResult.score, ml: urlMl.score, content: 0 },
+      LAYER_WEIGHTS,
+      embeddedActiveLayers,
+      blacklistResult.threatIntel,
+    );
+
+>>>>>>> d4e7d0431a4ad3c2532f837939f478298ab505bf
     embeddedAnalyses.push({
       url: embeddedUrl,
       domain: embeddedDomain,
@@ -753,13 +788,20 @@ const analyzeUrl = async (url) => {
  * @param {string} scanType - "email" or "sms"
  * @returns {Promise<object>} Complete scan result with layered detection details
  */
+<<<<<<< HEAD
 const analyzeMessage = async (content, scanType = "email", options = {}) => {
   const { sender = null } = options;
   const text = String(content || "");
+=======
+const analyzeMessage = async (content, scanType = "email") => {
+  const text = String(content || "");
+  const lowerText = text.toLowerCase();
+>>>>>>> d4e7d0431a4ad3c2532f837939f478298ab505bf
 
   // ── Layer 1: Rule-based checks ──
   const layer1 = runMessageRules(text, scanType);
 
+<<<<<<< HEAD
   // ── Sender + reply behaviour (SMS or when sender is provided) ──
   let senderAnalysis = { score: 0, signals: [], senderType: "unknown" };
   let replyAnalysis = { score: 0, signals: [], supportsReply: false, explicitlyNoReply: false };
@@ -772,6 +814,8 @@ const analyzeMessage = async (content, scanType = "email", options = {}) => {
     layer1.score = Math.min(100, layer1.score + Math.round(senderRawPoints * 0.3));
   }
 
+=======
+>>>>>>> d4e7d0431a4ad3c2532f837939f478298ab505bf
   // ── Layer 2: Check any URLs found in the message ──
   const layer2 = { score: 0, signals: [], threatIntel: null };
   let embeddedUrlAnalyses = [];
@@ -787,6 +831,7 @@ const analyzeMessage = async (content, scanType = "email", options = {}) => {
   // ── Layer 3: ML scoring ──
   const layer3 = runMessageMlScoring(text);
 
+<<<<<<< HEAD
   // ── Compute weighted score with rules escalation and blacklist-neutral redistribution ──
   const { score: riskScore, reason: scoringReason, effectiveWeights } = computeMessageScore(
     layer1.score,
@@ -802,6 +847,19 @@ const analyzeMessage = async (content, scanType = "email", options = {}) => {
     replyAnalysis,
   );
 
+=======
+  // ── Compute weighted score (Layer 4 weight redistributed) ──
+  // For messages, Layer 4 doesn't apply, so redistribute its weight:
+  // rules=0.40, blacklist=0.33, ml=0.27
+  const messageWeights = MESSAGE_LAYER_WEIGHTS;
+  const riskScore = computeFinalScore(
+    { rules: layer1.score, blacklist: layer2.score, ml: layer3.score },
+    messageWeights,
+    ["rules", "blacklist", "ml"],
+    layer2.threatIntel,
+  );
+
+>>>>>>> d4e7d0431a4ad3c2532f837939f478298ab505bf
   // ── Summary message ──
   let summary;
   if (riskScore >= 61) {
@@ -828,6 +886,7 @@ const analyzeMessage = async (content, scanType = "email", options = {}) => {
       embedded_urls: embeddedUrlAnalyses,
       summary,
       final_score: riskScore,
+<<<<<<< HEAD
       scoring_reason: scoringReason,
       layer_weights: effectiveWeights,
       user_guide: userGuide,
@@ -843,3 +902,11 @@ module.exports = {
   computeMessageScore,
   ENGINE_VERSION,
 };
+=======
+      layer_weights: messageWeights,
+    },
+  };
+};
+
+module.exports = { analyzeUrl, analyzeMessage, computeFinalScore, ENGINE_VERSION };
+>>>>>>> d4e7d0431a4ad3c2532f837939f478298ab505bf
