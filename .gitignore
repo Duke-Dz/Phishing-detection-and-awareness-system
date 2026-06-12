@@ -1,2 +1,2 @@
-# Local Postman environment (may contain tokens after login tests)
-postman/PDAS_Environment.json
+# Postman testing files (local only — not part of the application)
+postman/
