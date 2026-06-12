@@ -7,7 +7,10 @@ const rateLimit = require("express-rate-limit");
 const adminRoutes = require("./routes/adminRoutes");
 const authRoutes = require("./routes/authRoutes");
 const awarenessRoutes = require("./routes/awarenessRoutes");
+<<<<<<< HEAD
 const dashboardRoutes = require("./routes/dashboardRoutes");
+=======
+>>>>>>> d4e7d0431a4ad3c2532f837939f478298ab505bf
 const emailRoutes = require("./routes/emailRoutes");
 const notificationRoutes = require("./routes/notificationRoutes");
 const reportRoutes = require("./routes/reportRoutes");
@@ -92,6 +95,7 @@ app.use(
   }),
 );
 
+<<<<<<< HEAD
 // Auth-specific: strict limits on forgot-password (prevents abuse)
 app.use(
   "/api/auth/forgot-password",
@@ -104,6 +108,8 @@ app.use(
   }),
 );
 
+=======
+>>>>>>> d4e7d0431a4ad3c2532f837939f478298ab505bf
 // Heavy routes: scans call external APIs so must be limited
 app.use(
   "/api/scan",
@@ -183,7 +189,10 @@ app.use("/api/reports", reportRoutes);
 app.use("/api/awareness", awarenessRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/notifications", notificationRoutes);
+<<<<<<< HEAD
 app.use("/api/dashboard", dashboardRoutes);
+=======
+>>>>>>> d4e7d0431a4ad3c2532f837939f478298ab505bf
 
 app.use(notFound);
 app.use(errorHandler);

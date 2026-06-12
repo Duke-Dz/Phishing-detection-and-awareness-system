@@ -1,11 +1,17 @@
+<<<<<<< HEAD
 const { Op } = require("sequelize");
+=======
+>>>>>>> d4e7d0431a4ad3c2532f837939f478298ab505bf
 const { ScanJob, ScanResult } = require("../models");
 const { analyzeMessage, analyzeUrl } = require("../services/detectionService");
 const { createScanNotification } = require("../services/notificationService");
 const { persistScanResult } = require("../services/scanPersistenceService");
 const { createScanJob } = require("../services/scanJobService");
 const { createError, requireFields, validateUrl } = require("../utils/validators");
+<<<<<<< HEAD
 const { buildPaginationMeta, getPagination } = require("../utils/pagination");
+=======
+>>>>>>> d4e7d0431a4ad3c2532f837939f478298ab505bf
 
 const persistScan = async ({ user_id, report_id = null, analysis }) => {
   const scanResult = await persistScanResult({ user_id, report_id, analysis });
@@ -58,9 +64,13 @@ const scanSms = async (req, res) => {
     });
   }
 
+<<<<<<< HEAD
   const analysis = await analyzeMessage(req.body.content, "sms", {
     sender: req.body.sender || null,
   });
+=======
+  const analysis = await analyzeMessage(req.body.content, "sms");
+>>>>>>> d4e7d0431a4ad3c2532f837939f478298ab505bf
   const scanResult = await persistScan({ user_id: req.user.user_id, analysis });
 
   res.status(201).json({
@@ -108,6 +118,7 @@ const getScanJob = async (req, res) => {
   });
 };
 
+<<<<<<< HEAD
 const listScans = async (req, res) => {
   const pagination = getPagination(req.query);
   const where = ["admin", "analyst"].includes(req.user.role)
@@ -148,3 +159,6 @@ const listScans = async (req, res) => {
 };
 
 module.exports = { listScans, scanUrl, scanSms, getScan, getScanJob, persistScan };
+=======
+module.exports = { scanUrl, scanSms, getScan, getScanJob, persistScan };
+>>>>>>> d4e7d0431a4ad3c2532f837939f478298ab505bf

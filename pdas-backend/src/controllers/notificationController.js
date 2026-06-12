@@ -38,6 +38,7 @@ const markNotificationRead = async (req, res) => {
   });
 };
 
+<<<<<<< HEAD
 const markAllNotificationsRead = async (req, res) => {
   const [updatedCount] = await Notification.update(
     { is_read: true },
@@ -52,3 +53,6 @@ const markAllNotificationsRead = async (req, res) => {
 };
 
 module.exports = { listNotifications, markNotificationRead, markAllNotificationsRead };
+=======
+module.exports = { listNotifications, markNotificationRead };
+>>>>>>> d4e7d0431a4ad3c2532f837939f478298ab505bf

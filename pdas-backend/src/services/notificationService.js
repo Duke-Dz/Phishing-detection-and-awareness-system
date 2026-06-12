@@ -1,7 +1,11 @@
+<<<<<<< HEAD
 const { Notification, User } = require("../models");
 const { sendMail } = require("./mailService");
 const emailTemplates = require("../templates/emailTemplates");
 const config = require("../config/env");
+=======
+const { Notification } = require("../models");
+>>>>>>> d4e7d0431a4ad3c2532f837939f478298ab505bf
 
 const createNotification = async ({ user_id, title, message, type = "info", related_report_id }) =>
   Notification.create({
@@ -16,13 +20,18 @@ const createScanNotification = async ({ user_id, scanResult, report_id }) => {
   if (!user_id) return null;
 
   const type = scanResult.classification === "phishing" ? "alert" : "info";
+<<<<<<< HEAD
   const notification = await createNotification({
+=======
+  return createNotification({
+>>>>>>> d4e7d0431a4ad3c2532f837939f478298ab505bf
     user_id,
     title: "Scan completed",
     message: `Your ${scanResult.scan_type} scan was classified as ${scanResult.classification} with a risk score of ${scanResult.risk_score}.`,
     type,
     related_report_id: report_id,
   });
+<<<<<<< HEAD
 
   // Send phishing alert email
   if (scanResult.classification === "phishing") {
@@ -45,6 +54,8 @@ const createScanNotification = async ({ user_id, scanResult, report_id }) => {
   }
 
   return notification;
+=======
+>>>>>>> d4e7d0431a4ad3c2532f837939f478298ab505bf
 };
 
 module.exports = { createNotification, createScanNotification };

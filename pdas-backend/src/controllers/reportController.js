@@ -3,9 +3,12 @@ const { analyzeMessage, analyzeUrl } = require("../services/detectionService");
 const { createNotification, createScanNotification } = require("../services/notificationService");
 const { createError, requireFields, validateUrl } = require("../utils/validators");
 const { buildPaginationMeta, getPagination } = require("../utils/pagination");
+<<<<<<< HEAD
 const { sendMail } = require("../services/mailService");
 const emailTemplates = require("../templates/emailTemplates");
 const config = require("../config/env");
+=======
+>>>>>>> d4e7d0431a4ad3c2532f837939f478298ab505bf
 
 const analyzeByType = async (reportType, content) => {
   if (reportType === "url") {
@@ -124,6 +127,7 @@ const updateReportStatus = async (req, res) => {
     related_report_id: report.report_id,
   });
 
+<<<<<<< HEAD
   // Send status update email to report author
   try {
     const reportAuthor = await User.findByPk(report.user_id);
@@ -141,6 +145,8 @@ const updateReportStatus = async (req, res) => {
     // Don't break status update if email fails
   }
 
+=======
+>>>>>>> d4e7d0431a4ad3c2532f837939f478298ab505bf
   res.json({
     success: true,
     data: report,

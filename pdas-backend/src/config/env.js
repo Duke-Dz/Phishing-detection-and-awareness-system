@@ -59,11 +59,15 @@ module.exports = {
     port: parseInt(process.env.MAIL_PORT, 10),
     user: process.env.MAIL_USER,
     pass: process.env.MAIL_PASS,
+<<<<<<< HEAD
     from: process.env.MAIL_FROM || "PDAS Security <noreply@pdas.local>",
   },
   frontendUrl: process.env.FRONTEND_URL || "http://localhost:3000",
   passwordResetTokenExpiryMinutes: parseInt(process.env.PASSWORD_RESET_TOKEN_EXPIRY_MINUTES || "60", 10),
   emailVerificationTokenExpiryHours: parseInt(process.env.EMAIL_VERIFICATION_TOKEN_EXPIRY_HOURS || "24", 10),
+=======
+  },
+>>>>>>> d4e7d0431a4ad3c2532f837939f478298ab505bf
   // Optional API keys — system works without them (graceful degradation)
   apis: {
     googleSafeBrowsingKey: process.env.GOOGLE_SAFE_BROWSING_API_KEY || "",
