@@ -181,6 +181,10 @@ const enableMfa = async (req, res) => {
   user.mfa_enabled = true;
   await user.save();
 
+  // Send MFA enabled alert
+  const template = emailTemplates.mfaEnabled({ userName: user.full_name });
+  sendMail({ to: user.email, ...template }).catch(() => {});
+
   res.json({
     success: true,
     message: "Multi-factor authentication enabled",
@@ -199,6 +203,10 @@ const disableMfa = async (req, res) => {
   user.mfa_enabled = false;
   user.mfa_secret = null;
   await user.save();
+
+  // Send MFA disabled alert
+  const template = emailTemplates.mfaDisabled({ userName: user.full_name });
+  sendMail({ to: user.email, ...template }).catch(() => {});
 
   res.json({
     success: true,
