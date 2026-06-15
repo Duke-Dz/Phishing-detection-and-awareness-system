@@ -72,6 +72,39 @@ const createReport = async (req, res) => {
     report_id: report.report_id,
   });
 
+  // 1. Send receipt to the reporter
+  const receiptTemplate = emailTemplates.reportReceived({
+    userName: req.user.full_name,
+    reportId: report.report_id,
+    reportType: req.body.report_type,
+    frontendUrl: config.frontendUrl,
+  });
+  sendMail({ to: req.user.email, ...receiptTemplate }).catch(() => {});
+
+  // 2. Alert all active admins and analysts
+  try {
+    const admins = await User.findAll({
+      where: {
+        role: ["admin", "analyst"],
+        is_active: true,
+      },
+      attributes: ["email", "full_name"],
+    });
+
+    admins.forEach((admin) => {
+      const alertTemplate = emailTemplates.newReportAlert({
+        adminName: admin.full_name,
+        reportId: report.report_id,
+        reporterEmail: req.user.email,
+        reportType: req.body.report_type,
+        frontendUrl: config.frontendUrl,
+      });
+      sendMail({ to: admin.email, ...alertTemplate }).catch(() => {});
+    });
+  } catch (error) {
+    // Fail silently to not block the user's report submission
+  }
+
   res.status(201).json({
     success: true,
     data: {
