@@ -33,12 +33,14 @@ const createAwarenessValidator = [
   body("duration_minutes")
     .optional()
     .isInt({ min: 1, max: 480 })
-    .withMessage("Duration must be between 1 and 480 minutes"),
+    .withMessage("Duration must be between 1 and 480 minutes")
+    .toInt(),
 
   body("is_published")
     .optional()
     .isBoolean()
-    .withMessage("is_published must be a boolean"),
+    .withMessage("is_published must be a boolean")
+    .toBoolean(),
 ];
 
 const updateAwarenessValidator = [
@@ -71,12 +73,14 @@ const updateAwarenessValidator = [
   body("duration_minutes")
     .optional()
     .isInt({ min: 1, max: 480 })
-    .withMessage("Duration must be between 1 and 480 minutes"),
+    .withMessage("Duration must be between 1 and 480 minutes")
+    .toInt(),
 
   body("is_published")
     .optional()
     .isBoolean()
-    .withMessage("is_published must be a boolean"),
+    .withMessage("is_published must be a boolean")
+    .toBoolean(),
 ];
 
 module.exports = { createAwarenessValidator, updateAwarenessValidator };

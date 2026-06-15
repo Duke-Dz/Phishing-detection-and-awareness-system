@@ -1,6 +1,6 @@
 /**
  * @module mlScorerService
- * @description Layer 3 — ML-style feature-based scoring engine.
+ * @description Layer 3 feature-based scoring engine.
  *
  * Extracts numeric features from URLs and message text, then applies
  * pre-trained threshold weights (mimicking Random Forest classification)
@@ -54,7 +54,6 @@ const URL_WEIGHTS = {
 
 /** Weights for message-level phishing indicators. */
 const MSG_WEIGHTS = {
-<<<<<<< HEAD
   urlCount:               { threshold: 1,    weight: 15, direction: 'above_eq' },
   urgencyWordCount:       { threshold: 2,    weight: 20, direction: 'above_eq' },
   sensitiveWordCount:     { threshold: 3,    weight: 20, direction: 'above_eq' },
@@ -68,14 +67,6 @@ const MSG_WEIGHTS = {
   claimsPrize:            { threshold: 1,    weight: 20, direction: 'equals' },
   mentionsDeadline:       { threshold: 1,    weight: 10, direction: 'equals' },
   hasBankKeywordWithUrl:  { threshold: 1,    weight: 15, direction: 'equals' },
-=======
-  urlCount:              { threshold: 1,   weight: 10, direction: 'above_eq' },
-  urgencyWordCount:      { threshold: 2,   weight: 15, direction: 'above_eq' },
-  sensitiveWordCount:    { threshold: 2,   weight: 20, direction: 'above_eq' },
-  exclamationCount:      { threshold: 3,   weight: 8,  direction: 'above' },
-  capsRatio:             { threshold: 0.3, weight: 12, direction: 'above' },
-  suspiciousPatternCount: { threshold: 1,  weight: 15, direction: 'above_eq' },
->>>>>>> d4e7d0431a4ad3c2532f837939f478298ab505bf
 };
 
 // ───────────────────── helper utilities ──────────────────────
@@ -242,7 +233,6 @@ const extractMessageFeatures = (text) => {
     exclamationCount: 0,
     capsRatio: 0,
     suspiciousPatternCount: 0,
-<<<<<<< HEAD
     allCapsWordCount: 0,
     hasHttpOnly: 0,
     hasSuspiciousDomain: 0,
@@ -250,8 +240,6 @@ const extractMessageFeatures = (text) => {
     claimsPrize: 0,
     mentionsDeadline: 0,
     hasBankKeywordWithUrl: 0,
-=======
->>>>>>> d4e7d0431a4ad3c2532f837939f478298ab505bf
   };
 
   if (!text || typeof text !== 'string') return defaults;
@@ -292,7 +280,6 @@ const extractMessageFeatures = (text) => {
     suspiciousPatternCount += matches.length;
   }
 
-<<<<<<< HEAD
   const allCapsWordCount = words.filter((w) => w.length > 2 && w === w.toUpperCase()).length;
   const hasHttpOnly = /http:\/\//i.test(text) && !/https:\/\//i.test(text) ? 1 : 0;
   const hasSuspiciousDomain = /\b\w+(-\w+){2,}\.(com|net|org)/i.test(text) ? 1 : 0;
@@ -302,8 +289,6 @@ const extractMessageFeatures = (text) => {
   const mentionsDeadline = /expire|hours?|today|immediately|before it|deadline/i.test(text) ? 1 : 0;
   const hasBankKeywordWithUrl = hasBankKeyword && urlCount > 0 ? 1 : 0;
 
-=======
->>>>>>> d4e7d0431a4ad3c2532f837939f478298ab505bf
   return {
     textLength,
     wordCount,
@@ -313,7 +298,6 @@ const extractMessageFeatures = (text) => {
     exclamationCount,
     capsRatio,
     suspiciousPatternCount,
-<<<<<<< HEAD
     allCapsWordCount,
     hasHttpOnly,
     hasSuspiciousDomain,
@@ -321,8 +305,6 @@ const extractMessageFeatures = (text) => {
     claimsPrize,
     mentionsDeadline,
     hasBankKeywordWithUrl,
-=======
->>>>>>> d4e7d0431a4ad3c2532f837939f478298ab505bf
   };
 };
 

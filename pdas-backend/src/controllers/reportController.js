@@ -1,14 +1,13 @@
+const fs = require("fs");
+const path = require("path");
 const { Report, ScanResult, User } = require("../models");
 const { analyzeMessage, analyzeUrl } = require("../services/detectionService");
 const { createNotification, createScanNotification } = require("../services/notificationService");
 const { createError, requireFields, validateUrl } = require("../utils/validators");
 const { buildPaginationMeta, getPagination } = require("../utils/pagination");
-<<<<<<< HEAD
 const { sendMail } = require("../services/mailService");
 const emailTemplates = require("../templates/emailTemplates");
 const config = require("../config/env");
-=======
->>>>>>> d4e7d0431a4ad3c2532f837939f478298ab505bf
 
 const analyzeByType = async (reportType, content) => {
   if (reportType === "url") {
@@ -16,6 +15,29 @@ const analyzeByType = async (reportType, content) => {
   }
 
   return analyzeMessage(content, reportType);
+};
+
+const getRequestedReportId = (req) => req.params.reportId || req.params.id;
+
+const canAccessReport = (user, report) =>
+  ["admin", "analyst"].includes(user.role) || report.user_id === user.user_id;
+
+const requireReportAccess = async (req, _res, next) => {
+  try {
+    const report = await Report.findByPk(getRequestedReportId(req));
+    if (!report) {
+      throw createError("Report not found", 404);
+    }
+
+    if (!canAccessReport(req.user, report)) {
+      throw createError("Not authorized", 403);
+    }
+
+    req.report = report;
+    next();
+  } catch (error) {
+    next(error);
+  }
 };
 
 const createReport = async (req, res) => {
@@ -127,7 +149,6 @@ const updateReportStatus = async (req, res) => {
     related_report_id: report.report_id,
   });
 
-<<<<<<< HEAD
   // Send status update email to report author
   try {
     const reportAuthor = await User.findByPk(report.user_id);
@@ -145,12 +166,62 @@ const updateReportStatus = async (req, res) => {
     // Don't break status update if email fails
   }
 
-=======
->>>>>>> d4e7d0431a4ad3c2532f837939f478298ab505bf
   res.json({
     success: true,
     data: report,
   });
 };
 
-module.exports = { createReport, listReports, getReport, updateReportStatus };
+const uploadAttachment = async (req, res) => {
+  if (!req.file) {
+    throw createError("No file uploaded", 400);
+  }
+
+  const report = req.report;
+  const attachmentUrl = `/api/reports/${report.report_id}/attachments/${req.file.filename}`;
+
+  const attachments = report.attachments || [];
+  attachments.push(attachmentUrl);
+  report.attachments = attachments;
+
+  report.changed("attachments", true);
+  await report.save();
+
+  res.json({
+    success: true,
+    message: "Attachment uploaded successfully",
+    attachment_url: attachmentUrl,
+  });
+};
+
+const getAttachment = async (req, res) => {
+  const report = req.report;
+  const requestedUrl = `/api/reports/${report.report_id}/attachments/${req.params.filename}`;
+  const legacyUrl = `/uploads/reports/${req.params.filename}`;
+  const attachments = report.attachments || [];
+
+  if (!attachments.includes(requestedUrl) && !attachments.includes(legacyUrl)) {
+    throw createError("Attachment not found", 404);
+  }
+
+  const uploadRoot = path.resolve("uploads", "reports");
+  const filePath = path.resolve(uploadRoot, req.params.filename);
+  if (!filePath.startsWith(`${uploadRoot}${path.sep}`)) {
+    throw createError("Invalid attachment path", 400);
+  }
+  if (!fs.existsSync(filePath)) {
+    throw createError("Attachment file not found", 404);
+  }
+
+  res.sendFile(filePath);
+};
+
+module.exports = {
+  createReport,
+  getAttachment,
+  listReports,
+  requireReportAccess,
+  getReport,
+  updateReportStatus,
+  uploadAttachment,
+};

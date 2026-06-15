@@ -1,4 +1,4 @@
-require("dotenv").config();
+require("dotenv").config({ quiet: true });
 
 const fs = require("fs");
 const https = require("https");
@@ -16,11 +16,7 @@ let server;
 const startServer = async () => {
   try {
     await testConnection();
-    const syncAlter =
-      process.env.DB_SYNC_ALTER === "true" ||
-      (process.env.NODE_ENV !== "production" && process.env.DB_SYNC_ALTER !== "false");
-    await sequelize.sync({ alter: syncAlter });
-    logger.info("Database tables synced");
+    logger.info("Database connection verified");
     startScanJobWorker();
 
     if (process.env.WORKER_ONLY === "true") {

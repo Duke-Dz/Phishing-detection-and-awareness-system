@@ -52,8 +52,8 @@ const createAwarenessContent = async (req, res) => {
     description: req.body.description,
     body: req.body.body || null,
     difficulty: req.body.difficulty || "beginner",
-    duration_minutes: req.body.duration_minutes || 5,
-    is_published: Boolean(req.body.is_published),
+    duration_minutes: req.body.duration_minutes ?? 5,
+    is_published: req.body.is_published ?? false,
     created_by: req.user.user_id,
   });
 
@@ -69,7 +69,16 @@ const updateAwarenessContent = async (req, res) => {
     throw createError("Awareness content not found", 404);
   }
 
-  await lesson.update(req.body);
+  // Whitelist editable fields to prevent overwriting content_id, created_at, etc.
+  const allowedFields = ["title", "category", "description", "body", "difficulty", "duration_minutes", "is_published"];
+  const updates = {};
+  for (const field of allowedFields) {
+    if (req.body[field] !== undefined) {
+      updates[field] = req.body[field];
+    }
+  }
+
+  await lesson.update(updates);
 
   res.json({
     success: true,

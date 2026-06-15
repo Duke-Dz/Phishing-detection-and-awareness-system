@@ -6,11 +6,11 @@ const Notification = require("./Notification");
 const AwarenessContent = require("./AwarenessContent");
 const RefreshToken = require("./RefreshToken");
 const ScanJob = require("./ScanJob");
-<<<<<<< HEAD
 const PasswordResetToken = require("./PasswordResetToken");
 const EmailVerificationToken = require("./EmailVerificationToken");
-=======
->>>>>>> d4e7d0431a4ad3c2532f837939f478298ab505bf
+const AuditLog = require("./AuditLog");
+const SystemSetting = require("./SystemSetting");
+const ReportComment = require("./ReportComment");
 
 // ── User → Reports (cascade: delete user = delete their reports) ──
 User.hasMany(Report, { foreignKey: "user_id", as: "reports", onDelete: "CASCADE" });
@@ -45,7 +45,6 @@ ScanJob.belongsTo(ScanResult, { foreignKey: "scan_id", as: "scanResult", onDelet
 User.hasMany(AwarenessContent, { foreignKey: "created_by", as: "createdContent", onDelete: "SET NULL" });
 AwarenessContent.belongsTo(User, { foreignKey: "created_by", as: "creator" });
 
-<<<<<<< HEAD
 // ── User → PasswordResetTokens (cascade: tokens meaningless without user) ──
 User.hasMany(PasswordResetToken, { foreignKey: "user_id", as: "passwordResetTokens", onDelete: "CASCADE" });
 PasswordResetToken.belongsTo(User, { foreignKey: "user_id", as: "user" });
@@ -54,8 +53,18 @@ PasswordResetToken.belongsTo(User, { foreignKey: "user_id", as: "user" });
 User.hasMany(EmailVerificationToken, { foreignKey: "user_id", as: "emailVerificationTokens", onDelete: "CASCADE" });
 EmailVerificationToken.belongsTo(User, { foreignKey: "user_id", as: "user" });
 
-=======
->>>>>>> d4e7d0431a4ad3c2532f837939f478298ab505bf
+// ── User → AuditLogs (set null: preserve logs even if user is deleted) ──
+User.hasMany(AuditLog, { foreignKey: "user_id", as: "auditLogs", onDelete: "SET NULL" });
+AuditLog.belongsTo(User, { foreignKey: "user_id", as: "user" });
+
+// ── Report → ReportComments (cascade: delete report = delete comments) ──
+Report.hasMany(ReportComment, { foreignKey: "report_id", as: "comments", onDelete: "CASCADE" });
+ReportComment.belongsTo(Report, { foreignKey: "report_id", as: "report" });
+
+// ── User → ReportComments (cascade: delete user = delete their comments) ──
+User.hasMany(ReportComment, { foreignKey: "user_id", as: "reportComments", onDelete: "CASCADE" });
+ReportComment.belongsTo(User, { foreignKey: "user_id", as: "author" });
+
 module.exports = {
   User,
   Report,
@@ -65,9 +74,9 @@ module.exports = {
   AwarenessContent,
   RefreshToken,
   ScanJob,
-<<<<<<< HEAD
   PasswordResetToken,
   EmailVerificationToken,
-=======
->>>>>>> d4e7d0431a4ad3c2532f837939f478298ab505bf
+  AuditLog,
+  SystemSetting,
+  ReportComment,
 };

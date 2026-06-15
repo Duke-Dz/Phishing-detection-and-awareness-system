@@ -1,8 +1,5 @@
 const { Op } = require("sequelize");
-<<<<<<< HEAD
 const { sequelize } = require("../config/sequelize");
-=======
->>>>>>> d4e7d0431a4ad3c2532f837939f478298ab505bf
 const {
   AwarenessContent,
   Notification,
@@ -15,6 +12,7 @@ const {
 const { createError, requireFields } = require("../utils/validators");
 const { buildPaginationMeta, getPagination } = require("../utils/pagination");
 const { getApiStatus } = require("../services/externalThreatService");
+const { clearUserCache } = require("../middleware/authMiddleware");
 
 const getDashboardStats = async (_req, res) => {
   const [
@@ -102,6 +100,7 @@ const updateUser = async (req, res) => {
   }
 
   await user.update(updates);
+  clearUserCache(user.user_id);
 
   res.json({
     success: true,
@@ -130,8 +129,8 @@ const createThreatIntel = async (req, res) => {
 
   const threat = await ThreatIntelligence.create({
     domain: String(req.body.domain).toLowerCase(),
-    reputation_score: req.body.reputation_score || 80,
-    is_blacklisted: Boolean(req.body.is_blacklisted),
+    reputation_score: req.body.reputation_score ?? 80,
+    is_blacklisted: req.body.is_blacklisted ?? false,
     blacklist_sources: req.body.blacklist_sources || ["manual"],
     threat_type: req.body.threat_type || "unknown",
   });
@@ -142,7 +141,6 @@ const createThreatIntel = async (req, res) => {
   });
 };
 
-<<<<<<< HEAD
 const updateThreatIntel = async (req, res) => {
   const threat = await ThreatIntelligence.findByPk(req.params.threatId);
   if (!threat) {
@@ -153,7 +151,9 @@ const updateThreatIntel = async (req, res) => {
   const updates = {};
   for (const field of allowedFields) {
     if (req.body[field] !== undefined) {
-      updates[field] = req.body[field];
+      updates[field] = field === "domain"
+        ? String(req.body[field]).toLowerCase()
+        : req.body[field];
     }
   }
 
@@ -246,8 +246,6 @@ const getAnalytics = async (_req, res) => {
   });
 };
 
-=======
->>>>>>> d4e7d0431a4ad3c2532f837939f478298ab505bf
 const getExternalApiStatus = async (_req, res) => {
   res.json({
     success: true,
@@ -256,20 +254,13 @@ const getExternalApiStatus = async (_req, res) => {
 };
 
 module.exports = {
-<<<<<<< HEAD
   createThreatIntel,
   deleteThreatIntel,
   getAnalytics,
-=======
->>>>>>> d4e7d0431a4ad3c2532f837939f478298ab505bf
   getDashboardStats,
   getExternalApiStatus,
   listUsers,
   updateUser,
   listThreatIntel,
-<<<<<<< HEAD
   updateThreatIntel,
-=======
-  createThreatIntel,
->>>>>>> d4e7d0431a4ad3c2532f837939f478298ab505bf
 };

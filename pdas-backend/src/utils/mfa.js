@@ -72,8 +72,8 @@ const verifyTotp = (secret, code, window = 1) => {
 };
 
 const buildOtpAuthUrl = (user, secret) => {
-  const issuer = encodeURIComponent(process.env.MFA_ISSUER || "PDAS");
-  const label = encodeURIComponent(`${process.env.MFA_ISSUER || "PDAS"}:${user.email}`);
+  const issuer = encodeURIComponent(process.env.MFA_ISSUER || "CyberSense");
+  const label = encodeURIComponent(`${process.env.MFA_ISSUER || "CyberSense"}:${user.email}`);
   return `otpauth://totp/${label}?secret=${secret}&issuer=${issuer}&algorithm=SHA1&digits=6&period=30`;
 };
 
