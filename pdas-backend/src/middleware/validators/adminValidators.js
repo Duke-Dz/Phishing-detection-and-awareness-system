@@ -9,7 +9,8 @@ const updateUserValidator = [
   body("is_active")
     .optional()
     .isBoolean()
-    .withMessage("is_active must be a boolean"),
+    .withMessage("is_active must be a boolean")
+    .toBoolean(),
 ];
 
 const createThreatIntelValidator = [
@@ -25,12 +26,14 @@ const createThreatIntelValidator = [
   body("reputation_score")
     .optional()
     .isFloat({ min: 0, max: 100 })
-    .withMessage("Reputation score must be between 0 and 100"),
+    .withMessage("Reputation score must be between 0 and 100")
+    .toFloat(),
 
   body("is_blacklisted")
     .optional()
     .isBoolean()
-    .withMessage("is_blacklisted must be a boolean"),
+    .withMessage("is_blacklisted must be a boolean")
+    .toBoolean(),
 
   body("threat_type")
     .optional()
@@ -43,4 +46,36 @@ const createThreatIntelValidator = [
     .withMessage("blacklist_sources must be an array"),
 ];
 
-module.exports = { updateUserValidator, createThreatIntelValidator };
+const updateThreatIntelValidator = [
+  body("domain")
+    .optional()
+    .trim()
+    .isLength({ max: 255 })
+    .withMessage("Domain is too long")
+    .isFQDN()
+    .withMessage("Please provide a valid domain name"),
+
+  body("reputation_score")
+    .optional()
+    .isFloat({ min: 0, max: 100 })
+    .withMessage("Reputation score must be between 0 and 100")
+    .toFloat(),
+
+  body("is_blacklisted")
+    .optional()
+    .isBoolean()
+    .withMessage("is_blacklisted must be a boolean")
+    .toBoolean(),
+
+  body("threat_type")
+    .optional()
+    .isIn(["phishing", "malware", "spam", "unknown"])
+    .withMessage("Invalid threat type"),
+
+  body("blacklist_sources")
+    .optional()
+    .isArray()
+    .withMessage("blacklist_sources must be an array"),
+];
+
+module.exports = { updateUserValidator, createThreatIntelValidator, updateThreatIntelValidator };

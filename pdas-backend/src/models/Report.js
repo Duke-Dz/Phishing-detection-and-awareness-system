@@ -29,6 +29,11 @@ const Report = sequelize.define(
       type: DataTypes.ENUM("pending", "under_review", "confirmed", "false_positive"),
       defaultValue: "pending",
     },
+    attachments: {
+      type: DataTypes.JSONB,
+      allowNull: true,
+      defaultValue: [],
+    },
     notes: {
       type: DataTypes.TEXT,
       allowNull: true,

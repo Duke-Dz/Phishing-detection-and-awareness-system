@@ -1,9 +1,17 @@
 const { Op } = require("sequelize");
 const { sequelize } = require("../config/sequelize");
 const { ScanResult, Report, Notification } = require("../models");
+const cacheService = require("../services/cacheService");
 
 const getUserDashboardStats = async (req, res) => {
   const userId = req.user.user_id;
+  const cacheKey = cacheService.keys.dashboardStats(userId);
+
+  const cached = cacheService.get(cacheKey);
+  if (cached) {
+    return res.json({ success: true, data: cached, cached: true });
+  }
+
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
 
   const [
@@ -56,9 +64,7 @@ const getUserDashboardStats = async (req, res) => {
     typeBreakdown[row.scan_type] = parseInt(row.count, 10);
   }
 
-  res.json({
-    success: true,
-    data: {
+  const statsData = {
       totalScans,
       phishingScans,
       suspiciousScans,
@@ -68,7 +74,13 @@ const getUserDashboardStats = async (req, res) => {
       unreadNotifications,
       scanTypeBreakdown: typeBreakdown,
       recentActivity,
-    },
+    };
+
+  cacheService.set(cacheKey, statsData, cacheService.TTL.DASHBOARD_STATS);
+
+  res.json({
+    success: true,
+    data: statsData,
   });
 };
 

@@ -1,5 +1,6 @@
 const { Op } = require("sequelize");
 const { ScanJob } = require("../models");
+const { sequelize } = require("../config/sequelize");
 const { analyzeMessage, analyzeUrl } = require("./detectionService");
 const { createScanNotification } = require("./notificationService");
 const { persistScanResult } = require("./scanPersistenceService");
@@ -24,12 +25,31 @@ const runAnalysis = (job) => {
   return analyzeMessage(job.target, job.scan_type);
 };
 
-const processJob = async (job) => {
-  job.status = "processing";
-  job.started_at = new Date();
-  job.attempts += 1;
-  await job.save();
+const claimQueuedJobs = async (batchSize, maxAttempts) =>
+  sequelize.transaction(async (transaction) => {
+    const jobs = await ScanJob.findAll({
+      where: {
+        status: "queued",
+        attempts: { [Op.lt]: maxAttempts },
+      },
+      order: [["created_at", "ASC"]],
+      limit: batchSize,
+      lock: transaction.LOCK.UPDATE,
+      skipLocked: true,
+      transaction,
+    });
 
+    for (const job of jobs) {
+      job.status = "processing";
+      job.started_at = new Date();
+      job.attempts += 1;
+      await job.save({ transaction });
+    }
+
+    return jobs;
+  });
+
+const processJob = async (job) => {
   try {
     const analysis = await runAnalysis(job);
     const scanResult = await persistScanResult({
@@ -65,14 +85,8 @@ const processQueuedScanJobs = async () => {
   running = true;
   try {
     const batchSize = Number.parseInt(process.env.SCAN_WORKER_BATCH_SIZE || "5", 10);
-    const jobs = await ScanJob.findAll({
-      where: {
-        status: "queued",
-        attempts: { [Op.lt]: Number.parseInt(process.env.SCAN_JOB_MAX_ATTEMPTS || "3", 10) },
-      },
-      order: [["created_at", "ASC"]],
-      limit: batchSize,
-    });
+    const maxAttempts = Number.parseInt(process.env.SCAN_JOB_MAX_ATTEMPTS || "3", 10);
+    const jobs = await claimQueuedJobs(batchSize, maxAttempts);
 
     for (const job of jobs) {
       await processJob(job);

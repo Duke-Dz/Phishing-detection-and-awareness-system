@@ -1,32 +1,41 @@
 const express = require("express");
+const compression = require("compression");
 const cors = require("cors");
 const helmet = require("helmet");
 const morgan = require("morgan");
 const rateLimit = require("express-rate-limit");
 
 const adminRoutes = require("./routes/adminRoutes");
+const auditRoutes = require("./routes/auditRoutes");
 const authRoutes = require("./routes/authRoutes");
 const awarenessRoutes = require("./routes/awarenessRoutes");
-<<<<<<< HEAD
 const dashboardRoutes = require("./routes/dashboardRoutes");
-=======
->>>>>>> d4e7d0431a4ad3c2532f837939f478298ab505bf
 const emailRoutes = require("./routes/emailRoutes");
+const exportRoutes = require("./routes/exportRoutes");
 const notificationRoutes = require("./routes/notificationRoutes");
 const reportRoutes = require("./routes/reportRoutes");
 const scanRoutes = require("./routes/scanRoutes");
+const sseRoutes = require("./routes/sseRoutes");
+const userRoutes = require("./routes/userRoutes");
+const settingsRoutes = require("./routes/settingsRoutes");
 const logger = require("./utils/logger");
 const { errorHandler, notFound } = require("./middleware/errorHandler");
 const { protect } = require("./middleware/authMiddleware");
 const { authorize } = require("./middleware/roleMiddleware");
 const { getMetricsSnapshot, metricsMiddleware } = require("./middleware/metricsMiddleware");
 const { sequelize } = require("./config/sequelize");
+const { getApiStatus } = require("./services/externalThreatService");
+const { getActiveConnections } = require("./services/sseService");
+const cacheService = require("./services/cacheService");
+const { setupSwagger } = require("./config/swagger");
 
 const app = express();
 
 app.set("trust proxy", 1);
 
+// ── Security & Compression ─────────────────────────────────────────────
 app.use(helmet());
+app.use(compression());  // Compress all responses (60-80% size reduction for JSON)
 app.use(metricsMiddleware);
 app.use((req, res, next) => {
   if (process.env.FORCE_HTTPS === "true" && !req.secure) {
@@ -36,6 +45,8 @@ app.use((req, res, next) => {
 });
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
+// Support raw text bodies for email webhook
+app.use(express.text({ type: "text/plain", limit: "5mb" }));
 
 app.use(
   cors({
@@ -95,7 +106,6 @@ app.use(
   }),
 );
 
-<<<<<<< HEAD
 // Auth-specific: strict limits on forgot-password (prevents abuse)
 app.use(
   "/api/auth/forgot-password",
@@ -108,8 +118,6 @@ app.use(
   }),
 );
 
-=======
->>>>>>> d4e7d0431a4ad3c2532f837939f478298ab505bf
 // Heavy routes: scans call external APIs so must be limited
 app.use(
   "/api/scan",
@@ -142,11 +150,15 @@ if (process.env.NODE_ENV === "development") {
   );
 }
 
+// ── Swagger API Documentation ──────────────────────────────────────────
+setupSwagger(app);
+
+// ── Root & Health Endpoints ────────────────────────────────────────────
 app.get("/", (_req, res) => {
   res.json({
     success: true,
     message: "Phishing Detection and Awareness System API",
-    docs: "/api/health",
+    docs: "/api/docs",
   });
 });
 
@@ -156,6 +168,14 @@ app.get("/api/health", (_req, res) => {
     message: "API is healthy",
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV,
+    uptime_seconds: Math.round(process.uptime()),
+    memory: {
+      rss_mb: Math.round(process.memoryUsage().rss / 1024 / 1024),
+      heap_used_mb: Math.round(process.memoryUsage().heapUsed / 1024 / 1024),
+    },
+    external_apis: getApiStatus(),
+    sse_connections: getActiveConnections(),
+    cache: cacheService.getStats(),
   });
 });
 
@@ -182,6 +202,7 @@ app.get("/api/metrics", protect, authorize("admin"), (_req, res) => {
   });
 });
 
+// ── API Routes ─────────────────────────────────────────────────────────
 app.use("/api/auth", authRoutes);
 app.use("/api/scan", scanRoutes);
 app.use("/api/email", emailRoutes);
@@ -189,11 +210,14 @@ app.use("/api/reports", reportRoutes);
 app.use("/api/awareness", awarenessRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/notifications", notificationRoutes);
-<<<<<<< HEAD
 app.use("/api/dashboard", dashboardRoutes);
-=======
->>>>>>> d4e7d0431a4ad3c2532f837939f478298ab505bf
+app.use("/api/audit", auditRoutes);
+app.use("/api/export", exportRoutes);
+app.use("/api/sse", sseRoutes);
+app.use("/api/users", userRoutes);
+app.use("/api/settings", settingsRoutes);
 
+// ── Error Handling ─────────────────────────────────────────────────────
 app.use(notFound);
 app.use(errorHandler);
 

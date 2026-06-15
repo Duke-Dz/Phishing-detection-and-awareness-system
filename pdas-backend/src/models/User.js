@@ -25,6 +25,10 @@ const User = sequelize.define(
         isEmail: true,
       },
     },
+    avatar_url: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
     password_hash: {
       type: DataTypes.TEXT,
       allowNull: false,
@@ -49,7 +53,6 @@ const User = sequelize.define(
       type: DataTypes.TEXT,
       allowNull: true,
     },
-<<<<<<< HEAD
     email_verified: {
       type: DataTypes.BOOLEAN,
       defaultValue: false,
@@ -58,8 +61,6 @@ const User = sequelize.define(
       type: DataTypes.DATE,
       allowNull: true,
     },
-=======
->>>>>>> d4e7d0431a4ad3c2532f837939f478298ab505bf
   },
   {
     tableName: "users",

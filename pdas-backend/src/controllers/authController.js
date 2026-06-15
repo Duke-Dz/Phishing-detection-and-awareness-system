@@ -1,9 +1,5 @@
 const bcrypt = require("bcryptjs");
-<<<<<<< HEAD
 const { User, PasswordResetToken, EmailVerificationToken } = require("../models");
-=======
-const { User } = require("../models");
->>>>>>> d4e7d0431a4ad3c2532f837939f478298ab505bf
 const {
   issueTokenPair,
   revokeRefreshToken,
@@ -17,13 +13,10 @@ const {
   requireFields,
   validatePassword,
 } = require("../utils/validators");
-<<<<<<< HEAD
 const { generateToken, hashToken } = require("../utils/tokenGenerator");
 const { sendMail, isMailConfigured } = require("../services/mailService");
 const emailTemplates = require("../templates/emailTemplates");
 const config = require("../config/env");
-=======
->>>>>>> d4e7d0431a4ad3c2532f837939f478298ab505bf
 
 const sanitizeUser = (user) => {
   const data = user.toJSON();
@@ -44,15 +37,13 @@ const register = async (req, res) => {
   }
 
   const passwordHash = await bcrypt.hash(req.body.password, 12);
-  const userCount = await User.count();
   const user = await User.create({
     full_name: String(req.body.full_name).trim(),
     email,
     password_hash: passwordHash,
-    role: userCount === 0 ? "admin" : "user",
+    role: "user",
   });
 
-<<<<<<< HEAD
   // Send verification email
   const verificationToken = generateToken();
   const expiryHours = config.emailVerificationTokenExpiryHours || 24;
@@ -69,17 +60,11 @@ const register = async (req, res) => {
   });
   sendMail({ to: user.email, ...template }).catch(() => {});
 
-=======
->>>>>>> d4e7d0431a4ad3c2532f837939f478298ab505bf
   const tokens = await issueTokenPair(user);
 
   res.status(201).json({
     success: true,
-<<<<<<< HEAD
     message: "Account created successfully. Please verify your email.",
-=======
-    message: "Account created successfully",
->>>>>>> d4e7d0431a4ad3c2532f837939f478298ab505bf
     ...tokens,
     data: sanitizeUser(user),
   });
@@ -222,7 +207,6 @@ const disableMfa = async (req, res) => {
   });
 };
 
-<<<<<<< HEAD
 const forgotPassword = async (req, res) => {
   const email = normalizeEmail(req.body.email);
   const user = await User.findOne({ where: { email } });
@@ -409,22 +393,13 @@ module.exports = {
   disableMfa,
   enableMfa,
   forgotPassword,
-=======
-module.exports = {
-  disableMfa,
-  enableMfa,
->>>>>>> d4e7d0431a4ad3c2532f837939f478298ab505bf
   getMe,
   login,
   logout,
   refresh,
   register,
-<<<<<<< HEAD
   resendVerification,
   resetPassword,
   setupMfa,
   verifyEmail,
-=======
-  setupMfa,
->>>>>>> d4e7d0431a4ad3c2532f837939f478298ab505bf
 };

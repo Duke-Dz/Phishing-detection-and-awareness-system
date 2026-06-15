@@ -1,18 +1,12 @@
-<<<<<<< HEAD
 const logger = require("../utils/logger");
 
-=======
->>>>>>> d4e7d0431a4ad3c2532f837939f478298ab505bf
 const metrics = {
   startedAt: new Date(),
   requests: 0,
   responses: {},
   totalDurationMs: 0,
-<<<<<<< HEAD
   slowRequests: 0,
   routeTimings: {},
-=======
->>>>>>> d4e7d0431a4ad3c2532f837939f478298ab505bf
 };
 
 const metricsMiddleware = (req, res, next) => {
@@ -23,7 +17,6 @@ const metricsMiddleware = (req, res, next) => {
     metrics.requests += 1;
     metrics.totalDurationMs += durationMs;
     metrics.responses[res.statusCode] = (metrics.responses[res.statusCode] || 0) + 1;
-<<<<<<< HEAD
 
     // Per-route timing
     const routeKey = `${req.method} ${req.route ? req.route.path : req.path}`;
@@ -41,14 +34,11 @@ const metricsMiddleware = (req, res, next) => {
       metrics.slowRequests += 1;
       logger.warn(`SLOW ${req.method} ${req.originalUrl} ${Math.round(durationMs)}ms`);
     }
-=======
->>>>>>> d4e7d0431a4ad3c2532f837939f478298ab505bf
   });
 
   next();
 };
 
-<<<<<<< HEAD
 const getMetricsSnapshot = () => {
   // Build per-route averages
   const routeStats = {};
@@ -72,16 +62,5 @@ const getMetricsSnapshot = () => {
     memory: process.memoryUsage(),
   };
 };
-=======
-const getMetricsSnapshot = () => ({
-  uptime_seconds: Math.round(process.uptime()),
-  started_at: metrics.startedAt.toISOString(),
-  requests_total: metrics.requests,
-  responses_by_status: metrics.responses,
-  average_duration_ms:
-    metrics.requests > 0 ? Number((metrics.totalDurationMs / metrics.requests).toFixed(2)) : 0,
-  memory: process.memoryUsage(),
-});
->>>>>>> d4e7d0431a4ad3c2532f837939f478298ab505bf
 
 module.exports = { getMetricsSnapshot, metricsMiddleware };
