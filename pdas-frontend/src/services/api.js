@@ -23,6 +23,13 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
+    if (error.response && error.response.status === 503) {
+      if (error.response.data?.code === "MAINTENANCE_MODE") {
+        window.location.href = "/maintenance";
+        return new Promise(() => {}); // Suspend promise chain so app doesn't crash
+      }
+    }
+
     // Token refresh logic goes here
     return Promise.reject(error);
   }
