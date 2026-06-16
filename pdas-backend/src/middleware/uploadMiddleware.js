@@ -52,4 +52,43 @@ const upload = multer({
   fileFilter,
 });
 
-module.exports = upload;
+/**
+ * Middleware to validate file magic numbers using file-type.
+ * Must be used after multer's upload middleware.
+ */
+const validateMagicNumbers = async (req, res, next) => {
+  if (!req.file) {
+    return next();
+  }
+
+  try {
+    const { fileTypeFromFile } = await import("file-type");
+    const meta = await fileTypeFromFile(req.file.path);
+    
+    // Fallback for EML (emails often don't have a recognizable magic number by file-type)
+    const isEml = req.file.originalname.toLowerCase().endsWith(".eml") && req.file.mimetype === "message/rfc822";
+    
+    // If no meta found and not an EML, or if the detected mime doesn't match our allowed list
+    if (!meta && !isEml) {
+      fs.unlinkSync(req.file.path);
+      return next(createError("Invalid file type detected by magic number check", 400));
+    }
+
+    if (meta) {
+      const allowedMimes = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
+      if (!allowedMimes.includes(meta.mime)) {
+        fs.unlinkSync(req.file.path);
+        return next(createError("File signature does not match allowed types", 400));
+      }
+    }
+
+    next();
+  } catch (error) {
+    if (req.file && fs.existsSync(req.file.path)) {
+      fs.unlinkSync(req.file.path);
+    }
+    next(error);
+  }
+};
+
+module.exports = { upload, validateMagicNumbers };

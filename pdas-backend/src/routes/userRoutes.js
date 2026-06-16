@@ -3,7 +3,7 @@ const { getAvatar, updateProfile, uploadAvatar, unsubscribe } = require("../cont
 const { protect } = require("../middleware/authMiddleware");
 const { asyncHandler } = require("../middleware/errorHandler");
 const { filenameParam, updateProfileValidator, validate } = require("../middleware/validators");
-const upload = require("../middleware/uploadMiddleware");
+const { upload, validateMagicNumbers } = require("../middleware/uploadMiddleware");
 
 const router = express.Router();
 
@@ -52,7 +52,7 @@ router.put("/profile", protect, updateProfileValidator, validate, asyncHandler(u
  *       200:
  *         description: Avatar uploaded
  */
-router.post("/avatar", protect, upload.single("avatar"), asyncHandler(uploadAvatar));
+router.post("/avatar", protect, upload.single("avatar"), validateMagicNumbers, asyncHandler(uploadAvatar));
 
 router.get(
   "/avatar/:filename",

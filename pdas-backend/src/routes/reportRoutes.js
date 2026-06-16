@@ -19,7 +19,7 @@ const {
   validate,
 } = require("../middleware/validators");
 const { addComment, getComments } = require("../controllers/reportCommentController");
-const upload = require("../middleware/uploadMiddleware");
+const { upload, validateMagicNumbers } = require("../middleware/uploadMiddleware");
 
 const router = express.Router();
 
@@ -243,6 +243,7 @@ router.post(
   validate,
   asyncHandler(requireReportAccess),
   upload.single("attachment"),
+  validateMagicNumbers,
   asyncHandler(uploadAttachment),
 );
 
