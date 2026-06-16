@@ -43,12 +43,38 @@ const createScanNotification = async ({ user_id, scanResult, report_id }) => {
     try {
       const user = await User.findByPk(user_id);
       if (user) {
+        const details = scanResult.detection_details || {};
+        const layers = details.layers || {};
+        
+        // Extract signals from all active layers
+        const allSignals = [
+          ...(layers.rules?.signals || []),
+          ...(layers.blacklist?.signals || []),
+          ...(layers.content?.signals || []),
+        ].map(s => s.name || s.evidence).filter(Boolean);
+        
+        // Extract threat feeds from external API usage
+        const threatFeeds = (details.external_api_usage || []).map(a => ({
+          name: a.source || a.api_name || "Unknown Source",
+          verdict: a.isMalicious ? "malicious" : "clean"
+        }));
+
+        const domainAgeDays = details.domain_age_days;
+        const domainAge = domainAgeDays 
+          ? `${domainAgeDays} day${domainAgeDays === 1 ? "" : "s"}` 
+          : null;
+
         const template = emailTemplates.phishingAlert({
           userName: user.full_name,
           target: scanResult.target,
           riskScore: scanResult.risk_score,
           classification: scanResult.classification,
           scanId: scanResult.scan_id,
+          scanType: scanResult.scan_type || "url",
+          scannedAt: scanResult.created_at || new Date(),
+          detectedSignals: [...new Set(allSignals)],
+          threatFeeds,
+          domainAge,
           frontendUrl: config.frontendUrl,
         });
         sendMail({ to: user.email, ...template }).catch(() => {});
