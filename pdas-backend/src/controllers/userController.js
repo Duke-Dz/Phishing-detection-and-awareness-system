@@ -4,6 +4,7 @@ const { Op } = require("sequelize");
 const { User } = require("../models");
 const { createError } = require("../utils/validators");
 const auditService = require("../services/auditService");
+const { verifyUnsubscribeToken } = require("../utils/unsubscribeTokens");
 
 const updateProfile = async (req, res) => {
   const { full_name } = req.body;
@@ -88,8 +89,44 @@ const getAvatar = async (req, res) => {
   res.sendFile(filePath);
 };
 
+const unsubscribe = async (req, res) => {
+  const { email, token } = req.body;
+
+  if (!email || !token) {
+    throw createError("Email and token are required", 400);
+  }
+
+  if (!verifyUnsubscribeToken(email, token)) {
+    throw createError("Invalid or expired unsubscribe link", 403);
+  }
+
+  const user = await User.findOne({ where: { email: email.toLowerCase() } });
+  
+  if (!user) {
+    // If user doesn't exist, just return success to prevent email enumeration
+    return res.json({ success: true, message: "Successfully unsubscribed" });
+  }
+
+  user.email_notifications = false;
+  await user.save();
+
+  auditService.logAction({
+    userId: user.user_id,
+    action: "user.unsubscribe",
+    entityType: "user",
+    entityId: user.user_id,
+    req,
+  });
+
+  res.json({
+    success: true,
+    message: "Successfully unsubscribed from email notifications",
+  });
+};
+
 module.exports = {
   getAvatar,
   updateProfile,
   uploadAvatar,
+  unsubscribe,
 };

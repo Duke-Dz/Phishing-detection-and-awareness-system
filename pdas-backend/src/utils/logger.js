@@ -40,4 +40,9 @@ const logger = winston.createLogger({
   ],
 });
 
+// Prevent winston from crashing the app if a file transport fails (e.g. file locks on Windows)
+logger.on("error", (err) => {
+  console.error("Winston logger error:", err);
+});
+
 module.exports = logger;

@@ -28,6 +28,7 @@ const { getApiStatus } = require("./services/externalThreatService");
 const { getActiveConnections } = require("./services/sseService");
 const cacheService = require("./services/cacheService");
 const { setupSwagger } = require("./config/swagger");
+const maintenanceMiddleware = require("./middleware/maintenanceMiddleware");
 
 const app = express();
 
@@ -69,6 +70,9 @@ app.use(
     allowedHeaders: ["Content-Type", "Authorization"],
   }),
 );
+
+// ── Global Maintenance Mode ────────────────────────────────────────────
+app.use(maintenanceMiddleware);
 
 // ── Layered Rate Limiting ──────────────────────────────────────────────
 // Global limiter — applies to everything (tightened from 300)

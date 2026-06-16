@@ -36,12 +36,17 @@ const register = async (req, res) => {
     throw createError("Email is already registered", 409);
   }
 
+  // The very first registered user in the system becomes the admin automatically.
+  // This provides a bootstrap mechanism without requiring a separate seed step.
+  const userCount = await User.count();
+  const role = userCount === 0 ? "admin" : "user";
+
   const passwordHash = await bcrypt.hash(req.body.password, 12);
   const user = await User.create({
     full_name: String(req.body.full_name).trim(),
     email,
     password_hash: passwordHash,
-    role: "user",
+    role,
   });
 
   // Send verification email

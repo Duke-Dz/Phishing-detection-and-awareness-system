@@ -1,6 +1,7 @@
 const nodemailer = require("nodemailer");
 const config = require("../config/env");
 const logger = require("../utils/logger");
+const { generateUnsubscribeToken } = require("../utils/unsubscribeTokens");
 
 let transporter = null;
 
@@ -37,10 +38,10 @@ function createTransporter() {
       user: config.mail.user,
       pass: config.mail.pass,
     },
-    // Performance and stability defaults
-    pool: true,
-    maxConnections: 5,
-    maxMessages: 100,
+    // Prevent long hangs during DNS/connection
+    connectionTimeout: 10000,
+    // Force IPv4 to prevent 2-minute DNS resolution timeouts (Node 17+ issue with IPv6 and Mailtrap)
+    family: 4,
   });
 
   logger.info(
@@ -81,12 +82,19 @@ async function sendMail({ to, subject, html, text }) {
   }
 
   try {
+    const unsubscribeToken = generateUnsubscribeToken(to);
+    const unsubscribeUrl = `${config.frontendUrl}/unsubscribe?email=${encodeURIComponent(to)}&token=${unsubscribeToken}`;
+    const privacyUrl = `${config.frontendUrl}/privacy`;
+
+    const finalHtml = html ? html.replace(/\{\{UNSUBSCRIBE_URL\}\}/g, unsubscribeUrl).replace(/\{\{PRIVACY_URL\}\}/g, privacyUrl) : html;
+    const finalText = text ? text.replace(/\{\{UNSUBSCRIBE_URL\}\}/g, unsubscribeUrl).replace(/\{\{PRIVACY_URL\}\}/g, privacyUrl) : text;
+
     const info = await transporter.sendMail({
       from: config.mail.from,
       to,
       subject,
-      html,
-      text,
+      html: finalHtml,
+      text: finalText,
     });
     
     logger.info(`Email sent successfully to ${to}`, { messageId: info.messageId });

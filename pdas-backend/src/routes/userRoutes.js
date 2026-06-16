@@ -1,5 +1,5 @@
 const express = require("express");
-const { getAvatar, updateProfile, uploadAvatar } = require("../controllers/userController");
+const { getAvatar, updateProfile, uploadAvatar, unsubscribe } = require("../controllers/userController");
 const { protect } = require("../middleware/authMiddleware");
 const { asyncHandler } = require("../middleware/errorHandler");
 const { filenameParam, updateProfileValidator, validate } = require("../middleware/validators");
@@ -61,5 +61,28 @@ router.get(
   validate,
   asyncHandler(getAvatar),
 );
+
+/**
+ * @swagger
+ * /users/unsubscribe:
+ *   post:
+ *     summary: Unsubscribe from email notifications
+ *     tags: [Users]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *               token:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Unsubscribed successfully
+ */
+router.post("/unsubscribe", asyncHandler(unsubscribe));
 
 module.exports = router;

@@ -79,4 +79,9 @@ process.on("unhandledRejection", (reason) => {
   shutdown("unhandledRejection");
 });
 
+process.on("uncaughtException", (error) => {
+  logger.error(`Uncaught exception: ${error.message}`, { stack: error.stack });
+  shutdown("uncaughtException");
+});
+
 startServer();
