@@ -1,1 +1,306 @@
-/* Global styles and Tailwind directives */
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-primary: #4361ee;
+  --color-primary-light: #818cf8;
+  --color-bg-dark: #0a192f;
+  --color-bg-darker: #060d1a;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Inter", system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ─── Scrollbar ─── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(67, 97, 238, 0.3); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(67, 97, 238, 0.5); }
+
+/* ──────────────────────────────────────────────────────────────
+   Auth pages — premium glassmorphism & immersive layout
+   (Inspired by CampusFix design system)
+   ────────────────────────────────────────────────────────────── */
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .auth-float-1,
+  .auth-float-2,
+  .auth-float-3,
+  .auth-glow-pulse,
+  .auth-grid-drift {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+@layer components {
+  .auth-float-1 { animation: auth-float-1 14s ease-in-out infinite; }
+  .auth-float-2 { animation: auth-float-2 18s ease-in-out infinite; }
+  .auth-float-3 { animation: auth-float-3 22s ease-in-out infinite; }
+  .auth-glow-pulse { animation: auth-glow-pulse 6s ease-in-out infinite; }
+  .auth-grid-drift { animation: auth-grid-drift 30s linear infinite; }
+}
+
+/* Float path 1 — gentle vertical bob + slight horizontal sway */
+@keyframes auth-float-1 {
+  0%, 100% { transform: translateY(0) translateX(0) rotate(0deg); }
+  25% { transform: translateY(-18px) translateX(6px) rotate(3deg); }
+  50% { transform: translateY(-8px) translateX(-4px) rotate(-2deg); }
+  75% { transform: translateY(-22px) translateX(2px) rotate(1deg); }
+}
+
+/* Float path 2 — diagonal drift */
+@keyframes auth-float-2 {
+  0%, 100% { transform: translateY(0) translateX(0) scale(1); }
+  33% { transform: translateY(-14px) translateX(10px) scale(1.04); }
+  66% { transform: translateY(6px) translateX(-8px) scale(0.97); }
+}
+
+/* Float path 3 — slow circular drift */
+@keyframes auth-float-3 {
+  0%, 100% { transform: translateY(0) translateX(0) rotate(0deg); }
+  25% { transform: translateY(-10px) translateX(14px) rotate(6deg); }
+  50% { transform: translateY(4px) translateX(8px) rotate(-3deg); }
+  75% { transform: translateY(-16px) translateX(-6px) rotate(2deg); }
+}
+
+/* Ambient glow pulse */
+@keyframes auth-glow-pulse {
+  0%, 100% { opacity: 0.35; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(1.08); }
+}
+
+/* Subtle grid drift */
+@keyframes auth-grid-drift {
+  from { background-position: 0 0; }
+  to { background-position: 40px 40px; }
+}
+
+/* Brand panel base */
+.auth-brand-panel {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1.8rem;
+  background: linear-gradient(155deg, #0a1628 0%, #0f2040 32%, #102850 60%, #0d1f3a 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 24px 60px -32px rgba(2, 6, 23, 0.7);
+}
+
+/* Dot-grid overlay */
+.auth-grid-overlay {
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(circle, rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+  background-size: 28px 28px;
+  pointer-events: none;
+  mask-image: radial-gradient(ellipse 70% 70% at 50% 50%, black 30%, transparent 80%);
+  -webkit-mask-image: radial-gradient(ellipse 70% 70% at 50% 50%, black 30%, transparent 80%);
+}
+
+/* Noise texture */
+.auth-bp-noise {
+  position: absolute;
+  inset: 0;
+  opacity: 0.03;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='256' height='256' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 128px;
+  pointer-events: none;
+}
+
+/* Glassmorphism form card */
+.auth-glass-card {
+  position: relative;
+  border-radius: 1.8rem;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow:
+    0 32px 80px -40px rgba(16, 32, 51, 0.3),
+    0 2px 8px -2px rgba(16, 32, 51, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(24px) saturate(1.4);
+  -webkit-backdrop-filter: blur(24px) saturate(1.4);
+}
+
+/* Immersive auth background */
+.auth-immersive-bg {
+  background:
+    radial-gradient(circle at 20% 30%, rgba(67, 97, 238, 0.08), transparent 40%),
+    radial-gradient(circle at 80% 70%, rgba(15, 157, 138, 0.06), transparent 35%),
+    linear-gradient(180deg, #f0f4f9 0%, #e8eef6 50%, #e2eaf4 100%);
+}
+
+/* Entrance animations */
+.auth-brand-enter {
+  animation: auth-brand-enter 600ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.auth-form-enter {
+  animation: auth-form-enter 550ms cubic-bezier(0.22, 1, 0.36, 1) 120ms both;
+}
+
+@keyframes auth-brand-enter {
+  from { opacity: 0; transform: translateX(-24px) scale(0.97); }
+  to { opacity: 1; transform: translateX(0) scale(1); }
+}
+
+@keyframes auth-form-enter {
+  from { opacity: 0; transform: translateX(20px) scale(0.97); }
+  to { opacity: 1; transform: translateX(0) scale(1); }
+}
+
+/* Brand panel headline */
+.auth-bp-headline {
+  font-size: clamp(1.6rem, 3.2vw, 2rem);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.16;
+  color: white;
+}
+
+/* Brand panel logo ring */
+.auth-bp-logo-ring {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/* Brand panel feature icon */
+.auth-bp-feature-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.55);
+}
+
+/* Brand panel trust badge */
+.auth-bp-trust-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 100px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.42);
+  letter-spacing: 0.01em;
+}
+
+/* Brand panel gradient orbs */
+.auth-bp-orb {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.auth-bp-orb-1 {
+  width: 280px;
+  height: 280px;
+  top: -8%;
+  right: -12%;
+  background: radial-gradient(circle, rgba(67, 97, 238, 0.25), transparent 70%);
+}
+
+.auth-bp-orb-2 {
+  width: 200px;
+  height: 200px;
+  bottom: 18%;
+  left: -6%;
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.14), transparent 70%);
+}
+
+.auth-bp-orb-3 {
+  width: 160px;
+  height: 160px;
+  bottom: -4%;
+  right: 20%;
+  background: radial-gradient(circle, rgba(139, 92, 246, 0.12), transparent 70%);
+}
+
+/* Auth field styling */
+.auth-field {
+  width: 100%;
+  border-radius: 1.05rem;
+  border: 1px solid rgba(148, 163, 184, 0.34);
+  background: rgba(255, 255, 255, 0.90);
+  padding: 0.72rem 1rem;
+  font-size: 0.95rem;
+  color: #0f172a;
+  outline: none;
+  transition: all 150ms ease;
+}
+
+.auth-field::placeholder { color: #94a3b8; }
+
+.auth-field:hover {
+  border-color: rgba(67, 97, 238, 0.35);
+}
+
+.auth-field:focus {
+  border-color: rgba(67, 97, 238, 0.6);
+  box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.08);
+}
+
+.auth-field-error {
+  border-color: #fca5a5;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.06);
+}
+
+/* Auth primary button */
+.auth-btn-primary {
+  display: inline-flex;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.72rem 1rem;
+  border-radius: 1.05rem;
+  border: none;
+  background: linear-gradient(135deg, #102033, #4361ee);
+  color: white;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 200ms ease;
+  box-shadow: 0 16px 34px -24px rgba(16, 32, 51, 0.5);
+}
+
+.auth-btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 20px 40px -24px rgba(16, 32, 51, 0.6);
+}
+
+.auth-btn-primary:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+  transform: none;
+}
+
+@layer utilities {
+  .focus-ring {
+    @apply outline-none ring-2 ring-cyber-500/40 ring-offset-2 ring-offset-white;
+  }
+}

@@ -1,6 +1,15 @@
 const { body } = require("express-validator");
 
 const registerValidator = [
+  body("username")
+    .trim()
+    .notEmpty()
+    .withMessage("Username is required")
+    .isLength({ min: 3, max: 50 })
+    .withMessage("Username must be between 3 and 50 characters")
+    .matches(/^[a-zA-Z0-9_]+$/)
+    .withMessage("Username can only contain letters, numbers, and underscores"),
+
   body("full_name")
     .trim()
     .notEmpty()
@@ -38,13 +47,10 @@ const registerValidator = [
 ];
 
 const loginValidator = [
-  body("email")
+  body("identifier")
     .trim()
     .notEmpty()
-    .withMessage("Email is required")
-    .isEmail()
-    .withMessage("Please provide a valid email")
-    .normalizeEmail(),
+    .withMessage("Email or username is required"),
 
   body("password").notEmpty().withMessage("Password is required"),
 ];
@@ -80,13 +86,23 @@ const forgotPasswordValidator = [
 ];
 
 const resetPasswordValidator = [
-  body("token")
+  body("email")
+    .trim()
     .notEmpty()
-    .withMessage("Reset token is required")
+    .withMessage("Email is required")
+    .isEmail()
+    .withMessage("Please provide a valid email")
+    .normalizeEmail(),
+
+  body("otp_code")
+    .notEmpty()
+    .withMessage("Verification code is required")
     .isString()
-    .withMessage("Reset token must be a string")
-    .isLength({ min: 64, max: 64 })
-    .withMessage("Invalid reset token format"),
+    .withMessage("Verification code must be a string")
+    .isLength({ min: 6, max: 6 })
+    .withMessage("Verification code must be 6 digits")
+    .matches(/^\d{6}$/)
+    .withMessage("Verification code must contain only digits"),
 
   body("new_password")
     .notEmpty()
@@ -148,13 +164,23 @@ const changePasswordValidator = [
 ];
 
 const verifyEmailValidator = [
-  body("token")
+  body("email")
+    .trim()
     .notEmpty()
-    .withMessage("Verification token is required")
+    .withMessage("Email is required")
+    .isEmail()
+    .withMessage("Please provide a valid email")
+    .normalizeEmail(),
+
+  body("otp_code")
+    .notEmpty()
+    .withMessage("Verification code is required")
     .isString()
-    .withMessage("Token must be a string")
-    .isLength({ min: 64, max: 64 })
-    .withMessage("Invalid token format"),
+    .withMessage("Verification code must be a string")
+    .isLength({ min: 6, max: 6 })
+    .withMessage("Verification code must be 6 digits")
+    .matches(/^\d{6}$/)
+    .withMessage("Verification code must contain only digits"),
 ];
 
 const resendVerificationValidator = [

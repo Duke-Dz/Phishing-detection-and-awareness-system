@@ -13,7 +13,7 @@ const {
   requireFields,
   validatePassword,
 } = require("../utils/validators");
-const { generateToken, hashToken } = require("../utils/tokenGenerator");
+const { generateOtp, hashToken } = require("../utils/tokenGenerator");
 const { sendMail, isMailConfigured } = require("../services/mailService");
 const emailTemplates = require("../templates/emailTemplates");
 const config = require("../config/env");
@@ -26,14 +26,20 @@ const sanitizeUser = (user) => {
 };
 
 const register = async (req, res) => {
-  requireFields(req.body, ["full_name", "email", "password"]);
+  requireFields(req.body, ["username", "full_name", "email", "password"]);
 
   const email = normalizeEmail(req.body.email);
+  const username = String(req.body.username).trim().toLowerCase();
   validatePassword(req.body.password);
 
   const existingUser = await User.findOne({ where: { email } });
   if (existingUser) {
     throw createError("Email is already registered", 409);
+  }
+
+  const existingUsername = await User.findOne({ where: { username } });
+  if (existingUsername) {
+    throw createError("Username is already taken", 409);
   }
 
   // The very first registered user in the system becomes the admin automatically.
@@ -43,24 +49,24 @@ const register = async (req, res) => {
 
   const passwordHash = await bcrypt.hash(req.body.password, 12);
   const user = await User.create({
+    username,
     full_name: String(req.body.full_name).trim(),
     email,
     password_hash: passwordHash,
     role,
   });
 
-  // Send verification email
-  const verificationToken = generateToken();
+  // Send verification email with 6-digit OTP code
+  const otpCode = generateOtp();
   const expiryHours = config.emailVerificationTokenExpiryHours || 24;
   await EmailVerificationToken.create({
     user_id: user.user_id,
-    token_hash: hashToken(verificationToken),
+    token_hash: hashToken(otpCode),
     expires_at: new Date(Date.now() + expiryHours * 60 * 60 * 1000),
   });
 
-  const verifyUrl = `${config.frontendUrl}/verify-email?token=${verificationToken}`;
   const template = emailTemplates.emailVerification({
-    verifyUrl,
+    otpCode,
     userName: user.full_name,
   });
   sendMail({ to: user.email, ...template }).catch(() => {});
@@ -76,13 +82,16 @@ const register = async (req, res) => {
 };
 
 const login = async (req, res) => {
-  requireFields(req.body, ["email", "password"]);
+  requireFields(req.body, ["identifier", "password"]);
 
-  const email = normalizeEmail(req.body.email);
-  const user = await User.scope("withPassword").findOne({ where: { email } });
+  const identifier = String(req.body.identifier).trim().toLowerCase();
+  const isEmail = identifier.includes("@");
+  const whereClause = isEmail ? { email: identifier } : { username: identifier };
+
+  const user = await User.scope("withPassword").findOne({ where: whereClause });
 
   if (!user || !(await bcrypt.compare(req.body.password, user.password_hash))) {
-    throw createError("Invalid email or password", 401);
+    throw createError("Invalid credentials", 401);
   }
 
   if (!user.is_active) {
@@ -232,17 +241,16 @@ const forgotPassword = async (req, res) => {
       { where: { user_id: user.user_id, used_at: null } },
     );
 
-    const rawToken = generateToken();
+    const otpCode = generateOtp();
     const expiryMinutes = config.passwordResetTokenExpiryMinutes || 60;
     await PasswordResetToken.create({
       user_id: user.user_id,
-      token_hash: hashToken(rawToken),
+      token_hash: hashToken(otpCode),
       expires_at: new Date(Date.now() + expiryMinutes * 60 * 1000),
     });
 
-    const resetUrl = `${config.frontendUrl}/reset-password?token=${rawToken}`;
     const template = emailTemplates.passwordReset({
-      resetUrl,
+      otpCode,
       userName: user.full_name,
     });
     sendMail({ to: user.email, ...template }).catch(() => {});
@@ -250,33 +258,32 @@ const forgotPassword = async (req, res) => {
 
   res.json({
     success: true,
-    message: "If that email is registered, a password reset link has been sent.",
+    message: "If that email is registered, a password reset code has been sent.",
   });
 };
 
 const resetPassword = async (req, res) => {
-  const { token, new_password } = req.body;
-  const tokenHash = hashToken(token);
+  const { email, otp_code, new_password } = req.body;
 
-  const resetToken = await PasswordResetToken.findOne({
-    where: { token_hash: tokenHash },
-  });
-
-  if (!resetToken) {
-    throw createError("Invalid or expired reset token", 400);
+  const user = await User.findOne({ where: { email: normalizeEmail(email) } });
+  if (!user) {
+    throw createError("Invalid or expired reset code", 400);
   }
 
-  if (resetToken.used_at) {
-    throw createError("This reset token has already been used", 400);
+  // Find all unused reset tokens for this user and check the OTP against them
+  const tokens = await PasswordResetToken.findAll({
+    where: { user_id: user.user_id, used_at: null },
+    order: [["created_at", "DESC"]],
+  });
+
+  const resetToken = tokens.find((t) => hashToken(otp_code) === t.token_hash);
+
+  if (!resetToken) {
+    throw createError("Invalid or expired reset code", 400);
   }
 
   if (new Date() > resetToken.expires_at) {
-    throw createError("This reset token has expired", 400);
-  }
-
-  const user = await User.findByPk(resetToken.user_id);
-  if (!user) {
-    throw createError("User not found", 404);
+    throw createError("This reset code has expired", 400);
   }
 
   validatePassword(new_password);
@@ -329,28 +336,27 @@ const changePassword = async (req, res) => {
 };
 
 const verifyEmail = async (req, res) => {
-  const { token } = req.body;
-  const tokenHash = hashToken(token);
+  const { email, otp_code } = req.body;
 
-  const verificationToken = await EmailVerificationToken.findOne({
-    where: { token_hash: tokenHash },
-  });
-
-  if (!verificationToken) {
-    throw createError("Invalid verification token", 400);
+  const user = await User.findOne({ where: { email: normalizeEmail(email) } });
+  if (!user) {
+    throw createError("Invalid verification code", 400);
   }
 
-  if (verificationToken.used_at) {
-    throw createError("This token has already been used", 400);
+  // Find all unused verification tokens for this user and check the OTP
+  const tokens = await EmailVerificationToken.findAll({
+    where: { user_id: user.user_id, used_at: null },
+    order: [["created_at", "DESC"]],
+  });
+
+  const verificationToken = tokens.find((t) => hashToken(otp_code) === t.token_hash);
+
+  if (!verificationToken) {
+    throw createError("Invalid verification code", 400);
   }
 
   if (new Date() > verificationToken.expires_at) {
-    throw createError("This verification token has expired", 400);
-  }
-
-  const user = await User.findByPk(verificationToken.user_id);
-  if (!user) {
-    throw createError("User not found", 404);
+    throw createError("This verification code has expired", 400);
   }
 
   user.email_verified = true;
@@ -368,7 +374,16 @@ const verifyEmail = async (req, res) => {
 };
 
 const resendVerification = async (req, res) => {
-  const user = req.user;
+  const { email } = req.body;
+  const user = await User.findOne({ where: { email: normalizeEmail(email) } });
+
+  // Always return success to prevent email enumeration
+  if (!user) {
+    return res.json({
+      success: true,
+      message: "If that email is registered, a verification code has been sent.",
+    });
+  }
 
   if (user.email_verified) {
     throw createError("Email is already verified", 400);
@@ -380,24 +395,23 @@ const resendVerification = async (req, res) => {
     { where: { user_id: user.user_id, used_at: null } },
   );
 
-  const rawToken = generateToken();
+  const otpCode = generateOtp();
   const expiryHours = config.emailVerificationTokenExpiryHours || 24;
   await EmailVerificationToken.create({
     user_id: user.user_id,
-    token_hash: hashToken(rawToken),
+    token_hash: hashToken(otpCode),
     expires_at: new Date(Date.now() + expiryHours * 60 * 60 * 1000),
   });
 
-  const verifyUrl = `${config.frontendUrl}/verify-email?token=${rawToken}`;
   const template = emailTemplates.emailVerification({
-    verifyUrl,
+    otpCode,
     userName: user.full_name,
   });
   await sendMail({ to: user.email, ...template });
 
   res.json({
     success: true,
-    message: "Verification email has been sent.",
+    message: "Verification code has been sent.",
   });
 };
 
