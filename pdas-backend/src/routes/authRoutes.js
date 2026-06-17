@@ -44,8 +44,11 @@ const router = express.Router();
  *         application/json:
  *           schema:
  *             type: object
- *             required: [full_name, email, password]
+ *             required: [username, full_name, email, password]
  *             properties:
+ *               username:
+ *                 type: string
+ *                 example: johndoe
  *               full_name:
  *                 type: string
  *                 example: John Doe
@@ -88,18 +91,18 @@ router.post("/register", registerValidator, validate, asyncHandler(register));
  *   post:
  *     tags: [Auth]
  *     summary: Login to an existing account
- *     description: Authenticate with email and password. If MFA is enabled on the account, an mfa_code field is also required.
+ *     description: Authenticate with email/username and password. If MFA is enabled on the account, an mfa_code field is also required.
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             type: object
- *             required: [email, password]
+ *             required: [identifier, password]
  *             properties:
- *               email:
+ *               identifier:
  *                 type: string
- *                 format: email
+ *                 description: Email address or username
  *               password:
  *                 type: string
  *                 format: password
@@ -352,10 +355,14 @@ router.post("/forgot-password", forgotPasswordValidator, validate, asyncHandler(
  *         application/json:
  *           schema:
  *             type: object
- *             required: [token, new_password]
+ *             required: [email, otp_code, new_password]
  *             properties:
- *               token:
+ *               email:
  *                 type: string
+ *                 format: email
+ *               otp_code:
+ *                 type: string
+ *                 description: 6-digit code sent to email
  *               new_password:
  *                 type: string
  *                 format: password
@@ -406,17 +413,21 @@ router.post("/change-password", protect, changePasswordValidator, validate, asyn
  *   post:
  *     tags: [Auth]
  *     summary: Verify email address
- *     description: Verify the user's email address using the token sent via email during registration.
+ *     description: Verify the user's email address using the 6-digit code sent via email during registration.
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             type: object
- *             required: [token]
+ *             required: [email, otp_code]
  *             properties:
- *               token:
+ *               email:
  *                 type: string
+ *                 format: email
+ *               otp_code:
+ *                 type: string
+ *                 description: 6-digit verification code
  *     responses:
  *       200:
  *         description: Email verified successfully
@@ -433,26 +444,24 @@ router.post("/verify-email", verifyEmailValidator, validate, asyncHandler(verify
  *   post:
  *     tags: [Auth]
  *     summary: Resend verification email
- *     description: Resend the email verification link to the currently authenticated user. Fails if the email is already verified.
- *     security:
- *       - bearerAuth: []
+ *     description: Resend the email verification code. Fails if the email is already verified.
  *     requestBody:
+ *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             type: object
+ *             required: [email]
  *             properties:
  *               email:
  *                 type: string
  *                 format: email
  *     responses:
  *       200:
- *         description: Verification email sent
+ *         description: Verification code sent
  *       400:
  *         description: Email is already verified
- *       401:
- *         description: Not authenticated
  */
-router.post("/resend-verification", protect, resendVerificationValidator, validate, asyncHandler(resendVerification));
+router.post("/resend-verification", resendVerificationValidator, validate, asyncHandler(resendVerification));
 
 module.exports = router;

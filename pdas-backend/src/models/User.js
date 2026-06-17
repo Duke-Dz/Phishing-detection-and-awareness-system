@@ -9,6 +9,15 @@ const User = sequelize.define(
       defaultValue: DataTypes.UUIDV4,
       primaryKey: true,
     },
+    username: {
+      type: DataTypes.STRING(50),
+      allowNull: false,
+      unique: true,
+      validate: {
+        len: [3, 50],
+        notEmpty: true,
+      },
+    },
     full_name: {
       type: DataTypes.STRING(100),
       allowNull: false,
@@ -71,6 +80,7 @@ const User = sequelize.define(
     timestamps: true,
     underscored: true,
     indexes: [
+      { fields: ["username"], unique: true },
       { fields: ["email"], unique: true },
       { fields: ["role"] },
       { fields: ["is_active"] },
