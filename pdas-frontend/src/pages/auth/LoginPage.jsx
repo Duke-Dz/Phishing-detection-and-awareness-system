@@ -54,29 +54,38 @@ export default function LoginPage() {
       layout="single"
       showHeaderBrand
       footer={
-        <div className="flex flex-col gap-2 text-sm text-slate-600 sm:flex-row sm:items-center sm:justify-between">
-          <p>New to CyberSense?</p>
-          <Link to="/register" className="font-semibold text-cyber-600 no-underline hover:text-cyber-700">
-            Create an account
+        <>
+          <p className="text-sm text-slate-500">New to CyberSense?</p>
+          <Link to="/register" className="text-sm font-semibold text-cyber-600 no-underline hover:text-cyber-700">
+            Create an account →
           </Link>
-        </div>
+        </>
       }
     >
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-        <label className="block">
-          <span className="text-sm font-medium text-slate-700">Email or Username</span>
-          <input
-            {...register("identifier")}
-            autoComplete="username"
-            autoCapitalize="none"
-            spellCheck={false}
-            placeholder="Enter your email or username"
-            className={`auth-field mt-2 ${errors.identifier ? "auth-field-error" : ""}`}
-          />
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        {/* Email / username field */}
+        <div>
+          <label className="auth-label" htmlFor="login-identifier">Email or Username</label>
+          <div className="auth-field-wrap">
+            <span className="auth-field-icon">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+              </svg>
+            </span>
+            <input
+              id="login-identifier"
+              {...register("identifier")}
+              autoComplete="username"
+              autoCapitalize="none"
+              spellCheck={false}
+              placeholder="Enter your email or username"
+              className={`auth-field auth-field-has-icon ${errors.identifier ? "auth-field-error" : ""}`}
+            />
+          </div>
           {errors.identifier && (
-            <p className="mt-2 text-sm font-medium text-rose-600">{errors.identifier.message}</p>
+            <p className="mt-1.5 text-[0.8rem] font-medium text-rose-600">{errors.identifier.message}</p>
           )}
-        </label>
+        </div>
 
         <AuthPasswordField
           label="Password"
@@ -87,8 +96,8 @@ export default function LoginPage() {
         />
 
         <div className="flex items-center justify-between gap-3 text-sm">
-          <p className="text-slate-500">Use the details assigned to your account.</p>
-          <Link to="/forgot-password" className="font-semibold text-cyber-600 no-underline hover:text-cyber-700 whitespace-nowrap">
+          <p className="text-slate-500 text-[0.83rem]">Use the details assigned to your account.</p>
+          <Link to="/forgot-password" className="text-[0.83rem] font-semibold text-cyber-600 no-underline hover:text-cyber-700 whitespace-nowrap">
             Forgot password?
           </Link>
         </div>
@@ -101,7 +110,7 @@ export default function LoginPage() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -6 }}
               transition={{ duration: 0.2 }}
-              className="rounded-[1.05rem] border border-rose-200/80 bg-rose-50/90 px-4 py-3 text-sm font-medium text-rose-700"
+              className="auth-alert auth-alert-error"
             >
               {submitError}
             </Motion.div>
@@ -110,7 +119,7 @@ export default function LoginPage() {
 
         <button type="submit" disabled={isSubmitting} className="auth-btn-primary">
           <KeyRound size={16} />
-          {isSubmitting ? "Signing in..." : "Sign in"}
+          {isSubmitting ? "Signing in…" : "Sign in"}
         </button>
       </form>
     </AuthShell>

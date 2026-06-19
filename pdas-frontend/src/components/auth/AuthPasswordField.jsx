@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Lock } from "lucide-react";
 
 export const AuthPasswordField = ({
   label,
@@ -11,29 +11,36 @@ export const AuthPasswordField = ({
   const [visible, setVisible] = useState(false);
 
   return (
-    <label className="block">
-      <span className="text-sm font-medium text-slate-700">{label}</span>
-      <div className="relative mt-2">
+    <div>
+      <label className="auth-label">{label}</label>
+      <div className="auth-field-wrap">
+        {/* Left icon */}
+        <span className="auth-field-icon">
+          <Lock size={15} />
+        </span>
+
         <input
           {...registration}
           type={visible ? "text" : "password"}
           autoComplete={autoComplete}
           placeholder={placeholder}
-          className={`auth-field pr-11 ${error ? "auth-field-error" : ""}`}
+          className={`auth-field auth-field-has-icon pr-11 ${error ? "auth-field-error" : ""}`}
         />
+
+        {/* Show/hide toggle */}
         <button
           type="button"
           onClick={() => setVisible((v) => !v)}
-          className="absolute right-3 top-1/2 -translate-y-1/2 rounded-lg p-1 text-slate-400 transition hover:text-slate-600 focus:outline-none"
+          className="auth-pw-toggle"
           tabIndex={-1}
           aria-label={visible ? "Hide password" : "Show password"}
         >
-          {visible ? <EyeOff size={17} /> : <Eye size={17} />}
+          {visible ? <EyeOff size={16} /> : <Eye size={16} />}
         </button>
       </div>
       {error && (
-        <p className="mt-2 text-sm font-medium text-rose-600">{error}</p>
+        <p className="mt-1.5 text-[0.8rem] font-medium text-rose-600">{error}</p>
       )}
-    </label>
+    </div>
   );
 };

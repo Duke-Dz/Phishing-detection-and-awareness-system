@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowRight, UserPlus } from "lucide-react";
+import { ArrowRight, UserPlus, AtSign, User } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { Link, useNavigate } from "react-router-dom";
@@ -51,7 +51,7 @@ export default function RegisterPage() {
 
   const passwordValue = useWatch({ control, name: "password" });
   const usernameValue = useWatch({ control, name: "username" });
-  const emailValue = useWatch({ control, name: "email" });
+  const emailValue    = useWatch({ control, name: "email" });
   const fullNameValue = useWatch({ control, name: "full_name" });
 
   const passwordState = useMemo(
@@ -59,17 +59,17 @@ export default function RegisterPage() {
     [emailValue, fullNameValue, passwordValue, usernameValue],
   );
 
-  const showChecklist = passwordValue.length > 0;
+  const showChecklist     = passwordValue.length > 0;
   const emphasizeChecklist = showChecklist && (Boolean(touchedFields.password) || submitCount > 0);
 
   const onSubmit = async (values) => {
     setSubmitError("");
     try {
       await registerAccount({
-        username: values.username.trim().toLowerCase(),
-        email: values.email.trim(),
+        username:  values.username.trim().toLowerCase(),
+        email:     values.email.trim(),
         full_name: values.full_name.trim(),
-        password: values.password,
+        password:  values.password,
       });
       navigate(`/verify-email?email=${encodeURIComponent(values.email.trim().toLowerCase())}`, { replace: true });
     } catch (error) {
@@ -84,54 +84,84 @@ export default function RegisterPage() {
       layout="single"
       showHeaderBrand
       footer={
-        <div className="flex flex-col gap-2 text-sm text-slate-600 sm:flex-row sm:items-center sm:justify-between">
-          <p>Already have an account?</p>
-          <Link to="/login" className="font-semibold text-cyber-600 no-underline hover:text-cyber-700">
-            Sign in
+        <>
+          <p className="text-sm text-slate-500">Already have an account?</p>
+          <Link to="/login" className="text-sm font-semibold text-cyber-600 no-underline hover:text-cyber-700">
+            Sign in →
           </Link>
-        </div>
+        </>
       }
     >
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        {/* Username + Email row */}
         <div className="grid gap-4 sm:grid-cols-2">
-          <label className="block">
-            <span className="text-sm font-medium text-slate-700">Username</span>
-            <input
-              {...register("username")}
-              autoComplete="username"
-              autoCapitalize="none"
-              spellCheck={false}
-              placeholder="Choose a username"
-              className={`auth-field mt-2 ${errors.username ? "auth-field-error" : ""}`}
-            />
-            {errors.username && <p className="mt-1.5 text-xs font-medium text-rose-600">{errors.username.message}</p>}
-          </label>
+          {/* Username */}
+          <div>
+            <label className="auth-label" htmlFor="reg-username">Username</label>
+            <div className="auth-field-wrap">
+              <span className="auth-field-icon">
+                <User size={15} />
+              </span>
+              <input
+                id="reg-username"
+                {...register("username")}
+                autoComplete="username"
+                autoCapitalize="none"
+                spellCheck={false}
+                placeholder="Choose a username"
+                className={`auth-field auth-field-has-icon ${errors.username ? "auth-field-error" : ""}`}
+              />
+            </div>
+            {errors.username && (
+              <p className="mt-1.5 text-[0.8rem] font-medium text-rose-600">{errors.username.message}</p>
+            )}
+          </div>
 
-          <label className="block">
-            <span className="text-sm font-medium text-slate-700">Email</span>
-            <input
-              {...register("email")}
-              type="email"
-              autoComplete="email"
-              autoCapitalize="none"
-              spellCheck={false}
-              placeholder="you@example.com"
-              className={`auth-field mt-2 ${errors.email ? "auth-field-error" : ""}`}
-            />
-            {errors.email && <p className="mt-1.5 text-xs font-medium text-rose-600">{errors.email.message}</p>}
-          </label>
+          {/* Email */}
+          <div>
+            <label className="auth-label" htmlFor="reg-email">Email</label>
+            <div className="auth-field-wrap">
+              <span className="auth-field-icon">
+                <AtSign size={15} />
+              </span>
+              <input
+                id="reg-email"
+                {...register("email")}
+                type="email"
+                autoComplete="email"
+                autoCapitalize="none"
+                spellCheck={false}
+                placeholder="you@example.com"
+                className={`auth-field auth-field-has-icon ${errors.email ? "auth-field-error" : ""}`}
+              />
+            </div>
+            {errors.email && (
+              <p className="mt-1.5 text-[0.8rem] font-medium text-rose-600">{errors.email.message}</p>
+            )}
+          </div>
         </div>
 
-        <label className="block">
-          <span className="text-sm font-medium text-slate-700">Full name</span>
-          <input
-            {...register("full_name")}
-            autoComplete="name"
-            placeholder="Enter your full name"
-            className={`auth-field mt-2 ${errors.full_name ? "auth-field-error" : ""}`}
-          />
-          {errors.full_name && <p className="mt-1.5 text-xs font-medium text-rose-600">{errors.full_name.message}</p>}
-        </label>
+        {/* Full name */}
+        <div>
+          <label className="auth-label" htmlFor="reg-fullname">Full name</label>
+          <div className="auth-field-wrap">
+            <span className="auth-field-icon">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+              </svg>
+            </span>
+            <input
+              id="reg-fullname"
+              {...register("full_name")}
+              autoComplete="name"
+              placeholder="Enter your full name"
+              className={`auth-field auth-field-has-icon ${errors.full_name ? "auth-field-error" : ""}`}
+            />
+          </div>
+          {errors.full_name && (
+            <p className="mt-1.5 text-[0.8rem] font-medium text-rose-600">{errors.full_name.message}</p>
+          )}
+        </div>
 
         <AuthPasswordField
           label="Password"
@@ -151,7 +181,7 @@ export default function RegisterPage() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -6 }}
               transition={{ duration: 0.2 }}
-              className="rounded-[1.05rem] border border-rose-200/80 bg-rose-50/90 px-4 py-3 text-sm font-medium text-rose-700"
+              className="auth-alert auth-alert-error"
             >
               {submitError}
             </Motion.div>
@@ -160,7 +190,7 @@ export default function RegisterPage() {
 
         <button type="submit" disabled={isSubmitting} className="auth-btn-primary">
           <UserPlus size={16} />
-          {isSubmitting ? "Creating account..." : "Create account"}
+          {isSubmitting ? "Creating account…" : "Create account"}
           <ArrowRight size={16} />
         </button>
       </form>

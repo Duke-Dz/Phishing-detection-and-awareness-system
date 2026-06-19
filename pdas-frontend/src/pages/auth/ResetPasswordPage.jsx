@@ -14,7 +14,7 @@ import { evaluatePassword } from "../../utils/passwordPolicy";
 
 const resetPasswordSchema = z
   .object({
-    new_password: z.string().min(8, "Password must be at least 8 characters."),
+    new_password:     z.string().min(8, "Password must be at least 8 characters."),
     confirm_password: z.string().min(1, "Confirm your new password."),
   })
   .refine((data) => data.new_password === data.confirm_password, {
@@ -35,10 +35,10 @@ const resetPasswordSchema = z
 export default function ResetPasswordPage() {
   const [searchParams] = useSearchParams();
   const email = searchParams.get("email") || "";
-  const [otpCode, setOtpCode] = useState("");
-  const [otpError, setOtpError] = useState("");
+  const [otpCode, setOtpCode]       = useState("");
+  const [otpError, setOtpError]     = useState("");
   const [submitError, setSubmitError] = useState("");
-  const [success, setSuccess] = useState(false);
+  const [success, setSuccess]       = useState(false);
 
   const {
     register,
@@ -50,10 +50,9 @@ export default function ResetPasswordPage() {
     defaultValues: { new_password: "", confirm_password: "" },
   });
 
-  const passwordValue = useWatch({ control, name: "new_password" });
-  const passwordState = useMemo(() => evaluatePassword(passwordValue), [passwordValue]);
-
-  const showChecklist = passwordValue.length > 0;
+  const passwordValue    = useWatch({ control, name: "new_password" });
+  const passwordState    = useMemo(() => evaluatePassword(passwordValue), [passwordValue]);
+  const showChecklist    = passwordValue.length > 0;
   const emphasizeChecklist = showChecklist && (Boolean(touchedFields.new_password) || submitCount > 0);
 
   const onSubmit = async (values) => {
@@ -66,8 +65,8 @@ export default function ResetPasswordPage() {
     try {
       await authService.resetPassword({
         email,
-        otp_code: otpCode,
-        new_password: values.new_password,
+        otp_code:         otpCode,
+        new_password:     values.new_password,
         confirm_password: values.confirm_password,
       });
       setSuccess(true);
@@ -89,7 +88,7 @@ export default function ResetPasswordPage() {
           </Link>
         }
       >
-        <div className="rounded-[1.05rem] border border-amber-200/70 bg-amber-50/85 px-4 py-3 text-sm font-medium text-amber-800">
+        <div className="auth-alert auth-alert-warning">
           No email address provided. Please request a new password reset.
         </div>
       </AuthShell>
@@ -107,12 +106,12 @@ export default function ResetPasswordPage() {
       layout="single"
       showHeaderBrand
       footer={
-        <div className="flex flex-col gap-2 text-sm text-slate-600 sm:flex-row sm:items-center sm:justify-between">
-          <p>Back to your account?</p>
-          <Link to="/login" className="font-semibold text-cyber-600 no-underline hover:text-cyber-700">
-            Sign in
+        <>
+          <p className="text-sm text-slate-500">Back to your account?</p>
+          <Link to="/login" className="text-sm font-semibold text-cyber-600 no-underline hover:text-cyber-700">
+            Sign in →
           </Link>
-        </div>
+        </>
       }
     >
       <AnimatePresence mode="wait">
@@ -122,12 +121,12 @@ export default function ResetPasswordPage() {
             initial={{ opacity: 0, scale: 0.96 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.3 }}
-            className="space-y-5"
+            className="space-y-4"
           >
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-emerald-200/60 bg-emerald-50/80">
-              <CheckCircle2 size={24} className="text-emerald-600" />
+            <div className="auth-success-icon">
+              <CheckCircle2 size={26} className="text-emerald-600" />
             </div>
-            <div className="rounded-[1.05rem] border border-emerald-200/70 bg-emerald-50/85 px-4 py-3 text-sm font-medium text-emerald-700">
+            <div className="auth-alert auth-alert-success">
               Your password has been reset successfully. All previous sessions have been revoked.
             </div>
             <Link to="/login" className="auth-btn-primary no-underline">
@@ -142,7 +141,7 @@ export default function ResetPasswordPage() {
             animate={{ opacity: 1 }}
             transition={{ duration: 0.2 }}
             onSubmit={handleSubmit(onSubmit)}
-            className="space-y-5"
+            className="space-y-4"
           >
             <OtpCodeField
               label="Reset code"
@@ -178,7 +177,7 @@ export default function ResetPasswordPage() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -6 }}
                   transition={{ duration: 0.2 }}
-                  className="rounded-[1.05rem] border border-rose-200/80 bg-rose-50/90 px-4 py-3 text-sm font-medium text-rose-700"
+                  className="auth-alert auth-alert-error"
                 >
                   {submitError}
                 </Motion.div>
@@ -187,7 +186,7 @@ export default function ResetPasswordPage() {
 
             <button type="submit" disabled={isSubmitting} className="auth-btn-primary">
               <CheckCircle2 size={16} />
-              {isSubmitting ? "Updating..." : "Update password"}
+              {isSubmitting ? "Updating…" : "Update password"}
             </button>
           </Motion.form>
         )}

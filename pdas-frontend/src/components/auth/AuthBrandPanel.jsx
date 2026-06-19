@@ -1,10 +1,14 @@
-import { Shield, Globe, Mail, Search } from "lucide-react";
+import ManageSearchRoundedIcon from "@mui/icons-material/ManageSearchRounded";
+import MarkEmailReadRoundedIcon from "@mui/icons-material/MarkEmailReadRounded";
+import PublicRoundedIcon from "@mui/icons-material/PublicRounded";
+import GppGoodRoundedIcon from "@mui/icons-material/GppGoodRounded";
+import { Shield } from "lucide-react";
 
 const features = [
-  { icon: Search, label: "Real-time phishing URL detection" },
-  { icon: Mail, label: "AI-powered email threat analysis" },
-  { icon: Globe, label: "Live security awareness training" },
-  { icon: Shield, label: "Role-based secure access control" },
+  { Icon: ManageSearchRoundedIcon, label: "Real-time phishing URL detection" },
+  { Icon: MarkEmailReadRoundedIcon, label: "AI-powered email threat analysis" },
+  { Icon: PublicRoundedIcon, label: "Live security awareness training" },
+  { Icon: GppGoodRoundedIcon, label: "Role-based secure access control" },
 ];
 
 export const AuthBrandPanel = ({
@@ -78,12 +82,12 @@ export const AuthBrandPanel = ({
           <div className="h-px flex-1 bg-gradient-to-l from-white/20 to-transparent" />
         </div>
 
-        {/* feature list */}
+        {/* feature list — MUI rounded icons */}
         <ul className="mt-6 space-y-3.5">
-          {features.map(({ icon: FIcon, label }) => (
+          {features.map(({ Icon, label }) => (
             <li key={label} className="flex items-center gap-3">
               <span className="auth-bp-feature-icon">
-                <FIcon size={13} />
+                <Icon sx={{ fontSize: 13 }} />
               </span>
               <span className="text-[0.82rem] font-medium text-white/62">{label}</span>
             </li>
