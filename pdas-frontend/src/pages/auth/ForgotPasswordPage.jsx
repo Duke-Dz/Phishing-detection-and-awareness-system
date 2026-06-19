@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowRight, Mail } from "lucide-react";
+import { ArrowRight, AtSign } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { Link, useNavigate } from "react-router-dom";
@@ -42,28 +42,36 @@ export default function ForgotPasswordPage() {
       layout="single"
       showHeaderBrand
       footer={
-        <div className="flex flex-col gap-2 text-sm text-slate-600 sm:flex-row sm:items-center sm:justify-between">
-          <p>Remember your password?</p>
-          <Link to="/login" className="font-semibold text-cyber-600 no-underline hover:text-cyber-700">
-            Sign in
+        <>
+          <p className="text-sm text-slate-500">Remember your password?</p>
+          <Link to="/login" className="text-sm font-semibold text-cyber-600 no-underline hover:text-cyber-700">
+            Sign in →
           </Link>
-        </div>
+        </>
       }
     >
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-        <label className="block">
-          <span className="text-sm font-medium text-slate-700">Email address</span>
-          <input
-            {...register("email")}
-            type="email"
-            autoComplete="email"
-            autoCapitalize="none"
-            spellCheck={false}
-            placeholder="you@example.com"
-            className={`auth-field mt-2 ${errors.email ? "auth-field-error" : ""}`}
-          />
-          {errors.email && <p className="mt-2 text-sm font-medium text-rose-600">{errors.email.message}</p>}
-        </label>
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <div>
+          <label className="auth-label" htmlFor="forgot-email">Email address</label>
+          <div className="auth-field-wrap">
+            <span className="auth-field-icon">
+              <AtSign size={15} />
+            </span>
+            <input
+              id="forgot-email"
+              {...register("email")}
+              type="email"
+              autoComplete="email"
+              autoCapitalize="none"
+              spellCheck={false}
+              placeholder="you@example.com"
+              className={`auth-field auth-field-has-icon ${errors.email ? "auth-field-error" : ""}`}
+            />
+          </div>
+          {errors.email && (
+            <p className="mt-1.5 text-[0.8rem] font-medium text-rose-600">{errors.email.message}</p>
+          )}
+        </div>
 
         <AnimatePresence mode="wait">
           {submitError && (
@@ -73,7 +81,7 @@ export default function ForgotPasswordPage() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -6 }}
               transition={{ duration: 0.2 }}
-              className="rounded-[1.05rem] border border-rose-200/80 bg-rose-50/90 px-4 py-3 text-sm font-medium text-rose-700"
+              className="auth-alert auth-alert-error"
             >
               {submitError}
             </Motion.div>
@@ -81,8 +89,8 @@ export default function ForgotPasswordPage() {
         </AnimatePresence>
 
         <button type="submit" disabled={isSubmitting} className="auth-btn-primary">
-          <Mail size={16} />
-          {isSubmitting ? "Sending code..." : "Send reset code"}
+          <AtSign size={16} />
+          {isSubmitting ? "Sending code…" : "Send reset code"}
           <ArrowRight size={16} />
         </button>
       </form>

@@ -59,33 +59,43 @@ export const OtpCodeField = ({ value = "", onChange, length = 6, error, label })
   return (
     <div>
       {label && (
-        <p className="mb-3 text-sm font-medium text-slate-700">{label}</p>
+        <p className="auth-label mb-3">{label}</p>
       )}
-      <div className="flex justify-center gap-2.5 sm:gap-3">
-        {Array.from({ length }).map((_, i) => (
-          <input
-            key={i}
-            ref={(el) => (inputs.current[i] = el)}
-            type="text"
-            inputMode="numeric"
-            maxLength={1}
-            value={value[i] || ""}
-            onChange={(e) => handleChange(i, e)}
-            onKeyDown={(e) => handleKeyDown(i, e)}
-            onPaste={handlePaste}
-            autoComplete="one-time-code"
-            className={`h-[3.2rem] w-full max-w-[3.2rem] rounded-[1.05rem] border bg-white/90 text-center text-xl font-bold text-slate-900 outline-none transition ${
-              error
-                ? "border-rose-300 ring-2 ring-rose-100/70"
-                : value[i]
-                  ? "border-cyber-400/60 ring-2 ring-cyber-100/80"
-                  : "border-slate-200/85 hover:border-cyber-300/70 focus:border-cyber-500/80 focus:ring-2 focus:ring-cyber-100/80"
-            }`}
-          />
-        ))}
+
+      <div className="flex justify-center gap-2 sm:gap-2.5">
+        {Array.from({ length }).map((_, i) => {
+          const isFilled = Boolean(value[i]);
+          const cellClass = [
+            "auth-otp-cell",
+            error
+              ? "auth-otp-cell-error"
+              : isFilled
+              ? "auth-otp-cell-filled"
+              : "",
+          ]
+            .filter(Boolean)
+            .join(" ");
+
+          return (
+            <input
+              key={i}
+              ref={(el) => (inputs.current[i] = el)}
+              type="text"
+              inputMode="numeric"
+              maxLength={1}
+              value={value[i] || ""}
+              onChange={(e) => handleChange(i, e)}
+              onKeyDown={(e) => handleKeyDown(i, e)}
+              onPaste={handlePaste}
+              autoComplete="one-time-code"
+              className={cellClass}
+            />
+          );
+        })}
       </div>
+
       {error && (
-        <p className="mt-3 text-center text-sm font-medium text-rose-600">
+        <p className="mt-3 text-center text-[0.82rem] font-medium text-rose-600">
           {error}
         </p>
       )}
