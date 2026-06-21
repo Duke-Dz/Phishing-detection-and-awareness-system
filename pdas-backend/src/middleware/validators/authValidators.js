@@ -86,23 +86,14 @@ const forgotPasswordValidator = [
 ];
 
 const resetPasswordValidator = [
-  body("email")
+  body("token")
     .trim()
     .notEmpty()
-    .withMessage("Email is required")
-    .isEmail()
-    .withMessage("Please provide a valid email")
-    .normalizeEmail(),
-
-  body("otp_code")
-    .notEmpty()
-    .withMessage("Verification code is required")
+    .withMessage("Reset token is required")
     .isString()
-    .withMessage("Verification code must be a string")
-    .isLength({ min: 6, max: 6 })
-    .withMessage("Verification code must be 6 digits")
-    .matches(/^\d{6}$/)
-    .withMessage("Verification code must contain only digits"),
+    .withMessage("Reset token must be a string")
+    .isLength({ min: 32, max: 256 })
+    .withMessage("Reset token is invalid"),
 
   body("new_password")
     .notEmpty()

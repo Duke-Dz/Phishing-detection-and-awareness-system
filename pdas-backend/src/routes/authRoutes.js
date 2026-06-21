@@ -355,15 +355,15 @@ router.post("/forgot-password", forgotPasswordValidator, validate, asyncHandler(
  *         application/json:
  *           schema:
  *             type: object
- *             required: [email, otp_code, new_password]
+ *             required: [token, new_password, confirm_password]
  *             properties:
- *               email:
+ *               token:
  *                 type: string
- *                 format: email
- *               otp_code:
- *                 type: string
- *                 description: 6-digit code sent to email
+ *                 description: Reset token from the emailed reset link
  *               new_password:
+ *                 type: string
+ *                 format: password
+ *               confirm_password:
  *                 type: string
  *                 format: password
  *     responses:
