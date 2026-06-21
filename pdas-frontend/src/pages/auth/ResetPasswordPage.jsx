@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { CheckCircle2, KeyRound } from "lucide-react";
+import { CheckCircle2, KeyRound, Loader2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { Link, useSearchParams } from "react-router-dom";
@@ -8,14 +8,17 @@ import { AnimatePresence, motion as Motion } from "framer-motion";
 import { AuthPasswordField } from "../../components/auth/AuthPasswordField";
 import { AuthShell } from "../../components/auth/AuthShell";
 import { PasswordChecklist } from "../../components/auth/PasswordChecklist";
-import { OtpCodeField } from "../../components/auth/OtpCodeField";
 import { authService } from "../../services/authService";
+import { PASSWORD_RULES } from "../../utils/constants";
 import { evaluatePassword } from "../../utils/passwordPolicy";
 
 const resetPasswordSchema = z
   .object({
-    new_password:     z.string().min(8, "Password must be at least 8 characters."),
-    confirm_password: z.string().min(1, "Confirm your new password."),
+    new_password: z
+      .string()
+      .min(PASSWORD_RULES.minLength, `Password must be at least ${PASSWORD_RULES.minLength} characters.`)
+      .max(PASSWORD_RULES.maxLength, `Password must be ${PASSWORD_RULES.maxLength} characters or fewer.`),
+    confirm_password: z.string().min(1, "Please confirm your password."),
   })
   .refine((data) => data.new_password === data.confirm_password, {
     message: "Passwords do not match.",
@@ -34,39 +37,32 @@ const resetPasswordSchema = z
 
 export default function ResetPasswordPage() {
   const [searchParams] = useSearchParams();
-  const email = searchParams.get("email") || "";
-  const [otpCode, setOtpCode]       = useState("");
-  const [otpError, setOtpError]     = useState("");
+  const token = searchParams.get("token") || "";
   const [submitError, setSubmitError] = useState("");
-  const [success, setSuccess]       = useState(false);
+  const [success, setSuccess] = useState(false);
 
   const {
     register,
     handleSubmit,
     control,
-    formState: { errors, isSubmitting, touchedFields, submitCount },
+    formState: { errors, isSubmitting },
   } = useForm({
     resolver: zodResolver(resetPasswordSchema),
+    mode: "onSubmit",
+    reValidateMode: "onSubmit",
     defaultValues: { new_password: "", confirm_password: "" },
   });
 
-  const passwordValue    = useWatch({ control, name: "new_password" });
-  const passwordState    = useMemo(() => evaluatePassword(passwordValue), [passwordValue]);
-  const showChecklist    = passwordValue.length > 0;
-  const emphasizeChecklist = showChecklist && (Boolean(touchedFields.new_password) || submitCount > 0);
+  const passwordValue = useWatch({ control, name: "new_password" });
+  const passwordState = useMemo(() => evaluatePassword(passwordValue), [passwordValue]);
+  const showChecklist = passwordValue.length > 0;
 
   const onSubmit = async (values) => {
-    if (otpCode.length !== 6) {
-      setOtpError("Enter the complete 6-digit code.");
-      return;
-    }
-    setOtpError("");
     setSubmitError("");
     try {
       await authService.resetPassword({
-        email,
-        otp_code:         otpCode,
-        new_password:     values.new_password,
+        token,
+        new_password: values.new_password,
         confirm_password: values.confirm_password,
       });
       setSuccess(true);
@@ -75,22 +71,26 @@ export default function ResetPasswordPage() {
     }
   };
 
-  if (!email) {
+  if (!token) {
     return (
       <AuthShell
-        heading="Missing information"
-        description="We need your email to reset your password."
+        heading="Invalid reset link"
+        description="Request a new reset link to choose a new password."
         layout="single"
         showHeaderBrand
         footer={
-          <Link to="/forgot-password" className="text-sm font-semibold text-cyber-600 no-underline hover:text-cyber-700">
-            Request a new reset code
+          <Link to="/login" className="text-sm font-semibold text-black no-underline hover:text-cyber-700">
+            Back to sign in -&gt;
           </Link>
         }
       >
-        <div className="auth-alert auth-alert-warning">
-          No email address provided. Please request a new password reset.
+        <div className="auth-alert auth-alert-warning" role="alert">
+          This reset link is missing or invalid. Please request a new password reset.
         </div>
+        <Link to="/forgot-password" className="auth-btn-primary mt-4 no-underline">
+          <KeyRound size={16} />
+          Request reset link
+        </Link>
       </AuthShell>
     );
   }
@@ -101,15 +101,15 @@ export default function ResetPasswordPage() {
       description={
         success
           ? "Your password has been changed. Sign in with your new credentials."
-          : "Enter the 6-digit code sent to your email and choose a new password."
+          : "Choose a new password for your account."
       }
       layout="single"
       showHeaderBrand
       footer={
         <>
-          <p className="text-sm text-slate-500">Back to your account?</p>
-          <Link to="/login" className="text-sm font-semibold text-cyber-600 no-underline hover:text-cyber-700">
-            Sign in →
+          <p className="text-sm text-black">Back to your account?</p>
+          <Link to="/login" className="text-sm font-semibold text-black no-underline hover:text-cyber-700">
+            Back to sign in -&gt;
           </Link>
         </>
       }
@@ -122,16 +122,18 @@ export default function ResetPasswordPage() {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.3 }}
             className="space-y-4"
+            role="status"
+            aria-live="polite"
           >
             <div className="auth-success-icon">
-              <CheckCircle2 size={26} className="text-emerald-600" />
+              <CheckCircle2 size={26} className="text-cyber-600" aria-hidden="true" />
             </div>
             <div className="auth-alert auth-alert-success">
               Your password has been reset successfully. All previous sessions have been revoked.
             </div>
             <Link to="/login" className="auth-btn-primary no-underline">
               <KeyRound size={16} />
-              Sign in
+              Back to sign in
             </Link>
           </Motion.div>
         ) : (
@@ -142,32 +144,32 @@ export default function ResetPasswordPage() {
             transition={{ duration: 0.2 }}
             onSubmit={handleSubmit(onSubmit)}
             className="space-y-4"
+            noValidate
           >
-            <OtpCodeField
-              label="Reset code"
-              value={otpCode}
-              onChange={(v) => { setOtpCode(v); setOtpError(""); }}
-              length={6}
-              error={otpError}
-            />
+            <div className="grid gap-4 sm:grid-cols-2">
+              <AuthPasswordField
+                id="reset-new-password"
+                label="New password"
+                error={errors.new_password?.message}
+                registration={register("new_password")}
+                autoComplete="new-password"
+                placeholder="Create a password"
+                minLength={PASSWORD_RULES.minLength}
+                maxLength={PASSWORD_RULES.maxLength}
+              />
+              <AuthPasswordField
+                id="reset-confirm-password"
+                label="Confirm password"
+                error={errors.confirm_password?.message}
+                registration={register("confirm_password")}
+                autoComplete="new-password"
+                placeholder="Repeat password"
+                minLength={PASSWORD_RULES.minLength}
+                maxLength={PASSWORD_RULES.maxLength}
+              />
+            </div>
 
-            <AuthPasswordField
-              label="New password"
-              error={errors.new_password?.message}
-              registration={register("new_password")}
-              autoComplete="new-password"
-              placeholder="Enter a new password"
-            />
-
-            <PasswordChecklist passwordState={passwordState} show={showChecklist} emphasizeInvalid={emphasizeChecklist} />
-
-            <AuthPasswordField
-              label="Confirm password"
-              error={errors.confirm_password?.message}
-              registration={register("confirm_password")}
-              autoComplete="new-password"
-              placeholder="Confirm your new password"
-            />
+            <PasswordChecklist id="reset-password-checklist" passwordState={passwordState} show={showChecklist} />
 
             <AnimatePresence mode="wait">
               {submitError && (
@@ -178,6 +180,7 @@ export default function ResetPasswordPage() {
                   exit={{ opacity: 0, y: -6 }}
                   transition={{ duration: 0.2 }}
                   className="auth-alert auth-alert-error"
+                  role="alert"
                 >
                   {submitError}
                 </Motion.div>
@@ -185,8 +188,8 @@ export default function ResetPasswordPage() {
             </AnimatePresence>
 
             <button type="submit" disabled={isSubmitting} className="auth-btn-primary">
-              <CheckCircle2 size={16} />
-              {isSubmitting ? "Updating…" : "Update password"}
+              {isSubmitting ? <Loader2 className="animate-spin" size={16} /> : <CheckCircle2 size={16} />}
+              {isSubmitting ? "Updating..." : "Update password"}
             </button>
           </Motion.form>
         )}

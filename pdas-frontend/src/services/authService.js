@@ -62,11 +62,10 @@ export const authService = {
     }
   },
 
-  async resetPassword({ email, otp_code, new_password, confirm_password }) {
+  async resetPassword({ token, new_password, confirm_password }) {
     try {
       const { data } = await api.post("/auth/reset-password", {
-        email,
-        otp_code,
+        token,
         new_password,
         confirm_password,
       });

@@ -12,6 +12,7 @@ export const ROLE_DESTINATIONS = {
 
 export const PASSWORD_RULES = {
   minLength: 8,
+  maxLength: 128,
   requireUppercase: true,
   requireLowercase: true,
   requireNumber: true,

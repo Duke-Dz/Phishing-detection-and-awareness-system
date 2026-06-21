@@ -1,18 +1,19 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { KeyRound } from "lucide-react";
+import { KeyRound, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { z } from "zod";
 import { AnimatePresence, motion as Motion } from "framer-motion";
+import { AuthFieldError } from "../../components/auth/AuthFieldError";
 import { AuthPasswordField } from "../../components/auth/AuthPasswordField";
 import { AuthShell } from "../../components/auth/AuthShell";
 import { useAuth } from "../../hooks/useAuth";
 import { ROLE_DESTINATIONS } from "../../utils/constants";
 
 const loginSchema = z.object({
-  identifier: z.string().trim().min(1, "Enter your email or username."),
-  password: z.string().min(1, "Enter your password."),
+  identifier: z.string().trim().min(1, "Email or username is required."),
+  password: z.string().min(1, "Password is required."),
 });
 
 export default function LoginPage() {
@@ -24,9 +25,12 @@ export default function LoginPage() {
   const {
     register,
     handleSubmit,
+    getValues,
     formState: { errors, isSubmitting },
   } = useForm({
     resolver: zodResolver(loginSchema),
+    mode: "onSubmit",
+    reValidateMode: "onSubmit",
     defaultValues: { identifier: "", password: "" },
   });
 
@@ -43,33 +47,49 @@ export default function LoginPage() {
         "/dashboard";
       navigate(destination, { replace: true });
     } catch (error) {
-      setSubmitError(error.message || "Unable to sign in.");
+      setSubmitError("Incorrect email, username, or password. Please try again.");
     }
   };
 
   return (
     <AuthShell
       heading="Welcome back"
-      description="Sign in with your email or username and password to continue."
       layout="single"
       showHeaderBrand
       footer={
         <>
-          <p className="text-sm text-slate-500">New to CyberSense?</p>
-          <Link to="/register" className="text-sm font-semibold text-cyber-600 no-underline hover:text-cyber-700">
-            Create an account →
-          </Link>
+          <p className="text-sm text-black">New to CyberSense?</p>
+          <button
+            type="button"
+            onMouseDown={(event) => event.preventDefault()}
+            onClick={() => navigate("/register")}
+            className="auth-bottom-link"
+          >
+            Create an account -&gt;
+          </button>
         </>
       }
     >
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        {/* Email / username field */}
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
         <div>
-          <label className="auth-label" htmlFor="login-identifier">Email or Username</label>
+          <label className="auth-label" htmlFor="login-identifier">
+            Email or username
+          </label>
           <div className="auth-field-wrap">
             <span className="auth-field-icon">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+              <svg
+                width="15"
+                height="15"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <circle cx="12" cy="8" r="4" />
+                <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
               </svg>
             </span>
             <input
@@ -78,29 +98,32 @@ export default function LoginPage() {
               autoComplete="username"
               autoCapitalize="none"
               spellCheck={false}
-              placeholder="Enter your email or username"
+              placeholder="you@example.com"
               className={`auth-field auth-field-has-icon ${errors.identifier ? "auth-field-error" : ""}`}
+              aria-invalid={Boolean(errors.identifier)}
+              aria-describedby={errors.identifier ? "login-identifier-error" : undefined}
             />
           </div>
-          {errors.identifier && (
-            <p className="mt-1.5 text-[0.8rem] font-medium text-rose-600">{errors.identifier.message}</p>
-          )}
+          <AuthFieldError id="login-identifier-error" message={errors.identifier?.message} />
         </div>
 
         <AuthPasswordField
+          id="login-password"
           label="Password"
           error={errors.password?.message}
           registration={register("password")}
           autoComplete="current-password"
           placeholder="Enter your password"
+          labelAction={
+            <Link
+              to="/forgot-password"
+              state={{ email: getValues("identifier") }}
+              className="text-[13px] font-normal text-[#6B7280] no-underline hover:text-[#0D518C]"
+            >
+              Forgot password?
+            </Link>
+          }
         />
-
-        <div className="flex items-center justify-between gap-3 text-sm">
-          <p className="text-slate-500 text-[0.83rem]">Use the details assigned to your account.</p>
-          <Link to="/forgot-password" className="text-[0.83rem] font-semibold text-cyber-600 no-underline hover:text-cyber-700 whitespace-nowrap">
-            Forgot password?
-          </Link>
-        </div>
 
         <AnimatePresence mode="wait">
           {submitError && (
@@ -111,6 +134,7 @@ export default function LoginPage() {
               exit={{ opacity: 0, y: -6 }}
               transition={{ duration: 0.2 }}
               className="auth-alert auth-alert-error"
+              role="alert"
             >
               {submitError}
             </Motion.div>
@@ -118,8 +142,8 @@ export default function LoginPage() {
         </AnimatePresence>
 
         <button type="submit" disabled={isSubmitting} className="auth-btn-primary">
-          <KeyRound size={16} />
-          {isSubmitting ? "Signing in…" : "Sign in"}
+          {isSubmitting ? <Loader2 className="animate-spin" size={16} /> : <KeyRound size={16} />}
+          {isSubmitting ? "Signing in..." : "Sign in"}
         </button>
       </form>
     </AuthShell>
