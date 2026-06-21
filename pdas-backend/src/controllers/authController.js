@@ -13,7 +13,7 @@ const {
   requireFields,
   validatePassword,
 } = require("../utils/validators");
-const { generateOtp, hashToken } = require("../utils/tokenGenerator");
+const { generateOtp, generateToken, hashToken } = require("../utils/tokenGenerator");
 const { sendMail, isMailConfigured } = require("../services/mailService");
 const emailTemplates = require("../templates/emailTemplates");
 const config = require("../config/env");
@@ -241,49 +241,46 @@ const forgotPassword = async (req, res) => {
       { where: { user_id: user.user_id, used_at: null } },
     );
 
-    const otpCode = generateOtp();
+    const resetToken = generateToken();
     const expiryMinutes = config.passwordResetTokenExpiryMinutes || 60;
     await PasswordResetToken.create({
       user_id: user.user_id,
-      token_hash: hashToken(otpCode),
+      token_hash: hashToken(resetToken),
       expires_at: new Date(Date.now() + expiryMinutes * 60 * 1000),
     });
 
+    const resetUrl = `${config.frontendUrl.replace(/\/$/, "")}/reset-password?token=${encodeURIComponent(resetToken)}`;
     const template = emailTemplates.passwordReset({
-      otpCode,
+      resetUrl,
       userName: user.full_name,
+      expiryMinutes,
     });
     sendMail({ to: user.email, ...template }).catch(() => {});
   }
 
   res.json({
     success: true,
-    message: "If that email is registered, a password reset code has been sent.",
+    message: "If that email is registered, a password reset link has been sent.",
   });
 };
 
 const resetPassword = async (req, res) => {
-  const { email, otp_code, new_password } = req.body;
+  const { token, new_password } = req.body;
 
-  const user = await User.findOne({ where: { email: normalizeEmail(email) } });
-  if (!user) {
-    throw createError("Invalid or expired reset code", 400);
-  }
-
-  // Find all unused reset tokens for this user and check the OTP against them
-  const tokens = await PasswordResetToken.findAll({
-    where: { user_id: user.user_id, used_at: null },
-    order: [["created_at", "DESC"]],
+  const resetToken = await PasswordResetToken.findOne({
+    where: { token_hash: hashToken(token), used_at: null },
   });
-
-  const resetToken = tokens.find((t) => hashToken(otp_code) === t.token_hash);
-
   if (!resetToken) {
-    throw createError("Invalid or expired reset code", 400);
+    throw createError("Invalid or expired reset link", 400);
   }
 
   if (new Date() > resetToken.expires_at) {
-    throw createError("This reset code has expired", 400);
+    throw createError("This reset link has expired", 400);
+  }
+
+  const user = await User.scope("withPassword").findByPk(resetToken.user_id);
+  if (!user) {
+    throw createError("Invalid or expired reset link", 400);
   }
 
   validatePassword(new_password);

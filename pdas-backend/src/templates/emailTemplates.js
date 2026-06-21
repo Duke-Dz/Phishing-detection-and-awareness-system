@@ -626,8 +626,9 @@ const emailTemplates = {
   },
 
   // ── 3. PASSWORD RESET ─────────────────────────────────────────
-  passwordReset({ otpCode, userName }) {
-    const subject = `Your ${BRAND.name} password reset code`;
+  passwordReset({ resetUrl, userName, expiryMinutes = 60 }) {
+    const subject = `Reset your ${BRAND.name} password`;
+    const safeResetUrl = normalizeUrl(resetUrl);
 
     const html = layout(`
       <div style="text-align: center;">
@@ -638,14 +639,13 @@ const emailTemplates = {
         <h2 style="margin: 0 0 8px; font-family: ${BRAND.font}; font-size: 26px; font-weight: 800; color: ${BRAND.text}; letter-spacing: -0.5px;">Password Reset Request</h2>
         <p style="margin: 0 0 8px; font-family: ${BRAND.font}; font-size: 16px; color: ${BRAND.textSecondary};">Hi ${escapeHtml(userName)},</p>
         <p style="margin: 0 0 28px; font-family: ${BRAND.font}; font-size: 15px; line-height: 26px; color: ${BRAND.textSecondary}; max-width: 440px; margin-left: auto; margin-right: auto;">
-          We received a request to reset the password on your ${BRAND.name} account. Enter the code below to choose a new password.
+          We received a request to reset the password on your ${BRAND.name} account. Use the secure link below to choose a new password.
         </p>
-
-        <!-- OTP Code Block -->
-        <div style="display: inline-block; padding: 20px 40px; background-color: ${BRAND.warningBg}; border: 2px dashed ${BRAND.warning}; border-radius: 12px; margin-bottom: 8px;">
-          <span style="font-family: ${BRAND.mono}; font-size: 36px; font-weight: 800; letter-spacing: 12px; color: ${BRAND.text};">${escapeHtml(otpCode)}</span>
-        </div>
-        <p style="margin: 12px 0 0; font-family: ${BRAND.font}; font-size: 13px; color: ${BRAND.muted};">Enter this code in the app to reset your password</p>
+        ${ctaButton(safeResetUrl, "Reset Password", BRAND.warning)}
+        <p style="margin: 20px 0 0; font-family: ${BRAND.font}; font-size: 12px; line-height: 20px; color: ${BRAND.muted}; word-break: break-all;">
+          If the button does not work, copy and paste this link into your browser:<br>
+          <a href="${escapeAttribute(safeResetUrl)}" style="color: ${BRAND.accent}; text-decoration: underline;">${escapeHtml(safeResetUrl)}</a>
+        </p>
       </div>
 
       <!-- Expiry notice -->
@@ -653,7 +653,7 @@ const emailTemplates = {
         <tr>
           <td style="padding: 16px 22px; background-color: ${BRAND.rowAlt}; border: 1px solid ${BRAND.border}; border-radius: 8px; text-align: center;">
             <p style="margin: 0; font-family: ${BRAND.font}; font-size: 13px; line-height: 22px; color: ${BRAND.textSecondary};">
-              This code expires in <strong>1 hour</strong>. If you did not request this, your account may be at risk.
+              This reset link expires in <strong>${escapeHtml(expiryMinutes)} minutes</strong>. If you did not request this, your account may be at risk.
             </p>
           </td>
         </tr>
@@ -662,18 +662,17 @@ const emailTemplates = {
       <div style="margin-top: 28px;">
         ${alertBanner("If you did not request a password reset, change your password immediately and contact support.", "warning")}
       </div>
-    `, "Reset your CyberSense password \u2014 code expires in 1 hour", BRAND.warning);
+    `, "Reset your CyberSense password", BRAND.warning);
 
     const text = [
       `Hi ${userName},`,
       "",
       "We received a request to reset your CyberSense password.",
       "",
-      "Your password reset code is:",
-      otpCode,
+      "Open this link to choose a new password:",
+      safeResetUrl,
       "",
-      "Enter this code in the app to reset your password.",
-      "This code expires in 1 hour.",
+      `This reset link expires in ${expiryMinutes} minutes.`,
       "If you did not request this, change your password immediately and contact support.",
     ].join("\n");
 
