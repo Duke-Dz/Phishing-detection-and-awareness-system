@@ -28,23 +28,19 @@ export const AuthShell = ({
     }
   }, [heading]);
 
-  // Split heading into first word + rest for gradient treatment
-  const words = heading ? heading.split(" ") : [];
-  const firstWord = words[0] ?? "";
-  const restWords = words.slice(1).join(" ");
-
   const formCard = (
     <main
       aria-labelledby={headingId}
       className={
         isImmersive
-          ? "auth-form-enter auth-glass-card relative w-full max-w-lg px-6 py-6 sm:px-8 sm:py-8"
-          : "auth-form-enter auth-glass-card relative w-full px-5 py-6 sm:px-7 sm:py-8"
+          ? "auth-form-enter auth-glass-card relative h-auto w-full max-w-[26rem] px-6 py-5 sm:p-8"
+          : "auth-form-enter auth-glass-card relative h-auto w-full px-6 py-5 sm:p-8"
       }
+      style={{ borderRadius: "var(--auth-card-radius)" }}
     >
       {/* Logo — show inline if requested */}
       {showHeaderBrand && (
-        <div className={`mb-6 ${isImmersive ? "lg:hidden flex justify-center" : "flex justify-center"}`}>
+        <div className={`mb-2 sm:mb-3 ${isImmersive ? "lg:hidden flex justify-center" : "flex justify-center"}`}>
           <CyberSenseLogo />
         </div>
       )}
@@ -52,21 +48,14 @@ export const AuthShell = ({
       <header className={(!isImmersive || showHeaderBrand) ? "text-center" : "text-center lg:text-left"}>
         <h1
           id={headingId}
-          className="mt-1 text-[1.75rem] font-bold tracking-tight text-slate-950 sm:text-[1.9rem]"
-          style={{ letterSpacing: "-0.025em", lineHeight: "1.1" }}
+          className="text-[1.75rem] font-bold text-black sm:text-[1.9rem]"
+          style={{ lineHeight: "1.1" }}
         >
-          {restWords ? (
-            <>
-              <span className="auth-heading-gradient">{firstWord}</span>
-              {" "}{restWords}
-            </>
-          ) : (
-            <span className="auth-heading-gradient">{firstWord}</span>
-          )}
+          {heading}
         </h1>
         {description && (
           <p
-            className={`mt-2.5 text-[0.93rem] leading-[1.7] text-slate-500 ${
+            className={`mt-2 text-[0.93rem] leading-[1.7] text-black ${
               (!isImmersive || showHeaderBrand) ? "mx-auto max-w-[22rem]" : "max-w-xl"
             }`}
           >
@@ -75,10 +64,10 @@ export const AuthShell = ({
         )}
       </header>
 
-      <div className="mt-6">{children}</div>
+      <div className="mt-4">{children}</div>
 
       {footer && (
-        <div className="mt-5 pt-4 border-t border-slate-200/60">
+        <div className="mt-4 pt-3 border-t border-slate-200/60">
           <div className="auth-footer-pill">
             {footer}
           </div>
@@ -90,10 +79,6 @@ export const AuthShell = ({
   if (isImmersive) {
     return (
       <div className="auth-immersive-bg relative min-h-screen text-slate-900">
-        {/* Ambient background blurs */}
-        <div className="pointer-events-none absolute left-[7%] top-16 h-56 w-56 rounded-full bg-cyber-500/[0.08] blur-3xl" />
-        <div className="pointer-events-none absolute bottom-12 right-[6%] h-64 w-64 rounded-full bg-emerald-400/[0.08] blur-3xl" />
-
         <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-7xl items-center px-4 py-6 sm:px-6 lg:px-8">
           <div className="grid w-full grid-cols-1 items-center gap-6 lg:grid-cols-2 lg:gap-8">
             {/* Brand panel — hidden on mobile */}
@@ -114,37 +99,7 @@ export const AuthShell = ({
   // ── Single-column layout ────────────────────────────────────────────────────
   return (
     <div className="auth-immersive-bg relative min-h-screen text-slate-900 flex items-center justify-center p-4 sm:p-6 lg:p-8 overflow-hidden">
-
-      {/* Animated background orbs */}
-      <div
-        className="auth-bg-orb auth-bg-orb-1 pointer-events-none"
-        style={{
-          width: "420px", height: "420px",
-          top: "-6%", left: "-8%",
-          background: "radial-gradient(circle, rgba(67,97,238,0.13) 0%, transparent 70%)",
-        }}
-      />
-      <div
-        className="auth-bg-orb auth-bg-orb-2 pointer-events-none"
-        style={{
-          width: "360px", height: "360px",
-          bottom: "-4%", right: "-6%",
-          background: "radial-gradient(circle, rgba(139,92,246,0.11) 0%, transparent 70%)",
-        }}
-      />
-      <div
-        className="auth-bg-orb auth-bg-orb-3 pointer-events-none"
-        style={{
-          width: "280px", height: "280px",
-          top: "40%", left: "60%",
-          background: "radial-gradient(circle, rgba(16,185,129,0.08) 0%, transparent 70%)",
-        }}
-      />
-
-      {/* Card with glow halo */}
-      <div className="relative z-10 w-full" style={{ maxWidth: "min(90vw, 31rem)" }}>
-        {/* Under-card glow */}
-        <div className="auth-card-glow" />
+      <div className="relative z-10 w-full" style={{ maxWidth: "min(100%, 26rem)" }}>
         {formCard}
       </div>
     </div>

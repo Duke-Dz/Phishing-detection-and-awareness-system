@@ -58,13 +58,12 @@ export const AuthBrandPanel = ({
       <div className="relative z-10 flex items-center gap-3">
         <div className="auth-bp-logo-ring flex h-11 w-11 items-center justify-center rounded-2xl">
           <svg viewBox="0 0 16 18" width="18" height="20" aria-hidden="true">
-            <path d="M8 1 L15 4 L15 9 Q15 14 8 17 Q1 14 1 9 L1 4 Z" fill="#4361ee" />
+            <path d="M8 1 L15 4 L15 9 Q15 14 8 17 Q1 14 1 9 L1 4 Z" fill="#059669" />
             <path d="M5 9 L7.2 11.2 L11 7" fill="none" stroke="#fff" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </div>
         <div>
-          <p className="text-[0.65rem] font-bold uppercase tracking-[0.18em] text-white/40">Phishing Defense</p>
-          <p className="text-sm font-bold tracking-tight text-white/90">CyberSense</p>
+          <p className="text-sm font-bold text-white/90">CyberSense</p>
         </div>
       </div>
 
@@ -78,7 +77,7 @@ export const AuthBrandPanel = ({
         {/* decorative separator */}
         <div className="mt-8 flex items-center gap-3">
           <div className="h-px flex-1 bg-gradient-to-r from-white/20 to-transparent" />
-          <span className="text-[0.65rem] font-semibold uppercase tracking-widest text-white/25">Features</span>
+          <span className="text-[0.65rem] font-semibold uppercase text-white/25">Features</span>
           <div className="h-px flex-1 bg-gradient-to-l from-white/20 to-transparent" />
         </div>
 
@@ -98,7 +97,7 @@ export const AuthBrandPanel = ({
       {/* ── bottom: trust badge ── */}
       <div className="relative z-10">
         <div className="auth-bp-trust-badge">
-          <Shield size={13} className="text-emerald-300/80" />
+          <Shield size={13} className="text-cyber-300/80" />
           <span>Secured · JWT auth · Role-based access</span>
         </div>
       </div>

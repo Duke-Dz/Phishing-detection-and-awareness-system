@@ -14,49 +14,49 @@ const PULSE_DELAY_CLASSES = [
 ];
 
 // ─── Orbit configuration ─────────────────────────────────────────────────────
-const ORBIT_R  = 96;
+const ORBIT_R  = 98;
 const CENTER   = 130;
-const ICON_R   = 23;
+const ICON_R   = 25;
 
 const orbitItems = [
   {
     id: "url",
     label: "Web",
     angle: 270,
-    color: "#3b82f6",
-    glow: "rgba(59,130,246,0.45)",
-    bg: "#eff6ff",
-    borderColor: "#3b82f6",
+    color: "#020617",
+    glow: "rgba(2,6,23,0.22)",
+    bg: "#f8fafc",
+    borderColor: "#020617",
     Icon: LanguageRoundedIcon,
   },
   {
     id: "email",
     label: "Email",
     angle: 0,
-    color: "#8b5cf6",
-    glow: "rgba(139,92,246,0.45)",
-    bg: "#f5f3ff",
-    borderColor: "#8b5cf6",
+    color: "#0D518C",
+    glow: "rgba(13,81,140,0.32)",
+    bg: "#eef6fc",
+    borderColor: "#0D518C",
     Icon: EmailRoundedIcon,
   },
   {
     id: "sms",
     label: "SMS",
     angle: 90,
-    color: "#06b6d4",
-    glow: "rgba(6,182,212,0.45)",
-    bg: "#ecfeff",
-    borderColor: "#06b6d4",
+    color: "#0a477a",
+    glow: "rgba(13,81,140,0.28)",
+    bg: "#f4f9fd",
+    borderColor: "#176da3",
     Icon: SmsRoundedIcon,
   },
   {
     id: "verified",
     label: "Verified",
     angle: 180,
-    color: "#10b981",
-    glow: "rgba(16,185,129,0.45)",
-    bg: "#ecfdf5",
-    borderColor: "#10b981",
+    color: "#0D518C",
+    glow: "rgba(13,81,140,0.45)",
+    bg: "#eef6fc",
+    borderColor: "#0D518C",
     Icon: VerifiedUserRoundedIcon,
   },
 ];
@@ -145,7 +145,7 @@ function OrbitRing() {
                     color: item.color,
                   }}
                 >
-                  <item.Icon sx={{ fontSize: 17 }} />
+                  <item.Icon sx={{ fontSize: 19 }} />
                 </div>
               </foreignObject>
             </g>
@@ -163,7 +163,7 @@ export default function CyberSenseLogo() {
       <h2 className="sr-only">CyberSense animated logo</h2>
 
       {/* ── SVG canvas — slightly larger for premium presence ── */}
-      <div className="relative w-[72px] h-[72px] sm:w-[80px] sm:h-[80px] flex-shrink-0">
+      <div className="relative h-[96px] w-[96px] flex-shrink-0 sm:h-[104px] sm:w-[104px]">
         <svg
           viewBox="0 0 260 260"
           width="100%"
@@ -174,28 +174,28 @@ export default function CyberSenseLogo() {
           <defs>
             {/* Outer shield — blue → indigo */}
             <linearGradient id="cs-shieldOuter" x1="20%" y1="0%" x2="80%" y2="100%">
-              <stop offset="0%"   stopColor="#60a5fa" />
-              <stop offset="50%"  stopColor="#4361ee" />
-              <stop offset="100%" stopColor="#6d28d9" />
+              <stop offset="0%"   stopColor="#10b981" />
+              <stop offset="52%"  stopColor="#047857" />
+              <stop offset="100%" stopColor="#020617" />
             </linearGradient>
 
             {/* Inner shield — cyan → blue */}
             <linearGradient id="cs-shieldInner" x1="80%" y1="0%" x2="20%" y2="100%">
-              <stop offset="0%"   stopColor="#38bdf8" />
-              <stop offset="100%" stopColor="#4361ee" />
+              <stop offset="0%"   stopColor="#34d399" />
+              <stop offset="100%" stopColor="#059669" />
             </linearGradient>
 
             {/* Orbit track gradient — fades around the ring */}
             <linearGradient id="cs-trackGrad" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%"   stopColor="#94a3b8" stopOpacity="0.6" />
-              <stop offset="50%"  stopColor="#c7d2fe" stopOpacity="0.9" />
+              <stop offset="50%"  stopColor="#0D518C" stopOpacity="0.9" />
               <stop offset="100%" stopColor="#94a3b8" stopOpacity="0.6" />
             </linearGradient>
 
             {/* Shield drop shadow */}
             <filter id="cs-shieldShadow" x="-35%" y="-35%" width="170%" height="170%">
               <feDropShadow dx="0" dy="5" stdDeviation="8"
-                floodColor="#4361ee" floodOpacity="0.30" />
+                floodColor="#059669" floodOpacity="0.34" />
             </filter>
 
             {/* Shield inner glow */}
@@ -213,7 +213,7 @@ export default function CyberSenseLogo() {
           {/* ── Layered ambient halo ── */}
           <motion.circle
             cx={CENTER} cy={CENTER} r="44"
-            fill="#4361ee"
+            fill="#059669"
             filter="url(#cs-ambientHalo)"
             animate={{ opacity: [0.09, 0.20, 0.09], scale: [1, 1.08, 1] }}
             transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
@@ -235,7 +235,7 @@ export default function CyberSenseLogo() {
             cx={CENTER} cy={CENTER}
             r={ORBIT_R - 3}
             fill="none"
-            stroke="rgba(199,210,254,0.18)"
+            stroke="rgba(13,81,140,0.20)"
             strokeWidth="1"
           />
 
@@ -246,9 +246,9 @@ export default function CyberSenseLogo() {
               <circle
                 key={angle}
                 cx={p.x} cy={p.y}
-                r="2.5"
-                fill="#c7d2fe"
-                opacity="0.55"
+                r="3"
+                fill="#0D518C"
+                opacity="0.65"
               />
             );
           })}
@@ -259,7 +259,7 @@ export default function CyberSenseLogo() {
           {/* ── Shield outer ambient pulse ── */}
           <motion.circle
             cx={CENTER} cy={CENTER} r="46"
-            fill="#4361ee" opacity={0}
+            fill="#059669" opacity={0}
             animate={{ opacity: [0.05, 0.13, 0.05], scale: [0.98, 1.06, 0.98] }}
             transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
             style={{ transformOrigin: `${CENTER}px ${CENTER}px` }}
@@ -270,26 +270,26 @@ export default function CyberSenseLogo() {
             {/* Outer shield */}
             <path
               d={`
-                M ${CENTER} ${CENTER - 42}
-                L ${CENTER + 35} ${CENTER - 20}
-                L ${CENTER + 35} ${CENTER + 13}
-                Q ${CENTER + 35} ${CENTER + 42} ${CENTER} ${CENTER + 57}
-                Q ${CENTER - 35} ${CENTER + 42} ${CENTER - 35} ${CENTER + 13}
-                L ${CENTER - 35} ${CENTER - 20}
+                M ${CENTER} ${CENTER - 47}
+                L ${CENTER + 39} ${CENTER - 23}
+                L ${CENTER + 39} ${CENTER + 14}
+                Q ${CENTER + 39} ${CENTER + 45} ${CENTER} ${CENTER + 63}
+                Q ${CENTER - 39} ${CENTER + 45} ${CENTER - 39} ${CENTER + 14}
+                L ${CENTER - 39} ${CENTER - 23}
                 Z
               `}
               fill="url(#cs-shieldOuter)"
             />
             {/* Rim highlight — top edge */}
             <path
-              d={`M ${CENTER} ${CENTER - 42} L ${CENTER + 35} ${CENTER - 20}`}
+              d={`M ${CENTER} ${CENTER - 47} L ${CENTER + 39} ${CENTER - 23}`}
               fill="none"
               stroke="rgba(255,255,255,0.35)"
               strokeWidth="1.5"
               strokeLinecap="round"
             />
             <path
-              d={`M ${CENTER} ${CENTER - 42} L ${CENTER - 35} ${CENTER - 20}`}
+              d={`M ${CENTER} ${CENTER - 47} L ${CENTER - 39} ${CENTER - 23}`}
               fill="none"
               stroke="rgba(255,255,255,0.35)"
               strokeWidth="1.5"
@@ -299,12 +299,12 @@ export default function CyberSenseLogo() {
             {/* Inner shield */}
             <path
               d={`
-                M ${CENTER} ${CENTER - 29}
-                L ${CENTER + 24} ${CENTER - 13}
-                L ${CENTER + 24} ${CENTER + 9}
-                Q ${CENTER + 24} ${CENTER + 29} ${CENTER} ${CENTER + 40}
-                Q ${CENTER - 24} ${CENTER + 29} ${CENTER - 24} ${CENTER + 9}
-                L ${CENTER - 24} ${CENTER - 13}
+                M ${CENTER} ${CENTER - 32}
+                L ${CENTER + 27} ${CENTER - 15}
+                L ${CENTER + 27} ${CENTER + 10}
+                Q ${CENTER + 27} ${CENTER + 33} ${CENTER} ${CENTER + 45}
+                Q ${CENTER - 27} ${CENTER + 33} ${CENTER - 27} ${CENTER + 10}
+                L ${CENTER - 27} ${CENTER - 15}
                 Z
               `}
               fill="url(#cs-shieldInner)"
@@ -315,11 +315,11 @@ export default function CyberSenseLogo() {
           {/* Shield surface highlight — frosted top strip */}
           <path
             d={`
-              M ${CENTER - 30} ${CENTER - 17}
-              L ${CENTER} ${CENTER - 39}
-              L ${CENTER + 30} ${CENTER - 17}
-              Q ${CENTER + 30} ${CENTER - 5} ${CENTER} ${CENTER - 2}
-              Q ${CENTER - 30} ${CENTER - 5} ${CENTER - 30} ${CENTER - 17}
+              M ${CENTER - 33} ${CENTER - 20}
+              L ${CENTER} ${CENTER - 43}
+              L ${CENTER + 33} ${CENTER - 20}
+              Q ${CENTER + 33} ${CENTER - 7} ${CENTER} ${CENTER - 3}
+              Q ${CENTER - 33} ${CENTER - 7} ${CENTER - 33} ${CENTER - 20}
               Z
             `}
             fill="rgba(255,255,255,0.12)"
@@ -330,7 +330,7 @@ export default function CyberSenseLogo() {
             d={`M ${CENTER - 9} ${CENTER + 5} L ${CENTER - 2} ${CENTER + 13} L ${CENTER + 12} ${CENTER - 4}`}
             fill="none"
             stroke="rgba(255,255,255,0.96)"
-            strokeWidth="4.5"
+            strokeWidth="5"
             strokeLinecap="round"
             strokeLinejoin="round"
           />
@@ -342,11 +342,11 @@ export default function CyberSenseLogo() {
         {/* Brand name */}
         <div
           className="leading-none font-extrabold"
-          style={{ fontSize: "clamp(1.35rem, 4vw, 1.65rem)", letterSpacing: "-0.045em" }}
+          style={{ fontSize: "clamp(1.45rem, 4vw, 1.8rem)", letterSpacing: 0 }}
         >
           <span
             style={{
-              background: "linear-gradient(135deg, #1e293b 0%, #334155 100%)",
+              background: "linear-gradient(135deg, #000000 0%, #020617 100%)",
               WebkitBackgroundClip: "text",
               WebkitTextFillColor: "transparent",
               backgroundClip: "text",
@@ -356,7 +356,7 @@ export default function CyberSenseLogo() {
           </span>
           <span
             style={{
-              background: "linear-gradient(135deg, #4361ee 0%, #8b5cf6 100%)",
+              background: "linear-gradient(135deg, #0D518C 0%, #176da3 100%)",
               WebkitBackgroundClip: "text",
               WebkitTextFillColor: "transparent",
               backgroundClip: "text",
@@ -366,29 +366,6 @@ export default function CyberSenseLogo() {
           </span>
         </div>
 
-        {/* Subtitle pill */}
-        <span
-          className="inline-flex items-center gap-1 w-fit"
-          style={{
-            fontSize: "0.58rem",
-            fontWeight: 600,
-            letterSpacing: "0.13em",
-            textTransform: "uppercase",
-            color: "#94a3b8",
-          }}
-        >
-          {/* Micro dot accent */}
-          <span
-            style={{
-              width: "4px", height: "4px",
-              borderRadius: "50%",
-              background: "linear-gradient(135deg, #4361ee, #8b5cf6)",
-              display: "inline-block",
-              flexShrink: 0,
-            }}
-          />
-          Phishing Defense
-        </span>
       </div>
     </div>
   );

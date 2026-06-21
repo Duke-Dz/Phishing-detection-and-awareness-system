@@ -68,7 +68,7 @@ export default function VerifyEmailPage() {
         layout="single"
         showHeaderBrand
         footer={
-          <Link to="/register" className="text-sm font-semibold text-cyber-600 no-underline hover:text-cyber-700">
+          <Link to="/register" className="text-sm font-semibold text-black no-underline hover:text-cyber-700">
             Back to registration
           </Link>
         }
@@ -93,8 +93,8 @@ export default function VerifyEmailPage() {
       footer={
         !success && (
           <>
-            <p className="text-sm text-slate-500">Wrong email?</p>
-            <Link to="/register" className="text-sm font-semibold text-cyber-600 no-underline hover:text-cyber-700">
+            <p className="text-sm text-black">Wrong email?</p>
+            <Link to="/register" className="text-sm font-semibold text-black no-underline hover:text-cyber-700">
               Start over →
             </Link>
           </>
@@ -111,7 +111,7 @@ export default function VerifyEmailPage() {
             className="space-y-4"
           >
             <div className="auth-success-icon">
-              <CheckCircle2 size={26} className="text-emerald-600" />
+              <CheckCircle2 size={26} className="text-cyber-600" />
             </div>
             <div className="auth-alert auth-alert-success">
               Your email has been verified successfully.
@@ -159,7 +159,7 @@ export default function VerifyEmailPage() {
                 type="button"
                 onClick={handleResend}
                 disabled={resending || resendCooldown > 0}
-                className="inline-flex items-center gap-1.5 text-[0.83rem] font-medium text-slate-500 transition hover:text-cyber-600 focus:outline-none disabled:opacity-50"
+                className="inline-flex items-center gap-1.5 text-[0.83rem] font-medium text-black transition hover:text-cyber-700 focus:outline-none disabled:opacity-50"
               >
                 <RotateCw size={13} className={resending ? "animate-spin" : ""} />
                 {resendCooldown > 0

@@ -12,6 +12,7 @@ import Unsubscribe from "../pages/Unsubscribe.jsx";
 import PrivacyPolicy from "../pages/PrivacyPolicy.jsx";
 import NotFound from "../pages/NotFound.jsx";
 import Maintenance from "../pages/Maintenance.jsx";
+import TermsOfService from "../pages/TermsOfService.jsx";
 
 // Route guard
 import { RoleRoute } from "../components/auth/RoleRoute";
@@ -70,6 +71,7 @@ const AppRouter = () => {
       {/* Public routes */}
       <Route path="/unsubscribe" element={<Unsubscribe />} />
       <Route path="/privacy" element={<PrivacyPolicy />} />
+      <Route path="/terms" element={<TermsOfService />} />
       <Route path="/maintenance" element={<Maintenance />} />
 
       {/* Default & 404 */}
