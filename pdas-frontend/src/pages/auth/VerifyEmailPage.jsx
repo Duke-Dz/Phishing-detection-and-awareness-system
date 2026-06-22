@@ -152,7 +152,7 @@ export default function VerifyEmailPage() {
         <>
           <p className="text-sm text-black">Wrong email?</p>
           <Link to="/register" className="text-sm font-semibold text-black no-underline hover:text-cyber-700">
-            Start over →
+            Start over -&gt;
           </Link>
         </>
       }

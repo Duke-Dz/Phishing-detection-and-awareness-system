@@ -4,14 +4,13 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Link, useLocation } from "react-router-dom";
 import { z } from "zod";
-import { AnimatePresence, motion as Motion } from "framer-motion";
 import { Toast } from "../../components/common/Toast";
 import { AuthShell } from "../../components/auth/AuthShell";
 import { authService } from "../../services/authService";
 
 const forgotPasswordSchema = z.object({
   email: z.string().trim().min(1, "Enter your email address")
-    .email("Enter a valid email — example@domain.com"),
+    .email("Enter a valid email - example@domain.com"),
 });
 
 export default function ForgotPasswordPage() {
@@ -27,9 +26,7 @@ export default function ForgotPasswordPage() {
   const {
     register,
     handleSubmit,
-    setError,
-    trigger,
-    formState: { errors, isSubmitting },
+    formState: { isSubmitting },
   } = useForm({
     resolver: zodResolver(forgotPasswordSchema),
     mode: "onTouched",
@@ -75,7 +72,7 @@ export default function ForgotPasswordPage() {
         <>
           <p className="text-sm text-black">Remember your password?</p>
           <Link to="/login" className="auth-bottom-link">
-            Back to sign in →
+            Back to sign in -&gt;
           </Link>
         </>
       }

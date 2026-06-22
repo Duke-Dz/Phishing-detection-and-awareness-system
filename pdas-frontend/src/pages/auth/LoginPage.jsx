@@ -4,7 +4,6 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { z } from "zod";
-import { AnimatePresence, motion as Motion } from "framer-motion";
 import { Toast } from "../../components/common/Toast";
 import { AuthPasswordField } from "../../components/auth/AuthPasswordField";
 import { AuthShell } from "../../components/auth/AuthShell";
@@ -28,8 +27,6 @@ export default function LoginPage() {
     register,
     handleSubmit,
     getValues,
-    setError,
-    trigger,
     formState: { errors, isSubmitting },
   } = useForm({
     resolver: zodResolver(loginSchema),
@@ -70,7 +67,7 @@ export default function LoginPage() {
             onClick={() => navigate("/register")}
             className="auth-bottom-link"
           >
-            Create an account →
+            Create an account -&gt;
           </button>
         </>
       }
