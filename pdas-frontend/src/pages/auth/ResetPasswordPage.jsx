@@ -146,7 +146,7 @@ export default function ResetPasswordPage() {
             className="space-y-4"
             noValidate
           >
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <AuthPasswordField
                 id="reset-new-password"
                 label="New password"
