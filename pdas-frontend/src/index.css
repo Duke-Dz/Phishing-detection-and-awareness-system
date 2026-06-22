@@ -759,35 +759,197 @@ input[type="password"].auth-field {
   }
 }
 
-/* ─────────────────────────────────────────────────────────────────────────────
-   Auth — Mobile Responsiveness Overrides
-   ───────────────────────────────────────────────────────────────────────────── */
+/* ─────────────────────────────────────────────────────────────
+   MOBILE RESPONSIVENESS — Complete Auth Fix
+   Targets all screens 640px and below
+   ───────────────────────────────────────────────────────────── */
 @media (max-width: 640px) {
-  .auth-logo-container {
-    transform: scale(0.65);
-    transform-origin: center top;
-    margin-bottom: -16px;
+
+  /* ── Page wrapper — add safe area for notched phones ── */
+  .auth-immersive-bg {
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+    padding-bottom: env(safe-area-inset-bottom);
   }
-  
-  .auth-terms-label {
-    white-space: normal;
-    word-break: break-word;
-    font-size: 12px;
-  }
-  
-  .auth-footer-pill {
-    font-size: 12px;
-  }
-  
+
+  /* ── Glass card — breathe from screen edges ── */
   .auth-glass-card {
-    padding-top: 20px;
-    padding-bottom: 24px;
+    margin: 0 12px;
+    padding: 24px 20px 28px !important;
+    border-radius: 1.25rem;
+    box-shadow:
+      0 1px 2px rgba(0,0,0,0.04),
+      0 4px 12px rgba(0,0,0,0.08);
   }
-  
-  .auth-heading {
-    font-size: 22px;
+
+  /* ── Logo — fix scale clipping ── */
+  .auth-logo-container {
+    transform: scale(0.75);
+    transform-origin: center top;
+    margin-bottom: -8px !important;  /* reduce the negative gap */
+    margin-top: 0 !important;
+  }
+
+  /* ── Page heading ── */
+  .auth-heading,
+  h1.auth-heading {
+    font-size: 22px !important;
+    line-height: 1.2 !important;
+    letter-spacing: -0.3px;
+  }
+
+  /* ── Fields — bigger tap targets for mobile ── */
+  .auth-field {
+    height: 3rem !important;        /* 48px — Apple HIG minimum */
+    font-size: 16px !important;     /* prevents iOS zoom on focus */
+    border-radius: 0.75rem !important;
+  }
+
+  /* ── Field labels ── */
+  .auth-label {
+    font-size: 12px !important;
+    letter-spacing: 0.3px;
+  }
+
+  /* ── 2-column grid → single column on mobile ──
+     This is the most important fix.
+     Target any grid used for the form field pairs */
+  .auth-glass-card .grid-cols-2,
+  .auth-glass-card [class*="grid-cols-2"] {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+
+  /* If you used a custom class for the 2-col layout
+     add it here too — replace 'auth-form-grid' with
+     whatever class you used on the grid wrapper */
+  .auth-form-grid {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 16px !important;
+  }
+
+  /* ── Inputs — prevent iOS auto-zoom (font must be 16px) ── */
+  .auth-field::placeholder {
+    font-size: 15px;
+  }
+
+  /* ── Password requirements popover —
+     Float RIGHT works on desktop.
+     On mobile it goes off screen.
+     Drop it BELOW the input instead. ── */
+  .auth-pw-popover,
+  [class*="pw-requirements"],
+  [class*="password-popover"] {
+    position: static !important;
+    transform: none !important;
+    left: auto !important;
+    top: auto !important;
+    width: 100% !important;
+    margin-top: 10px !important;
+    border-radius: 0.85rem !important;
+    /* Remove the left-pointing arrow on mobile */
+    box-shadow: 0 4px 16px rgba(0,0,0,0.10) !important;
+  }
+
+  /* Hide the left arrow on mobile since it's no longer beside the field */
+  .auth-pw-popover::before,
+  [class*="pw-requirements"]::before {
+    display: none !important;
+  }
+
+  /* ── Footer pill — allow wrapping on small screens ── */
+  .auth-footer-pill {
+    flex-wrap: wrap !important;
+    gap: 4px 8px !important;
+    padding: 10px 14px !important;
+    font-size: 13px !important;
+    border-radius: 0.85rem !important;
+  }
+
+  /* ── Bottom link — ensure it stays readable ── */
+  .auth-bottom-link {
+    font-size: 13px !important;
+    font-weight: 600 !important;
+  }
+
+  /* ── Primary button — bigger on mobile ── */
+  .auth-btn-primary {
+    height: 3rem !important;        /* 48px tap target */
+    font-size: 15px !important;
+    border-radius: 0.875rem !important;
+    /* Disable hover lift on touch — no hover on mobile */
+    transform: none !important;
+  }
+
+  /* ── OTP cells — larger on mobile ── */
+  .auth-otp-cell {
+    max-width: 2.75rem !important;
+    height: 2.75rem !important;
+    font-size: 1.25rem !important;
+    border-radius: 0.75rem !important;
+  }
+
+  /* ── Forgot password label row —
+     Stack "PASSWORD" and "Forgot password?" vertically ── */
+  .auth-label-row {
+    flex-wrap: wrap !important;
+    gap: 2px !important;
+  }
+
+  /* ── Alert bubbles — adjust padding ── */
+  .auth-alert {
+    padding: 0.65rem 0.875rem !important;
+    font-size: 13px !important;
+    border-radius: 0.75rem !important;
+  }
+
+  /* ── Disable floating animations on mobile —
+     Saves battery and avoids layout jank ── */
+  .auth-float-1,
+  .auth-float-2,
+  .auth-float-3,
+  .auth-bg-orb-1,
+  .auth-bg-orb-2,
+  .auth-bg-orb-3 {
+    animation: none !important;
+  }
+
+  /* ── Remove card glow blur on mobile — performance ── */
+  .auth-glass-card {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
   }
 }
 
+/* ── Very small phones (iPhone SE, Galaxy A series) ── */
+@media (max-width: 380px) {
 
+  .auth-glass-card {
+    margin: 0 8px;
+    padding: 20px 16px 24px !important;
+  }
 
+  .auth-heading,
+  h1.auth-heading {
+    font-size: 20px !important;
+  }
+
+  .auth-field {
+    font-size: 15px !important;
+  }
+
+  .auth-otp-cell {
+    max-width: 2.4rem !important;
+    height: 2.4rem !important;
+    font-size: 1.1rem !important;
+  }
+
+  .auth-footer-pill {
+    font-size: 12px !important;
+  }
+
+  .auth-btn-primary {
+    font-size: 14px !important;
+  }
+}
