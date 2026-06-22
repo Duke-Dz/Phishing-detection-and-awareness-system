@@ -11,6 +11,7 @@ const EmailVerificationToken = require("./EmailVerificationToken");
 const AuditLog = require("./AuditLog");
 const SystemSetting = require("./SystemSetting");
 const ReportComment = require("./ReportComment");
+const PendingRegistration = require("./PendingRegistration");
 
 // ── User → Reports (cascade: delete user = delete their reports) ──
 User.hasMany(Report, { foreignKey: "user_id", as: "reports", onDelete: "CASCADE" });
@@ -79,4 +80,5 @@ module.exports = {
   AuditLog,
   SystemSetting,
   ReportComment,
+  PendingRegistration,
 };

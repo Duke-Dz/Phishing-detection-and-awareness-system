@@ -577,8 +577,9 @@ const emailTemplates = {
   },
 
   // ── 2. EMAIL VERIFICATION ─────────────────────────────────────
-  emailVerification({ otpCode, userName }) {
-    const subject = `Your ${BRAND.name} verification code`;
+  emailVerification({ verificationUrl, userName }) {
+    const subject = `Activate your ${BRAND.name} account`;
+    const safeVerificationUrl = normalizeUrl(verificationUrl);
 
     const html = layout(`
       <div style="text-align: center;">
@@ -589,14 +590,14 @@ const emailTemplates = {
         <h2 style="margin: 0 0 8px; font-family: ${BRAND.font}; font-size: 26px; font-weight: 800; color: ${BRAND.text}; letter-spacing: -0.5px;">Welcome to ${BRAND.name}</h2>
         <p style="margin: 0 0 8px; font-family: ${BRAND.font}; font-size: 16px; color: ${BRAND.textSecondary};">Hi ${escapeHtml(userName)},</p>
         <p style="margin: 0 0 28px; font-family: ${BRAND.font}; font-size: 15px; line-height: 26px; color: ${BRAND.textSecondary}; max-width: 440px; margin-left: auto; margin-right: auto;">
-          You&#8217;re one step away from protecting yourself against phishing threats. Enter the verification code below to activate your account.
+          You&#8217;re one step away from protecting yourself against phishing threats. Click the secure button below to verify your email and activate your account.
         </p>
 
-        <!-- OTP Code Block -->
-        <div style="display: inline-block; padding: 20px 40px; background-color: #f0f4ff; border: 2px dashed ${BRAND.accent}; border-radius: 12px; margin-bottom: 8px;">
-          <span style="font-family: ${BRAND.mono}; font-size: 36px; font-weight: 800; letter-spacing: 12px; color: ${BRAND.text};">${escapeHtml(otpCode)}</span>
-        </div>
-        <p style="margin: 12px 0 0; font-family: ${BRAND.font}; font-size: 13px; color: ${BRAND.muted};">Enter this code in the app to verify your email</p>
+        ${ctaButton(safeVerificationUrl, "Verify Email Address", BRAND.accent)}
+        <p style="margin: 20px 0 0; font-family: ${BRAND.font}; font-size: 12px; line-height: 20px; color: ${BRAND.muted}; word-break: break-all;">
+          If the button does not work, copy and paste this link into your browser:<br>
+          <a href="${escapeAttribute(safeVerificationUrl)}" style="color: ${BRAND.accent}; text-decoration: underline;">${escapeHtml(safeVerificationUrl)}</a>
+        </p>
       </div>
 
       <!-- Expiry notice -->
@@ -604,7 +605,7 @@ const emailTemplates = {
         <tr>
           <td style="padding: 16px 22px; background-color: ${BRAND.rowAlt}; border: 1px solid ${BRAND.border}; border-radius: 8px; text-align: center;">
             <p style="margin: 0; font-family: ${BRAND.font}; font-size: 13px; line-height: 22px; color: ${BRAND.textSecondary};">
-              This code expires in <strong>24 hours</strong>. If you did not create a ${BRAND.name} account, you can safely ignore this email.
+              This link expires in <strong>24 hours</strong>. If you did not create a ${BRAND.name} account, you can safely ignore this email.
             </p>
           </td>
         </tr>
@@ -614,11 +615,10 @@ const emailTemplates = {
     const text = [
       `Welcome to ${BRAND.name}, ${userName}.`,
       "",
-      "Your verification code is:",
-      otpCode,
+      "Please verify your email address to activate your account by opening the following link:",
+      safeVerificationUrl,
       "",
-      "Enter this code in the app to verify your email.",
-      "Code expires in 24 hours.",
+      "This link expires in 24 hours.",
       "If you did not create this account, ignore this email.",
     ].join("\n");
 
