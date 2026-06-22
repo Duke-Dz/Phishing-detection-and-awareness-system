@@ -361,7 +361,11 @@ export default function RegisterPage() {
               {...register("terms")}
               className="mt-1"
             />
-            <label htmlFor="reg-terms" className="auth-terms-label text-[13px] leading-5 text-slate-600">
+            <label
+              htmlFor="reg-terms"
+              className="text-[13px] leading-5 text-slate-600"
+              style={{ wordBreak: 'break-word', overflowWrap: 'break-word' }}
+            >
               I agree to the <Link to="/terms" style={{color: "#0D818C", fontWeight: 500}}>Terms of Service</Link> and <Link to="/privacy" style={{color: "#0D818C", fontWeight: 500}}>Privacy Policy</Link>
             </label>
           </div>

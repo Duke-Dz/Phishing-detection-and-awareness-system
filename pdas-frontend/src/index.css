@@ -780,14 +780,15 @@ input[type="password"].auth-field {
     box-shadow:
       0 1px 2px rgba(0,0,0,0.04),
       0 4px 12px rgba(0,0,0,0.08);
+    overflow: hidden;
   }
 
   /* ── Logo — fix scale clipping ── */
   .auth-logo-container {
-    transform: scale(0.75);
-    transform-origin: center top;
-    margin-bottom: -8px !important;  /* reduce the negative gap */
-    margin-top: 0 !important;
+    transform: scale(0.65) !important;
+    transform-origin: center top !important;
+    margin-bottom: -16px !important;
+    margin-top: -8px !important;
   }
 
   /* ── Page heading ── */
