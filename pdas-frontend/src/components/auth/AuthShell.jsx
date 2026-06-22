@@ -89,7 +89,7 @@ export const AuthShell = ({
   }
 
   return (
-    <div className="auth-immersive-bg auth-single-shell relative flex min-h-[100dvh] items-center justify-center overflow-x-hidden overflow-y-auto px-4 py-5 text-slate-900 sm:p-6 lg:p-8">
+    <div className="auth-immersive-bg auth-single-shell relative grid min-h-[100svh] overflow-x-hidden overflow-y-auto px-4 py-5 text-slate-900 sm:p-6 lg:p-8">
       <div className="auth-single-panel relative z-10 w-full" style={{ maxWidth: "min(100%, 27rem)" }}>
         {formCard}
       </div>

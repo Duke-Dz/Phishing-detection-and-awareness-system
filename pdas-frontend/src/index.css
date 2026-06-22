@@ -1026,18 +1026,25 @@ input[type="password"].auth-field {
 
 @media (max-width: 640px) {
   .auth-single-shell {
-    align-items: flex-start !important;
-    justify-content: center !important;
+    display: grid !important;
+    align-items: center !important;
+    align-items: safe center !important;
+    justify-items: center !important;
+    align-content: center !important;
+    min-height: 100vh !important;
+    min-height: 100svh !important;
     padding:
-      clamp(1rem, 4svh, 2.25rem)
+      clamp(0.875rem, 3svh, 1.5rem)
       max(0.75rem, env(safe-area-inset-right))
-      calc(1.25rem + env(safe-area-inset-bottom))
+      calc(clamp(0.875rem, 3svh, 1.5rem) + env(safe-area-inset-bottom))
       max(0.75rem, env(safe-area-inset-left)) !important;
     background:
       linear-gradient(180deg, #f8fafc 0%, #ffffff 38%, #f8fafc 100%) !important;
+    scrollbar-gutter: stable both-edges;
   }
 
   .auth-single-panel {
+    justify-self: center;
     max-width: min(100%, 27rem) !important;
   }
 
@@ -1224,5 +1231,12 @@ input[type="password"].auth-field {
   .auth-btn-primary,
   .auth-btn-secondary {
     font-size: 0.9rem !important;
+  }
+}
+
+@media (min-width: 641px) {
+  .auth-single-shell {
+    place-items: center !important;
+    min-height: 100dvh !important;
   }
 }
