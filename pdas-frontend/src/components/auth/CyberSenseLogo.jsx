@@ -142,10 +142,10 @@ function OrbitRing() {
 export default function CyberSenseLogo({ variant = "default" }) {
   const isCompact = variant === "compact";
   const canvasClass = isCompact
-    ? "relative h-[72px] w-[72px] flex-shrink-0 sm:h-[80px] sm:w-[80px]"
+    ? "relative h-[64px] w-[64px] flex-shrink-0 sm:h-[76px] sm:w-[76px]"
     : "relative h-[96px] w-[96px] flex-shrink-0 sm:h-[104px] sm:w-[104px]";
   const wordmarkSize = isCompact
-    ? "clamp(1.22rem, 5vw, 1.45rem)"
+    ? "clamp(1.08rem, 4.6vw, 1.32rem)"
     : "clamp(1.45rem, 4vw, 1.8rem)";
 
   return (
@@ -310,7 +310,7 @@ export default function CyberSenseLogo({ variant = "default" }) {
       </div>
 
       <div className="flex flex-col justify-center gap-0.5">
-        <div className="font-extrabold leading-none" style={{ fontSize: wordmarkSize, letterSpacing: 0 }}>
+        <div className="auth-logo-wordmark font-extrabold leading-none" style={{ fontSize: wordmarkSize, letterSpacing: 0 }}>
           <span
             style={{
               background: "linear-gradient(135deg, #000000 0%, #020617 100%)",
