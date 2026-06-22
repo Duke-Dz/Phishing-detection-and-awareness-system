@@ -48,7 +48,7 @@ export const AuthShell = ({
       <header className={(!isImmersive || showHeaderBrand) ? "text-center" : "text-center lg:text-left"}>
         <h1
           id={headingId}
-          className="text-2xl font-bold text-black sm:text-[1.75rem] lg:text-[1.9rem]"
+          className="auth-heading text-2xl font-bold text-black sm:text-[1.75rem] lg:text-[1.9rem]"
           style={{ lineHeight: "1.1" }}
         >
           {heading}
