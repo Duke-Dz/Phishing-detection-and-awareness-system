@@ -6,7 +6,6 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { z } from "zod";
 import { AnimatePresence, motion as Motion } from "framer-motion";
 import { Toast } from "../../components/common/Toast";
-import { AuthFieldError } from "../../components/auth/AuthFieldError";
 import { AuthPasswordField } from "../../components/auth/AuthPasswordField";
 import { AuthShell } from "../../components/auth/AuthShell";
 import { useAuth } from "../../hooks/useAuth";
@@ -109,6 +108,7 @@ export default function LoginPage() {
               autoCapitalize="none"
               spellCheck={false}
               placeholder="you@example.com"
+              required
               className="auth-field auth-field-has-icon"
             />
           </div>
@@ -121,6 +121,7 @@ export default function LoginPage() {
           registration={register("password")}
           autoComplete="current-password"
           placeholder="Enter your password"
+          required
           labelAction={
             <Link
               to="/forgot-password"

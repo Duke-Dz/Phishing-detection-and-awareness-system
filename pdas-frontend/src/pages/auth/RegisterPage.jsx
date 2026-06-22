@@ -14,7 +14,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { z } from "zod";
 import { AnimatePresence, motion as Motion } from "framer-motion";
 import { Toast } from "../../components/common/Toast";
-import { AuthFieldError } from "../../components/auth/AuthFieldError";
+
 import { AuthPasswordField } from "../../components/auth/AuthPasswordField";
 import { AuthShell } from "../../components/auth/AuthShell";
 import { useAuth } from "../../hooks/useAuth";
@@ -190,12 +190,10 @@ export default function RegisterPage() {
                 autoFocus
                 autoComplete="given-name"
                 placeholder="John"
-                aria-invalid={Boolean(errors.first_name)}
-                aria-describedby={errors.first_name ? "first_name-error" : undefined}
+                required
                 className="auth-field auth-field-has-icon pr-9"
               />
             </div>
-            {errors.first_name && <AuthFieldError id="first_name-error" message={errors.first_name.message} icon="user" />}
           </div>
 
           <div>
@@ -224,12 +222,10 @@ export default function RegisterPage() {
                 {...register("last_name")}
                 autoComplete="family-name"
                 placeholder="Doe"
-                aria-invalid={Boolean(errors.last_name)}
-                aria-describedby={errors.last_name ? "last_name-error" : undefined}
+                required
                 className="auth-field auth-field-has-icon pr-9"
               />
             </div>
-            {errors.last_name && <AuthFieldError id="last_name-error" message={errors.last_name.message} icon="user" />}
           </div>
         </div>
 
@@ -250,12 +246,10 @@ export default function RegisterPage() {
                 spellCheck={false}
                 placeholder="johndoe"
                 minLength={3}
-                aria-invalid={Boolean(errors.username)}
-                aria-describedby={errors.username ? "username-error" : undefined}
+                required
                 className="auth-field auth-field-has-icon pr-9"
               />
             </div>
-            {errors.username && <AuthFieldError id="username-error" message={errors.username.message} icon="hash" />}
           </div>
 
           <div>
@@ -274,8 +268,7 @@ export default function RegisterPage() {
                 autoCapitalize="none"
                 spellCheck={false}
                 placeholder="you@example.com"
-                aria-invalid={Boolean(errors.email)}
-                aria-describedby={errors.email ? "email-error" : undefined}
+                required
                 className="auth-field auth-field-has-icon pr-9"
                 style={{
                   textOverflow: "ellipsis",
@@ -284,7 +277,6 @@ export default function RegisterPage() {
                 }}
               />
             </div>
-            {errors.email && <AuthFieldError id="email-error" message={errors.email.message} icon="email" />}
           </div>
         </div>
 
@@ -359,6 +351,7 @@ export default function RegisterPage() {
               type="checkbox"
               id="reg-terms"
               {...register("terms")}
+              required
               className="mt-1"
             />
             <label
@@ -369,7 +362,6 @@ export default function RegisterPage() {
               I agree to the <Link to="/terms" style={{color: "#0D818C", fontWeight: 500}}>Terms of Service</Link> and <Link to="/privacy" style={{color: "#0D818C", fontWeight: 500}}>Privacy Policy</Link>
             </label>
           </div>
-          {errors.terms && <AuthFieldError id="terms-error" message={errors.terms.message} icon="AlertCircle" />}
         </div>
 
 

@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
-import { AuthFieldError } from "./AuthFieldError";
 
 const LockIcon = ({ size = 15, unlocked = false }) => (
   <svg
@@ -64,7 +63,7 @@ export const AuthPasswordField = ({
           type={visible ? "text" : "password"}
           autoComplete={autoComplete}
           placeholder={placeholder}
-          className={`auth-field auth-field-has-icon pr-11 ${valid ? "auth-field-success" : ""}`}
+          className="auth-field auth-field-has-icon pr-11"
           onFocus={(e) => {
             if (onFocus) onFocus(e);
             if (registration?.onFocus) registration.onFocus(e);
