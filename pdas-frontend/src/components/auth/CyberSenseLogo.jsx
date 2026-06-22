@@ -159,7 +159,7 @@ function OrbitRing() {
 // ─── Main Component ───────────────────────────────────────────────────────────
 export default function CyberSenseLogo() {
   return (
-    <div className="flex items-center justify-center gap-3.5">
+    <div className="auth-logo-container flex items-center justify-center gap-3.5">
       <h2 className="sr-only">CyberSense animated logo</h2>
 
       {/* ── SVG canvas — slightly larger for premium presence ── */}
