@@ -5,8 +5,8 @@ const { RefreshToken, User } = require("../models");
 
 const hashToken = (token) => crypto.createHash("sha256").update(token).digest("hex");
 
-const getRefreshExpiry = () => {
-  const days = Number(process.env.REFRESH_TOKEN_EXPIRES_DAYS || 30);
+const getRefreshExpiry = (rememberMe = false) => {
+  const days = rememberMe ? Number(process.env.REFRESH_TOKEN_EXPIRES_DAYS || 30) : 1;
   return new Date(Date.now() + days * 24 * 60 * 60 * 1000);
 };
 
@@ -20,21 +20,21 @@ const signAccessToken = (user) =>
     { expiresIn: process.env.JWT_EXPIRES_IN || "15m" },
   );
 
-const issueRefreshToken = async (user) => {
+const issueRefreshToken = async (user, rememberMe = false) => {
   const refreshToken = crypto.randomBytes(64).toString("hex");
 
   await RefreshToken.create({
     user_id: user.user_id,
     token_hash: hashToken(refreshToken),
-    expires_at: getRefreshExpiry(),
+    expires_at: getRefreshExpiry(rememberMe),
   });
 
   return refreshToken;
 };
 
-const issueTokenPair = async (user) => ({
+const issueTokenPair = async (user, rememberMe = false) => ({
   token: signAccessToken(user),
-  refreshToken: await issueRefreshToken(user),
+  refreshToken: await issueRefreshToken(user, rememberMe),
 });
 
 const rotateRefreshToken = async (refreshToken) => {

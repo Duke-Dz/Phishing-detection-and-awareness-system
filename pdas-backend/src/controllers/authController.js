@@ -1,5 +1,5 @@
 const bcrypt = require("bcryptjs");
-const { User, PasswordResetToken, EmailVerificationToken } = require("../models");
+const { User, PasswordResetToken, EmailVerificationToken, PendingRegistration } = require("../models");
 const {
   issueTokenPair,
   revokeRefreshToken,
@@ -42,42 +42,33 @@ const register = async (req, res) => {
     throw createError("Username is already taken", 409);
   }
 
-  // The very first registered user in the system becomes the admin automatically.
-  // This provides a bootstrap mechanism without requiring a separate seed step.
-  const userCount = await User.count();
-  const role = userCount === 0 ? "admin" : "user";
+  // Delete any existing pending registration for this email
+  await PendingRegistration.destroy({ where: { email } });
 
   const passwordHash = await bcrypt.hash(req.body.password, 12);
-  const user = await User.create({
+  const token = generateToken();
+  const expiryHours = config.emailVerificationTokenExpiryHours || 24;
+
+  await PendingRegistration.create({
+    email,
     username,
     full_name: String(req.body.full_name).trim(),
-    email,
     password_hash: passwordHash,
-    role,
-  });
-
-  // Send verification email with 6-digit OTP code
-  const otpCode = generateOtp();
-  const expiryHours = config.emailVerificationTokenExpiryHours || 24;
-  await EmailVerificationToken.create({
-    user_id: user.user_id,
-    token_hash: hashToken(otpCode),
+    verification_token_hash: hashToken(token),
     expires_at: new Date(Date.now() + expiryHours * 60 * 60 * 1000),
   });
 
+  const verificationUrl = `${config.frontendUrl.replace(/\/$/, "")}/verify-email?token=${encodeURIComponent(token)}`;
   const template = emailTemplates.emailVerification({
-    otpCode,
-    userName: user.full_name,
+    verificationUrl,
+    userName: req.body.full_name,
   });
-  sendMail({ to: user.email, ...template }).catch(() => {});
-
-  const tokens = await issueTokenPair(user);
+  
+  sendMail({ to: email, ...template }).catch(() => {});
 
   res.status(201).json({
     success: true,
-    message: "Account created successfully. Please verify your email.",
-    ...tokens,
-    data: sanitizeUser(user),
+    message: "Registration pending. Please check your email to verify your account.",
   });
 };
 
@@ -115,7 +106,7 @@ const login = async (req, res) => {
   user.last_login = new Date();
   await user.save();
 
-  const tokens = await issueTokenPair(user);
+  const tokens = await issueTokenPair(user, req.body.remember_me === true);
 
   res.json({
     success: true,
@@ -333,82 +324,82 @@ const changePassword = async (req, res) => {
 };
 
 const verifyEmail = async (req, res) => {
-  const { email, otp_code } = req.body;
+  const { token } = req.body;
 
-  const user = await User.findOne({ where: { email: normalizeEmail(email) } });
-  if (!user) {
-    throw createError("Invalid verification code", 400);
+  if (!token) {
+    throw createError("Verification token is missing", 400);
   }
 
-  // Find all unused verification tokens for this user and check the OTP
-  const tokens = await EmailVerificationToken.findAll({
-    where: { user_id: user.user_id, used_at: null },
-    order: [["created_at", "DESC"]],
+  const pendingReg = await PendingRegistration.findOne({
+    where: { verification_token_hash: hashToken(token) },
   });
 
-  const verificationToken = tokens.find((t) => hashToken(otp_code) === t.token_hash);
-
-  if (!verificationToken) {
-    throw createError("Invalid verification code", 400);
+  if (!pendingReg) {
+    throw createError("Invalid verification link", 400);
   }
 
-  if (new Date() > verificationToken.expires_at) {
-    throw createError("This verification code has expired", 400);
+  if (new Date() > pendingReg.expires_at) {
+    await pendingReg.destroy();
+    throw createError("This verification link has expired. Please register again.", 400);
   }
 
-  user.email_verified = true;
-  user.email_verified_at = new Date();
-  await user.save();
+  // The very first registered user in the system becomes the admin automatically.
+  const userCount = await User.count();
+  const role = userCount === 0 ? "admin" : "user";
 
-  verificationToken.used_at = new Date();
-  await verificationToken.save();
+  const user = await User.create({
+    username: pendingReg.username,
+    full_name: pendingReg.full_name,
+    email: pendingReg.email,
+    password_hash: pendingReg.password_hash,
+    role,
+    email_verified: true,
+    email_verified_at: new Date(),
+    is_active: true,
+  });
+
+  await pendingReg.destroy();
 
   res.json({
     success: true,
-    message: "Email verified successfully.",
+    message: "Email verified successfully. You may now log in.",
     data: sanitizeUser(user),
   });
 };
 
 const resendVerification = async (req, res) => {
-  const { email } = req.body;
-  const user = await User.findOne({ where: { email: normalizeEmail(email) } });
+  const email = normalizeEmail(req.body.email);
+  const pendingReg = await PendingRegistration.findOne({ where: { email } });
 
   // Always return success to prevent email enumeration
-  if (!user) {
+  if (!pendingReg) {
+    const user = await User.findOne({ where: { email } });
+    if (user) {
+      throw createError("Account is already verified. Please log in.", 400);
+    }
     return res.json({
       success: true,
-      message: "If that email is registered, a verification code has been sent.",
+      message: "If that email is registered, a verification link has been sent.",
     });
   }
 
-  if (user.email_verified) {
-    throw createError("Email is already verified", 400);
-  }
-
-  // Invalidate existing tokens
-  await EmailVerificationToken.update(
-    { used_at: new Date() },
-    { where: { user_id: user.user_id, used_at: null } },
-  );
-
-  const otpCode = generateOtp();
+  const token = generateToken();
   const expiryHours = config.emailVerificationTokenExpiryHours || 24;
-  await EmailVerificationToken.create({
-    user_id: user.user_id,
-    token_hash: hashToken(otpCode),
-    expires_at: new Date(Date.now() + expiryHours * 60 * 60 * 1000),
-  });
 
+  pendingReg.verification_token_hash = hashToken(token);
+  pendingReg.expires_at = new Date(Date.now() + expiryHours * 60 * 60 * 1000);
+  await pendingReg.save();
+
+  const verificationUrl = `${config.frontendUrl.replace(/\/$/, "")}/verify-email?token=${encodeURIComponent(token)}`;
   const template = emailTemplates.emailVerification({
-    otpCode,
-    userName: user.full_name,
+    verificationUrl,
+    userName: pendingReg.full_name,
   });
-  await sendMail({ to: user.email, ...template });
+  await sendMail({ to: pendingReg.email, ...template });
 
   res.json({
     success: true,
-    message: "Verification code has been sent.",
+    message: "Verification link has been resent.",
   });
 };
 
