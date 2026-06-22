@@ -30,8 +30,8 @@ const registerSchema = z
     username: z.string().trim().min(3, "Choose a username (min. 3 characters)")
       .max(50, "Username is too long.")
       .regex(/^[a-zA-Z0-9_]+$/, "Only letters, numbers, and underscores."),
-    email: z.string().trim().min(1, "Enter a valid email — example@domain.com")
-      .email("Enter a valid email — example@domain.com"),
+    email: z.string().trim().min(1, "Enter a valid email - example@domain.com")
+      .email("Enter a valid email - example@domain.com"),
     password: z.string().min(1, "Create a password"),
     terms: z.literal(true, { errorMap: () => ({ message: "Accept the terms to continue." }) }),
   })
@@ -83,9 +83,7 @@ export default function RegisterPage() {
     register,
     handleSubmit,
     control,
-    setError,
-    trigger,
-    formState: { errors, isSubmitting, touchedFields },
+    formState: { errors, isSubmitting },
   } = useForm({
     resolver: zodResolver(registerSchema),
     mode: "onTouched",
@@ -152,7 +150,7 @@ export default function RegisterPage() {
             onClick={() => navigate("/login")}
             className="auth-bottom-link"
           >
-            Sign in →
+            Sign in -&gt;
           </button>
         </>
       }

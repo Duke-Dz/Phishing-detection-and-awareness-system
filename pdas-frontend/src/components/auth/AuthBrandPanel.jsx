@@ -1,7 +1,7 @@
+import GppGoodRoundedIcon from "@mui/icons-material/GppGoodRounded";
 import ManageSearchRoundedIcon from "@mui/icons-material/ManageSearchRounded";
 import MarkEmailReadRoundedIcon from "@mui/icons-material/MarkEmailReadRounded";
 import PublicRoundedIcon from "@mui/icons-material/PublicRounded";
-import GppGoodRoundedIcon from "@mui/icons-material/GppGoodRounded";
 import { Shield } from "lucide-react";
 
 const features = [
@@ -11,25 +11,15 @@ const features = [
   { Icon: GppGoodRoundedIcon, label: "Role-based secure access control" },
 ];
 
-export const AuthBrandPanel = ({
-  title = "Welcome to CyberSense",
-  subtitle,
-}) => {
+export const AuthBrandPanel = ({ title = "Welcome to CyberSense", subtitle }) => {
   return (
     <div className="auth-brand-panel relative flex h-full flex-col justify-between overflow-hidden px-10 py-12 lg:px-12 lg:py-14">
-
-      {/* ── layered mesh gradient orbs ── */}
       <div className="auth-bp-orb auth-bp-orb-1" />
       <div className="auth-bp-orb auth-bp-orb-2" />
       <div className="auth-bp-orb auth-bp-orb-3" />
-
-      {/* dot-grid overlay */}
       <div className="auth-grid-overlay auth-grid-drift" />
-
-      {/* noise texture */}
       <div className="auth-bp-noise" />
 
-      {/* ── floating geometric accents ── */}
       <div className="auth-float-1 pointer-events-none absolute right-[9%] top-[8%]">
         <svg width="72" height="72" viewBox="0 0 72 72" fill="none" className="opacity-[0.13]">
           <path d="M36 4L66 22V50L36 68L6 50V22L36 4Z" stroke="white" strokeWidth="1.2" />
@@ -51,10 +41,8 @@ export const AuthBrandPanel = ({
         </svg>
       </div>
 
-      {/* pulsing glow behind heading */}
       <div className="auth-glow-pulse pointer-events-none absolute left-1/2 top-[30%] h-72 w-72 -translate-x-1/2 -translate-y-1/2 rounded-full bg-cyber-500/[0.18] blur-3xl" />
 
-      {/* ── top: logo + brand name ── */}
       <div className="relative z-10 flex items-center gap-3">
         <div className="auth-bp-logo-ring flex h-11 w-11 items-center justify-center rounded-2xl">
           <svg viewBox="0 0 16 18" width="18" height="20" aria-hidden="true">
@@ -62,26 +50,21 @@ export const AuthBrandPanel = ({
             <path d="M5 9 L7.2 11.2 L11 7" fill="none" stroke="#fff" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         </div>
-        <div>
-          <p className="text-sm font-bold text-white/90">CyberSense</p>
-        </div>
+        <p className="text-sm font-bold text-white/90">CyberSense</p>
       </div>
 
-      {/* ── centre: headline ── */}
       <div className="relative z-10 flex flex-col">
         <h2 className="auth-bp-headline">{title}</h2>
         <p className="mt-4 max-w-[300px] text-sm leading-[1.75] text-white/52">
           {subtitle || "The intelligent platform that detects phishing threats, analyzes suspicious content, and keeps your organization safe."}
         </p>
 
-        {/* decorative separator */}
         <div className="mt-8 flex items-center gap-3">
           <div className="h-px flex-1 bg-gradient-to-r from-white/20 to-transparent" />
           <span className="text-[0.65rem] font-semibold uppercase text-white/25">Features</span>
           <div className="h-px flex-1 bg-gradient-to-l from-white/20 to-transparent" />
         </div>
 
-        {/* feature list — MUI rounded icons */}
         <ul className="mt-6 space-y-3.5">
           {features.map(({ Icon, label }) => (
             <li key={label} className="flex items-center gap-3">
@@ -94,11 +77,10 @@ export const AuthBrandPanel = ({
         </ul>
       </div>
 
-      {/* ── bottom: trust badge ── */}
       <div className="relative z-10">
         <div className="auth-bp-trust-badge">
           <Shield size={13} className="text-cyber-300/80" />
-          <span>Secured · JWT auth · Role-based access</span>
+          <span>Secured - JWT auth - Role-based access</span>
         </div>
       </div>
     </div>

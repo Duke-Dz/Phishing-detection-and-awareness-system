@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { XCircle, X } from "lucide-react";
+import { X, XCircle } from "lucide-react";
 
 export const Toast = ({ message, onClose, duration = 4000 }) => {
   const [isClosing, setIsClosing] = useState(false);
@@ -8,7 +8,7 @@ export const Toast = ({ message, onClose, duration = 4000 }) => {
     if (duration > 0 && message) {
       const timer = setTimeout(() => {
         setIsClosing(true);
-        setTimeout(onClose, 300); // wait for exit animation
+        setTimeout(onClose, 300);
       }, duration);
       return () => clearTimeout(timer);
     }
@@ -23,82 +23,20 @@ export const Toast = ({ message, onClose, duration = 4000 }) => {
 
   return (
     <div
-      style={{
-        position: "fixed",
-        top: "24px",
-        left: "50%",
-        transform: "translateX(-50%)",
-        zIndex: 9999,
-        animation: isClosing 
-          ? "slideUp 300ms ease forwards" 
-          : "slideDown 300ms ease forwards",
-      }}
+      className={`app-toast ${isClosing ? "app-toast-closing" : "app-toast-opening"}`}
+      role="alert"
+      aria-live="assertive"
     >
-      <style>
-        {`
-          @keyframes slideDown {
-            from {
-              transform: translate(-50%, -20px);
-              opacity: 0;
-            }
-            to {
-              transform: translate(-50%, 0);
-              opacity: 1;
-            }
-          }
-          @keyframes slideUp {
-            from {
-              transform: translate(-50%, 0);
-              opacity: 1;
-            }
-            to {
-              transform: translate(-50%, -20px);
-              opacity: 0;
-            }
-          }
-        `}
-      </style>
-      <div
-        style={{
-          background: "white",
-          borderRadius: "8px",
-          boxShadow: "0 4px 20px rgba(0,0,0,0.12)",
-          padding: "12px 20px",
-          borderTop: "3px solid #DC2626",
-          display: "flex",
-          alignItems: "center",
-          gap: "12px",
-          minWidth: "300px",
-          maxWidth: "90vw",
-        }}
-      >
-        <XCircle size={20} color="#DC2626" style={{ flexShrink: 0 }} />
-        <span
-          style={{
-            color: "#111827",
-            fontSize: "14px",
-            fontWeight: 500,
-            flexGrow: 1,
-          }}
-        >
-          {message}
-        </span>
+      <div className="app-toast-card">
+        <XCircle className="app-toast-icon" size={20} aria-hidden="true" />
+        <span className="app-toast-message">{message}</span>
         <button
           type="button"
           onClick={handleClose}
-          style={{
-            background: "none",
-            border: "none",
-            cursor: "pointer",
-            padding: "4px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            color: "#6B7280",
-          }}
-          aria-label="Close"
+          className="app-toast-close"
+          aria-label="Close notification"
         >
-          <X size={16} />
+          <X size={18} aria-hidden="true" />
         </button>
       </div>
     </div>
