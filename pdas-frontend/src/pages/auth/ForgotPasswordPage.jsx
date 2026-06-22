@@ -5,12 +5,14 @@ import { useForm } from "react-hook-form";
 import { Link, useLocation } from "react-router-dom";
 import { z } from "zod";
 import { AnimatePresence, motion as Motion } from "framer-motion";
+import { Toast } from "../../components/common/Toast";
 import { AuthFieldError } from "../../components/auth/AuthFieldError";
 import { AuthShell } from "../../components/auth/AuthShell";
 import { authService } from "../../services/authService";
 
 const forgotPasswordSchema = z.object({
-  email: z.string().trim().email("Enter a valid email address."),
+  email: z.string().trim().min(1, "Enter your email address")
+    .email("Enter a valid email — example@domain.com"),
 });
 
 export default function ForgotPasswordPage() {
@@ -22,14 +24,17 @@ export default function ForgotPasswordPage() {
   const [submittedEmail, setSubmittedEmail] = useState(defaultEmail);
   const [resendCountdown, setResendCountdown] = useState(0);
 
+  // DO NOT CHANGE: empty fields validate on submit only
   const {
     register,
     handleSubmit,
+    setError,
+    trigger,
     formState: { errors, isSubmitting },
   } = useForm({
     resolver: zodResolver(forgotPasswordSchema),
-    mode: "onSubmit",
-    reValidateMode: "onSubmit",
+    mode: "onTouched",
+    reValidateMode: "onChange",
     defaultValues: { email: defaultEmail },
   });
 
@@ -63,15 +68,15 @@ export default function ForgotPasswordPage() {
 
   return (
     <AuthShell
-      heading="Forgot password?"
-      description="Enter your email and we will send reset instructions if the account exists. Check your spam folder if the email does not arrive within 2 minutes."
+      heading={sent ? "Email sent" : "Forgot password?"}
+      description={sent ? undefined : "Enter your email and we will send reset instructions if the account exists. Check your spam folder if the email does not arrive within 2 minutes."}
       layout="single"
       showHeaderBrand
       footer={
         <>
           <p className="text-sm text-black">Remember your password?</p>
           <Link to="/login" className="auth-bottom-link">
-            Back to sign in -&gt;
+            Back to sign in →
           </Link>
         </>
       }
@@ -97,7 +102,11 @@ export default function ForgotPasswordPage() {
           </button>
         </div>
       ) : (
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
+        <>
+          {submitError && (
+            <Toast message={submitError} onClose={() => setSubmitError("")} />
+          )}
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div>
             <label className="auth-label" htmlFor="forgot-email">
               Email address
@@ -114,29 +123,11 @@ export default function ForgotPasswordPage() {
                 autoCapitalize="none"
                 spellCheck={false}
                 placeholder="you@example.com"
-                className={`auth-field auth-field-has-icon ${errors.email ? "auth-field-error" : ""}`}
-                aria-invalid={Boolean(errors.email)}
-                aria-describedby={errors.email ? "forgot-email-error" : undefined}
+                className="auth-field auth-field-has-icon"
               />
             </div>
-            <AuthFieldError id="forgot-email-error" message={errors.email?.message} />
           </div>
 
-          <AnimatePresence mode="wait">
-            {submitError && (
-              <Motion.div
-                key="forgot-error"
-                initial={{ opacity: 0, y: -6 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -6 }}
-                transition={{ duration: 0.2 }}
-                className="auth-alert auth-alert-error"
-                role="alert"
-              >
-                {submitError}
-              </Motion.div>
-            )}
-          </AnimatePresence>
 
           <button type="submit" disabled={isSubmitting} className="auth-btn-primary">
             {isSubmitting ? <Loader2 className="animate-spin" size={16} /> : <Send size={16} />}
@@ -144,6 +135,7 @@ export default function ForgotPasswordPage() {
             {!isSubmitting && <ArrowRight size={16} />}
           </button>
         </form>
+        </>
       )}
     </AuthShell>
   );

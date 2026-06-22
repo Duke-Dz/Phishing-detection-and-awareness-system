@@ -1,4 +1,4 @@
-﻿@import url("https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap");
 
 @tailwind base;
 @tailwind components;
@@ -276,7 +276,7 @@ body {
    Auth Ã¢â‚¬â€ Immersive background (shared)
    Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */
 .auth-immersive-bg {
-  background: #F0F4F8;
+  background: #FFFFFF;
 }
 
 /* Floating background orbs Ã¢â‚¬â€ single-page layout */
@@ -297,10 +297,13 @@ body {
 .auth-glass-card {
   position: relative;
   border-radius: var(--auth-card-radius);
-  border: 1px solid rgba(226,232,240,0.95);
+  border: 1px solid rgba(0, 0, 0, 0.08);
   outline: none;
-  background: #ffffff;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.10);
+  background-color: #FFFFFF;
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.04),
+    0 4px 8px rgba(0, 0, 0, 0.06),
+    0 16px 32px rgba(0, 0, 0, 0.08);
   animation: auth-form-enter 560ms cubic-bezier(0.22,1,0.36,1) 80ms both;
 }
 
@@ -311,7 +314,7 @@ body {
 
 @media (max-width: 639px) {
   .auth-immersive-bg {
-    background: #F0F4F8;
+    background: #FFFFFF;
   }
 
   .auth-bg-orb {
@@ -449,8 +452,7 @@ input[type="password"].auth-field {
 .auth-field:focus {
   border-color: rgba(13,81,140,0.95);
   background: rgba(255,255,255,1);
-  outline: 2px solid #1D4ED8;
-  outline-offset: 2px;
+  outline: none;
 }
 
 
@@ -520,8 +522,7 @@ input[type="password"].auth-field {
 
 .auth-otp-cell:focus {
   border-color: rgba(13,81,140,0.95);
-  outline: 2px solid #1D4ED8;
-  outline-offset: 2px;
+  outline: none;
 }
 
 /* Filled state Ã¢â‚¬â€ neon glow */

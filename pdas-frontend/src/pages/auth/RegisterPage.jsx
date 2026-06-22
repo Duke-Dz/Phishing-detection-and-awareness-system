@@ -1,50 +1,74 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowRight, AtSign, Hash, Loader2, UserPlus } from "lucide-react";
+import {
+  ArrowRight,
+  AtSign,
+  Hash,
+  Loader2,
+  UserPlus,
+  Check,
+  X,
+} from "lucide-react";
 import { useMemo, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { Link, useNavigate } from "react-router-dom";
 import { z } from "zod";
 import { AnimatePresence, motion as Motion } from "framer-motion";
+import { Toast } from "../../components/common/Toast";
 import { AuthFieldError } from "../../components/auth/AuthFieldError";
 import { AuthPasswordField } from "../../components/auth/AuthPasswordField";
 import { AuthShell } from "../../components/auth/AuthShell";
-import { PasswordChecklist } from "../../components/auth/PasswordChecklist";
 import { useAuth } from "../../hooks/useAuth";
 import { PASSWORD_RULES } from "../../utils/constants";
 import { evaluatePassword } from "../../utils/passwordPolicy";
 
-const nameSchema = z
-  .string()
-  .trim()
-  .min(1, "This field is required.")
-  .max(50, "Keep this under 50 characters.")
-  .regex(/^[a-zA-Z\s'-]+$/, "Use letters, spaces, hyphens, or apostrophes.");
-
 const registerSchema = z
   .object({
-    first_name: nameSchema,
-    last_name: nameSchema,
-    username: z
-      .string()
-      .trim()
-      .min(3, "At least 3 characters.")
+    first_name: z.string().trim().min(1, "Enter your first name")
+      .regex(/^[a-zA-Z\s'-]+$/, "Use letters, spaces, hyphens, or apostrophes."),
+    last_name: z.string().trim().min(1, "Enter your last name")
+      .regex(/^[a-zA-Z\s'-]+$/, "Use letters, spaces, hyphens, or apostrophes."),
+    username: z.string().trim().min(3, "Choose a username (min. 3 characters)")
       .max(50, "Username is too long.")
       .regex(/^[a-zA-Z0-9_]+$/, "Only letters, numbers, and underscores."),
-    email: z.string().trim().email("Enter a valid email address."),
-    password: z
-      .string()
-      .min(PASSWORD_RULES.minLength, `At least ${PASSWORD_RULES.minLength} characters required.`)
-      .max(PASSWORD_RULES.maxLength, `Password must be ${PASSWORD_RULES.maxLength} characters or fewer.`),
+    email: z.string().trim().min(1, "Enter a valid email — example@domain.com")
+      .email("Enter a valid email — example@domain.com"),
+    password: z.string().min(1, "Create a password"),
     terms: z.literal(true, { errorMap: () => ({ message: "Accept the terms to continue." }) }),
   })
   .superRefine((values, ctx) => {
-    const state = evaluatePassword(values.password, values);
-    if (!state.valid) {
+    if (values.username && values.username.length < 3) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        path: ["password"],
-        message: "Password does not meet all requirements.",
+        path: ["username"],
+        message: "Choose a username (min. 3 characters)",
       });
+    }
+    if (values.password) {
+      if (values.password.length < 8) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["password"],
+          message: "Password must be at least 8 characters",
+        });
+      } else if (!/[A-Z]/.test(values.password)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["password"],
+          message: "Add at least one uppercase letter (A-Z)",
+        });
+      } else if (!/[0-9]/.test(values.password)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["password"],
+          message: "Add at least one number (0-9)",
+        });
+      } else if (!/[!@#$%^&*(),.?":{}|<>]/.test(values.password)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["password"],
+          message: "Add a special character (!@#$...)",
+        });
+      }
     }
   });
 
@@ -52,11 +76,15 @@ export default function RegisterPage() {
   const { register: registerAccount } = useAuth();
   const navigate = useNavigate();
   const [submitError, setSubmitError] = useState("");
+  const [isPasswordFocused, setIsPasswordFocused] = useState(false);
 
+  // DO NOT CHANGE: empty fields validate on submit only
   const {
     register,
     handleSubmit,
     control,
+    setError,
+    trigger,
     formState: { errors, isSubmitting, touchedFields },
   } = useForm({
     resolver: zodResolver(registerSchema),
@@ -72,7 +100,7 @@ export default function RegisterPage() {
     },
   });
 
-  const isValid = (field) => touchedFields[field] && !errors[field];
+
 
   const passwordValue = useWatch({ control, name: "password" });
   const usernameValue = useWatch({ control, name: "username" });
@@ -90,18 +118,21 @@ export default function RegisterPage() {
     [emailValue, firstNameValue, lastNameValue, passwordValue, usernameValue],
   );
 
-  const showChecklist = passwordValue.length > 0;
+
 
   const onSubmit = async (values) => {
     setSubmitError("");
     try {
       await registerAccount({
-        username: values.username.trim().toLowerCase(),
-        email: values.email.trim().toLowerCase(),
         full_name: `${values.first_name.trim()} ${values.last_name.trim()}`,
+        username: values.username.trim(),
+        email: values.email.trim().toLowerCase(),
         password: values.password,
       });
-      navigate(`/verify-email?email=${encodeURIComponent(values.email.trim().toLowerCase())}`, { replace: true });
+      navigate(
+        `/verify-email?email=${encodeURIComponent(values.email.trim().toLowerCase())}`,
+        { replace: true },
+      );
     } catch (error) {
       setSubmitError(error.message || "Unable to create your account.");
     }
@@ -121,12 +152,16 @@ export default function RegisterPage() {
             onClick={() => navigate("/login")}
             className="auth-bottom-link"
           >
-            Sign in -&gt;
+            Sign in →
           </button>
         </>
       }
     >
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
+      <>
+        {submitError && (
+          <Toast message={submitError} onClose={() => setSubmitError("")} />
+        )}
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
             <label className="auth-label" htmlFor="reg-firstname">
@@ -157,10 +192,10 @@ export default function RegisterPage() {
                 placeholder="John"
                 aria-invalid={Boolean(errors.first_name)}
                 aria-describedby={errors.first_name ? "first_name-error" : undefined}
-                className={`auth-field auth-field-has-icon pr-9 ${errors.first_name ? "auth-field-error" : isValid("first_name") ? "auth-field-success" : ""}`}
+                className="auth-field auth-field-has-icon pr-9"
               />
             </div>
-            <AuthFieldError id="first_name-error" message={errors.first_name?.message} />
+            {errors.first_name && <AuthFieldError id="first_name-error" message={errors.first_name.message} icon="user" />}
           </div>
 
           <div>
@@ -191,10 +226,10 @@ export default function RegisterPage() {
                 placeholder="Doe"
                 aria-invalid={Boolean(errors.last_name)}
                 aria-describedby={errors.last_name ? "last_name-error" : undefined}
-                className={`auth-field auth-field-has-icon pr-9 ${errors.last_name ? "auth-field-error" : isValid("last_name") ? "auth-field-success" : ""}`}
+                className="auth-field auth-field-has-icon pr-9"
               />
             </div>
-            <AuthFieldError id="last_name-error" message={errors.last_name?.message} />
+            {errors.last_name && <AuthFieldError id="last_name-error" message={errors.last_name.message} icon="user" />}
           </div>
         </div>
 
@@ -217,10 +252,10 @@ export default function RegisterPage() {
                 minLength={3}
                 aria-invalid={Boolean(errors.username)}
                 aria-describedby={errors.username ? "username-error" : undefined}
-                className={`auth-field auth-field-has-icon pr-9 ${errors.username ? "auth-field-error" : isValid("username") ? "auth-field-success" : ""}`}
+                className="auth-field auth-field-has-icon pr-9"
               />
             </div>
-            <AuthFieldError id="username-error" message={errors.username?.message} />
+            {errors.username && <AuthFieldError id="username-error" message={errors.username.message} icon="hash" />}
           </div>
 
           <div>
@@ -241,15 +276,19 @@ export default function RegisterPage() {
                 placeholder="you@example.com"
                 aria-invalid={Boolean(errors.email)}
                 aria-describedby={errors.email ? "email-error" : undefined}
-                className={`auth-field auth-field-has-icon pr-9 ${errors.email ? "auth-field-error" : isValid("email") ? "auth-field-success" : ""}`}
-                style={{ textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap" }}
+                className="auth-field auth-field-has-icon pr-9"
+                style={{
+                  textOverflow: "ellipsis",
+                  overflow: "hidden",
+                  whiteSpace: "nowrap",
+                }}
               />
             </div>
-            <AuthFieldError id="email-error" message={errors.email?.message} />
+            {errors.email && <AuthFieldError id="email-error" message={errors.email.message} icon="email" />}
           </div>
         </div>
 
-        <div>
+        <div className="relative">
           <AuthPasswordField
             id="reg-password"
             label="Password"
@@ -259,11 +298,60 @@ export default function RegisterPage() {
             placeholder="Create a password"
             minLength={PASSWORD_RULES.minLength}
             maxLength={PASSWORD_RULES.maxLength}
-            valid={isValid("password")}
+            valid={false}
+            onFocus={() => setIsPasswordFocused(true)}
+            onBlur={() => setIsPasswordFocused(false)}
           />
+
+          <AnimatePresence>
+            {isPasswordFocused && (
+              <Motion.div
+                initial={{ opacity: 0, y: 4, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 4, scale: 0.95 }}
+                transition={{ duration: 0.15 }}
+                className="absolute z-50 bg-white shadow-[0_4px_16px_rgba(0,0,0,0.12)] rounded-[8px] p-[12px_16px] w-[240px] bottom-full left-0 mb-2 sm:bottom-auto sm:top-0 sm:left-full sm:ml-3 sm:mb-0"
+              >
+                <div className="absolute -bottom-[6px] left-[20px] w-0 h-0 border-l-[6px] border-l-transparent border-t-[6px] border-t-white border-r-[6px] border-r-transparent sm:hidden" />
+                <div className="absolute top-[32px] -left-[6px] hidden sm:block w-0 h-0 border-t-[6px] border-t-transparent border-r-[6px] border-r-white border-b-[6px] border-b-transparent" />
+
+                <ul className="flex flex-col gap-1.5">
+                  {passwordState.checks?.map((check) => (
+                    <li
+                      key={check.id}
+                      className="flex items-start gap-2 text-[12px] leading-tight"
+                    >
+                      {check.passed ? (
+                        <Check
+                          size={14}
+                          strokeWidth={3}
+                          className="text-emerald-500 shrink-0"
+                          aria-hidden="true"
+                        />
+                      ) : (
+                        <X
+                          size={14}
+                          strokeWidth={3}
+                          className="text-slate-300 shrink-0"
+                          aria-hidden="true"
+                        />
+                      )}
+                      <span
+                        className={
+                          check.passed ? "text-slate-800" : "text-slate-500"
+                        }
+                      >
+                        {check.label}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </Motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
-        <PasswordChecklist id="reg-password-checklist" passwordState={passwordState} show={showChecklist} />
+
 
         <div className="mt-2">
           <div className="flex items-start gap-2">
@@ -272,45 +360,31 @@ export default function RegisterPage() {
               id="reg-terms"
               {...register("terms")}
               className="mt-1"
-              aria-invalid={Boolean(errors.terms)}
-              aria-describedby={errors.terms ? "terms-error" : undefined}
             />
-            <label htmlFor="reg-terms" className="text-sm leading-5 text-slate-600">
-              I agree to the{" "}
-              <Link to="/terms" style={{ color: "#1D4ED8", textDecoration: "underline", fontWeight: 500 }}>
-                Terms of Service
-              </Link>{" "}
-              and{" "}
-              <Link to="/privacy" style={{ color: "#1D4ED8", textDecoration: "underline", fontWeight: 500 }}>
-                Privacy Policy
-              </Link>
+            <label htmlFor="reg-terms" className="text-[13px] leading-5 text-slate-600 whitespace-nowrap">
+              I agree to the <Link to="/terms" style={{color: "#0D818C", fontWeight: 500}}>Terms of Service</Link> and <Link to="/privacy" style={{color: "#0D818C", fontWeight: 500}}>Privacy Policy</Link>
             </label>
           </div>
-          <AuthFieldError id="terms-error" message={errors.terms?.message} />
+          {errors.terms && <AuthFieldError id="terms-error" message={errors.terms.message} icon="AlertCircle" />}
         </div>
 
-        <AnimatePresence mode="wait">
-          {submitError && (
-            <Motion.div
-              key="register-error"
-              initial={{ opacity: 0, y: -6 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -6 }}
-              transition={{ duration: 0.2 }}
-              className="auth-alert auth-alert-error"
-              role="alert"
-            >
-              {submitError}
-            </Motion.div>
-          )}
-        </AnimatePresence>
 
-        <button type="submit" disabled={isSubmitting} className="auth-btn-primary">
-          {isSubmitting ? <Loader2 className="animate-spin" size={16} /> : <UserPlus size={16} />}
+
+        <button
+          type="submit"
+          disabled={isSubmitting}
+          className="auth-btn-primary"
+        >
+          {isSubmitting ? (
+            <Loader2 className="animate-spin" size={16} />
+          ) : (
+            <UserPlus size={16} />
+          )}
           {isSubmitting ? "Creating account..." : "Create account"}
           {!isSubmitting && <ArrowRight size={16} />}
         </button>
-      </form>
+        </form>
+      </>
     </AuthShell>
   );
 }

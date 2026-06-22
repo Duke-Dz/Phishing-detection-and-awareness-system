@@ -23,21 +23,18 @@ export const authService = {
     }
   },
 
-  async login({ identifier, password }) {
+  async login({ identifier, password, remember_me }) {
     try {
-      const { data } = await api.post("/auth/login", { identifier, password });
+      const { data } = await api.post("/auth/login", { identifier, password, remember_me });
       return data;
     } catch (error) {
       extractError(error);
     }
   },
 
-  async verifyEmail({ email, otp_code }) {
+  async verifyEmail({ token }) {
     try {
-      const { data } = await api.post("/auth/verify-email", {
-        email,
-        otp_code,
-      });
+      const { data } = await api.post("/auth/verify-email", { token });
       return data;
     } catch (error) {
       extractError(error);

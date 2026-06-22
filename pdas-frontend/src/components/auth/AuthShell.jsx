@@ -48,7 +48,7 @@ export const AuthShell = ({
       <header className={(!isImmersive || showHeaderBrand) ? "text-center" : "text-center lg:text-left"}>
         <h1
           id={headingId}
-          className="text-[1.75rem] font-bold text-black sm:text-[1.9rem]"
+          className="text-2xl font-bold text-black sm:text-[1.75rem] lg:text-[1.9rem]"
           style={{ lineHeight: "1.1" }}
         >
           {heading}
@@ -78,8 +78,8 @@ export const AuthShell = ({
 
   if (isImmersive) {
     return (
-      <div className="auth-immersive-bg relative min-h-screen text-slate-900">
-        <div className="relative z-10 mx-auto flex min-h-screen w-full max-w-7xl items-center px-4 py-6 sm:px-6 lg:px-8">
+      <div className="auth-immersive-bg relative min-h-[100dvh] text-slate-900">
+        <div className="relative z-10 mx-auto flex min-h-[100dvh] w-full max-w-7xl items-center px-4 py-6 sm:px-6 lg:px-8">
           <div className="grid w-full grid-cols-1 items-center gap-6 lg:grid-cols-2 lg:gap-8">
             {/* Brand panel — hidden on mobile */}
             <div className="auth-brand-enter hidden min-h-[520px] lg:block">
@@ -98,7 +98,7 @@ export const AuthShell = ({
 
   // ── Single-column layout ────────────────────────────────────────────────────
   return (
-    <div className="auth-immersive-bg relative min-h-screen text-slate-900 flex items-center justify-center p-4 sm:p-6 lg:p-8 overflow-hidden">
+    <div className="auth-immersive-bg relative min-h-[100dvh] text-slate-900 flex items-center justify-center p-4 sm:p-6 lg:p-8 overflow-hidden">
       <div className="relative z-10 w-full" style={{ maxWidth: "min(100%, 26rem)" }}>
         {formCard}
       </div>

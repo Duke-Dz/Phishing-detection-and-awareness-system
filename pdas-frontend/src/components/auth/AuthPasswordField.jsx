@@ -64,11 +64,15 @@ export const AuthPasswordField = ({
           type={visible ? "text" : "password"}
           autoComplete={autoComplete}
           placeholder={placeholder}
-          className={`auth-field auth-field-has-icon pr-11 ${error ? "auth-field-error" : valid ? "auth-field-success" : ""}`}
-          aria-invalid={Boolean(error)}
-          aria-describedby={error ? `${id}-error` : undefined}
-          onFocus={onFocus || registration?.onFocus}
-          onBlur={onBlur || registration?.onBlur}
+          className={`auth-field auth-field-has-icon pr-11 ${valid ? "auth-field-success" : ""}`}
+          onFocus={(e) => {
+            if (onFocus) onFocus(e);
+            if (registration?.onFocus) registration.onFocus(e);
+          }}
+          onBlur={(e) => {
+            if (onBlur) onBlur(e);
+            if (registration?.onBlur) registration.onBlur(e);
+          }}
           style={{ backgroundColor: "rgba(255,255,255,0.94)" }}
           {...props}
         />
@@ -83,8 +87,6 @@ export const AuthPasswordField = ({
           {visible ? <EyeOff size={16} /> : <Eye size={16} />}
         </button>
       </div>
-
-      <AuthFieldError id={`${id}-error`} message={error} />
     </div>
   );
 };
