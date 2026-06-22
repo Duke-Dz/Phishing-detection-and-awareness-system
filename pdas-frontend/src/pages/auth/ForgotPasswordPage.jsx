@@ -6,7 +6,6 @@ import { Link, useLocation } from "react-router-dom";
 import { z } from "zod";
 import { AnimatePresence, motion as Motion } from "framer-motion";
 import { Toast } from "../../components/common/Toast";
-import { AuthFieldError } from "../../components/auth/AuthFieldError";
 import { AuthShell } from "../../components/auth/AuthShell";
 import { authService } from "../../services/authService";
 
@@ -123,6 +122,7 @@ export default function ForgotPasswordPage() {
                 autoCapitalize="none"
                 spellCheck={false}
                 placeholder="you@example.com"
+                required
                 className="auth-field auth-field-has-icon"
               />
             </div>

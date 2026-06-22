@@ -144,7 +144,6 @@ export default function ResetPasswordPage() {
             transition={{ duration: 0.2 }}
             onSubmit={handleSubmit(onSubmit)}
             className="space-y-4"
-            noValidate
           >
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <AuthPasswordField
@@ -156,6 +155,7 @@ export default function ResetPasswordPage() {
                 placeholder="Create a password"
                 minLength={PASSWORD_RULES.minLength}
                 maxLength={PASSWORD_RULES.maxLength}
+                required
               />
               <AuthPasswordField
                 id="reset-confirm-password"
@@ -166,6 +166,7 @@ export default function ResetPasswordPage() {
                 placeholder="Repeat password"
                 minLength={PASSWORD_RULES.minLength}
                 maxLength={PASSWORD_RULES.maxLength}
+                required
               />
             </div>
 
