@@ -41,9 +41,6 @@ export const AuthProvider = ({ children }) => {
 
   const register = useCallback(async (data) => {
     const response = await authService.register(data);
-    localStorage.setItem("access_token", response.token);
-    localStorage.setItem("refresh_token", response.refreshToken);
-    setUser(response.data);
     return response;
   }, []);
 

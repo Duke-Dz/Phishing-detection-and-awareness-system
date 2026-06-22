@@ -166,9 +166,7 @@ export default function CyberSenseLogo() {
       <div className="relative h-[96px] w-[96px] flex-shrink-0 sm:h-[104px] sm:w-[104px]">
         <svg
           viewBox="0 0 260 260"
-          width="100%"
-          height="100%"
-          className="overflow-visible"
+          className="h-full w-full overflow-visible scale-[1.3]"
           aria-hidden="true"
         >
           <defs>
@@ -270,26 +268,26 @@ export default function CyberSenseLogo() {
             {/* Outer shield */}
             <path
               d={`
-                M ${CENTER} ${CENTER - 47}
-                L ${CENTER + 39} ${CENTER - 23}
-                L ${CENTER + 39} ${CENTER + 14}
-                Q ${CENTER + 39} ${CENTER + 45} ${CENTER} ${CENTER + 63}
-                Q ${CENTER - 39} ${CENTER + 45} ${CENTER - 39} ${CENTER + 14}
-                L ${CENTER - 39} ${CENTER - 23}
+                M ${CENTER} ${CENTER - 55}
+                L ${CENTER + 39} ${CENTER - 31}
+                L ${CENTER + 39} ${CENTER + 6}
+                Q ${CENTER + 39} ${CENTER + 37} ${CENTER} ${CENTER + 55}
+                Q ${CENTER - 39} ${CENTER + 37} ${CENTER - 39} ${CENTER + 6}
+                L ${CENTER - 39} ${CENTER - 31}
                 Z
               `}
               fill="url(#cs-shieldOuter)"
             />
             {/* Rim highlight — top edge */}
             <path
-              d={`M ${CENTER} ${CENTER - 47} L ${CENTER + 39} ${CENTER - 23}`}
+              d={`M ${CENTER} ${CENTER - 55} L ${CENTER + 39} ${CENTER - 31}`}
               fill="none"
               stroke="rgba(255,255,255,0.35)"
               strokeWidth="1.5"
               strokeLinecap="round"
             />
             <path
-              d={`M ${CENTER} ${CENTER - 47} L ${CENTER - 39} ${CENTER - 23}`}
+              d={`M ${CENTER} ${CENTER - 55} L ${CENTER - 39} ${CENTER - 31}`}
               fill="none"
               stroke="rgba(255,255,255,0.35)"
               strokeWidth="1.5"
@@ -299,12 +297,12 @@ export default function CyberSenseLogo() {
             {/* Inner shield */}
             <path
               d={`
-                M ${CENTER} ${CENTER - 32}
-                L ${CENTER + 27} ${CENTER - 15}
-                L ${CENTER + 27} ${CENTER + 10}
-                Q ${CENTER + 27} ${CENTER + 33} ${CENTER} ${CENTER + 45}
-                Q ${CENTER - 27} ${CENTER + 33} ${CENTER - 27} ${CENTER + 10}
-                L ${CENTER - 27} ${CENTER - 15}
+                M ${CENTER} ${CENTER - 40}
+                L ${CENTER + 27} ${CENTER - 23}
+                L ${CENTER + 27} ${CENTER + 2}
+                Q ${CENTER + 27} ${CENTER + 25} ${CENTER} ${CENTER + 37}
+                Q ${CENTER - 27} ${CENTER + 25} ${CENTER - 27} ${CENTER + 2}
+                L ${CENTER - 27} ${CENTER - 23}
                 Z
               `}
               fill="url(#cs-shieldInner)"
@@ -315,11 +313,11 @@ export default function CyberSenseLogo() {
           {/* Shield surface highlight — frosted top strip */}
           <path
             d={`
-              M ${CENTER - 33} ${CENTER - 20}
-              L ${CENTER} ${CENTER - 43}
-              L ${CENTER + 33} ${CENTER - 20}
-              Q ${CENTER + 33} ${CENTER - 7} ${CENTER} ${CENTER - 3}
-              Q ${CENTER - 33} ${CENTER - 7} ${CENTER - 33} ${CENTER - 20}
+              M ${CENTER - 33} ${CENTER - 28}
+              L ${CENTER} ${CENTER - 51}
+              L ${CENTER + 33} ${CENTER - 28}
+              Q ${CENTER + 33} ${CENTER - 15} ${CENTER} ${CENTER - 11}
+              Q ${CENTER - 33} ${CENTER - 15} ${CENTER - 33} ${CENTER - 28}
               Z
             `}
             fill="rgba(255,255,255,0.12)"
@@ -327,7 +325,7 @@ export default function CyberSenseLogo() {
 
           {/* Check mark — crisp native SVG (no foreignObject needed for a simple path) */}
           <path
-            d={`M ${CENTER - 9} ${CENTER + 5} L ${CENTER - 2} ${CENTER + 13} L ${CENTER + 12} ${CENTER - 4}`}
+            d={`M ${CENTER - 9} ${CENTER - 3} L ${CENTER - 2} ${CENTER + 5} L ${CENTER + 12} ${CENTER - 12}`}
             fill="none"
             stroke="rgba(255,255,255,0.96)"
             strokeWidth="5"

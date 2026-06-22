@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { z } from "zod";
 import { AnimatePresence, motion as Motion } from "framer-motion";
+import { Toast } from "../../components/common/Toast";
 import { AuthFieldError } from "../../components/auth/AuthFieldError";
 import { AuthPasswordField } from "../../components/auth/AuthPasswordField";
 import { AuthShell } from "../../components/auth/AuthShell";
@@ -12,8 +13,9 @@ import { useAuth } from "../../hooks/useAuth";
 import { ROLE_DESTINATIONS } from "../../utils/constants";
 
 const loginSchema = z.object({
-  identifier: z.string().trim().min(1, "Email or username is required."),
-  password: z.string().min(1, "Password is required."),
+  identifier: z.string().trim().min(1, "Enter your email or username"),
+  password: z.string().min(1, "Enter your password"),
+  remember_me: z.boolean().optional(),
 });
 
 export default function LoginPage() {
@@ -22,16 +24,19 @@ export default function LoginPage() {
   const location = useLocation();
   const [submitError, setSubmitError] = useState("");
 
+  // DO NOT CHANGE: empty fields validate on submit only
   const {
     register,
     handleSubmit,
     getValues,
+    setError,
+    trigger,
     formState: { errors, isSubmitting },
   } = useForm({
     resolver: zodResolver(loginSchema),
-    mode: "onSubmit",
-    reValidateMode: "onSubmit",
-    defaultValues: { identifier: "", password: "" },
+    mode: "onTouched",
+    reValidateMode: "onChange",
+    defaultValues: { identifier: "", password: "", remember_me: false },
   });
 
   const onSubmit = async (values) => {
@@ -40,6 +45,7 @@ export default function LoginPage() {
       const response = await login({
         identifier: values.identifier.trim(),
         password: values.password,
+        remember_me: values.remember_me,
       });
       const destination =
         location.state?.from?.pathname ||
@@ -65,12 +71,16 @@ export default function LoginPage() {
             onClick={() => navigate("/register")}
             className="auth-bottom-link"
           >
-            Create an account -&gt;
+            Create an account →
           </button>
         </>
       }
     >
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
+      {submitError && (
+        <Toast message={submitError} onClose={() => setSubmitError("")} />
+      )}
+
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div>
           <label className="auth-label" htmlFor="login-identifier">
             Email or username
@@ -99,12 +109,9 @@ export default function LoginPage() {
               autoCapitalize="none"
               spellCheck={false}
               placeholder="you@example.com"
-              className={`auth-field auth-field-has-icon ${errors.identifier ? "auth-field-error" : ""}`}
-              aria-invalid={Boolean(errors.identifier)}
-              aria-describedby={errors.identifier ? "login-identifier-error" : undefined}
+              className="auth-field auth-field-has-icon"
             />
           </div>
-          <AuthFieldError id="login-identifier-error" message={errors.identifier?.message} />
         </div>
 
         <AuthPasswordField
@@ -125,21 +132,17 @@ export default function LoginPage() {
           }
         />
 
-        <AnimatePresence mode="wait">
-          {submitError && (
-            <Motion.div
-              key="login-error"
-              initial={{ opacity: 0, y: -6 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -6 }}
-              transition={{ duration: 0.2 }}
-              className="auth-alert auth-alert-error"
-              role="alert"
-            >
-              {submitError}
-            </Motion.div>
-          )}
-        </AnimatePresence>
+        <div className="flex items-center">
+          <input
+            id="login-remember"
+            type="checkbox"
+            {...register("remember_me")}
+            className="h-4 w-4 rounded border-gray-300 text-cyber-600 focus:ring-cyber-500"
+          />
+          <label htmlFor="login-remember" className="ml-2 text-[14px] text-[#6B7280]">
+            Remember me
+          </label>
+        </div>
 
         <button type="submit" disabled={isSubmitting} className="auth-btn-primary">
           {isSubmitting ? <Loader2 className="animate-spin" size={16} /> : <KeyRound size={16} />}
