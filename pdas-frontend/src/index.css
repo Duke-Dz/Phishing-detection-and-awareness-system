@@ -265,6 +265,14 @@ body {
   background: #FFFFFF;
 }
 
+.auth-single-shell {
+  width: 100%;
+}
+
+.auth-single-panel {
+  width: min(100%, clamp(20rem, 92vw, 27.5rem));
+}
+
 
 .auth-bg-orb {
   position: absolute;
@@ -1045,7 +1053,8 @@ input[type="password"].auth-field {
 
   .auth-single-panel {
     justify-self: center;
-    max-width: min(100%, 27rem) !important;
+    width: min(100%, calc(100vw - 1.5rem)) !important;
+    max-width: 30rem !important;
   }
 
   .auth-glass-card {
