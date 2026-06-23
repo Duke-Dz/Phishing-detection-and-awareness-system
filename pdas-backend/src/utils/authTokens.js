@@ -20,54 +20,91 @@ const signAccessToken = (user) =>
     { expiresIn: process.env.JWT_EXPIRES_IN || "15m" },
   );
 
-const issueRefreshToken = async (user, rememberMe = false) => {
+const issueRefreshToken = async (user, rememberMe = false, req = null) => {
   const refreshToken = crypto.randomBytes(64).toString("hex");
+
+  const metadata = {};
+  if (req) {
+    metadata.ip_address = req.ip || req.connection?.remoteAddress || null;
+    metadata.user_agent = req.headers['user-agent'] || null;
+    metadata.last_used_at = new Date();
+  }
 
   await RefreshToken.create({
     user_id: user.user_id,
     token_hash: hashToken(refreshToken),
     expires_at: getRefreshExpiry(rememberMe),
+    ...metadata
   });
 
   return refreshToken;
 };
 
-const issueTokenPair = async (user, rememberMe = false) => ({
+const issueTokenPair = async (user, rememberMe = false, req = null) => ({
   token: signAccessToken(user),
-  refreshToken: await issueRefreshToken(user, rememberMe),
+  refreshToken: await issueRefreshToken(user, rememberMe, req),
 });
 
-const rotateRefreshToken = async (refreshToken) => {
+const { sequelize } = require("../config/sequelize");
+
+const rotateRefreshToken = async (refreshToken, req = null) => {
   const tokenHash = hashToken(refreshToken);
-  const storedToken = await RefreshToken.findOne({
-    where: {
-      token_hash: tokenHash,
-      revoked_at: null,
-      expires_at: { [Op.gt]: new Date() },
-    },
+  
+  const existingToken = await RefreshToken.findOne({
+    where: { token_hash: tokenHash },
     include: [{ model: User, as: "user" }],
   });
 
-  if (!storedToken || !storedToken.user || !storedToken.user.is_active) {
+  if (!existingToken) {
     return null;
   }
 
-  const newRefreshToken = crypto.randomBytes(64).toString("hex");
-  storedToken.revoked_at = new Date();
-  storedToken.replaced_by_hash = hashToken(newRefreshToken);
-  await storedToken.save();
+  // Replay detection
+  if (existingToken.revoked_at !== null || existingToken.replaced_by_hash !== null) {
+    await revokeUserRefreshTokens(existingToken.user_id);
+    const { logSecurityEvent } = require("./securityLogger");
+    logSecurityEvent(existingToken.user_id, 'TOKEN_REPLAY_DETECTED', req, { tokenHash });
+    return { error: 'ReplayDetected' };
+  }
 
-  await RefreshToken.create({
-    user_id: storedToken.user_id,
-    token_hash: storedToken.replaced_by_hash,
-    expires_at: getRefreshExpiry(),
+  if (existingToken.expires_at <= new Date() || !existingToken.user || !existingToken.user.is_active) {
+    return null;
+  }
+
+  // Inherit remember_me: calculate duration between created_at and expires_at
+  const originalDurationMs = existingToken.expires_at.getTime() - existingToken.created_at.getTime();
+  const originalDays = Math.round(originalDurationMs / (24 * 60 * 60 * 1000));
+  const isRememberMe = originalDays > 1;
+
+  return await sequelize.transaction(async (t) => {
+    const newRefreshToken = crypto.randomBytes(64).toString("hex");
+    
+    // Update last_used_at on the old token (to signify it was successfully used for rotation right now)
+    existingToken.last_used_at = new Date();
+    existingToken.revoked_at = new Date();
+    existingToken.replaced_by_hash = hashToken(newRefreshToken);
+    await existingToken.save({ transaction: t });
+
+    const metadata = {};
+    if (req) {
+      metadata.ip_address = req.ip || req.connection?.remoteAddress || null;
+      metadata.user_agent = req.headers['user-agent'] || null;
+      metadata.last_used_at = new Date();
+    }
+
+    await RefreshToken.create({
+      user_id: existingToken.user_id,
+      token_hash: existingToken.replaced_by_hash,
+      expires_at: getRefreshExpiry(isRememberMe),
+      ...metadata
+    }, { transaction: t });
+
+    return {
+      user: existingToken.user,
+      token: signAccessToken(existingToken.user),
+      refreshToken: newRefreshToken,
+    };
   });
-
-  return {
-    user: storedToken.user,
-    token: signAccessToken(storedToken.user),
-    refreshToken: newRefreshToken,
-  };
 };
 
 const revokeRefreshToken = async (refreshToken) => {

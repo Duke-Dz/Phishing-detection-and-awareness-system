@@ -34,6 +34,18 @@ const RefreshToken = sequelize.define(
       type: DataTypes.STRING(64),
       allowNull: true,
     },
+    user_agent: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    ip_address: {
+      type: DataTypes.STRING(45),
+      allowNull: true,
+    },
+    last_used_at: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
   },
   {
     tableName: "refresh_tokens",

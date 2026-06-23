@@ -12,6 +12,7 @@ const AuditLog = require("./AuditLog");
 const SystemSetting = require("./SystemSetting");
 const ReportComment = require("./ReportComment");
 const PendingRegistration = require("./PendingRegistration");
+const SecurityEvent = require("./SecurityEvent");
 
 // ── User → Reports (cascade: delete user = delete their reports) ──
 User.hasMany(Report, { foreignKey: "user_id", as: "reports", onDelete: "CASCADE" });
@@ -66,6 +67,10 @@ ReportComment.belongsTo(Report, { foreignKey: "report_id", as: "report" });
 User.hasMany(ReportComment, { foreignKey: "user_id", as: "reportComments", onDelete: "CASCADE" });
 ReportComment.belongsTo(User, { foreignKey: "user_id", as: "author" });
 
+// ── User → SecurityEvent (set null: preserve history if user deleted) ──
+User.hasMany(SecurityEvent, { foreignKey: "user_id", as: "securityEvents", onDelete: "SET NULL" });
+SecurityEvent.belongsTo(User, { foreignKey: "user_id", as: "user" });
+
 module.exports = {
   User,
   Report,
@@ -81,4 +86,5 @@ module.exports = {
   SystemSetting,
   ReportComment,
   PendingRegistration,
+  SecurityEvent,
 };

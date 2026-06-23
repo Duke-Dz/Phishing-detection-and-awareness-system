@@ -928,6 +928,101 @@ const emailTemplates = {
     return { subject, html, text };
   },
 
+  // ── 10. ACCOUNT LOCKED ────────────────────────────────────────
+  accountLocked({ userName, lockoutMinutes, resetUrl }) {
+    const subject = `Security Alert: Your ${BRAND.name} account has been temporarily locked`;
+    const safeResetUrl = normalizeUrl(resetUrl);
+
+    const html = layout(`
+      <div style="text-align: center;">
+        <div style="display: inline-block; width: 56px; height: 56px; border-radius: 50%; background-color: ${BRAND.dangerBg}; border: 2px solid ${BRAND.danger}; text-align: center; line-height: 56px; margin-bottom: 24px;">
+          <span style="font-family: ${BRAND.font}; font-size: 24px; font-weight: 900; color: ${BRAND.dangerDark};">&#128274;</span>
+        </div>
+        <h2 style="margin: 0 0 8px; font-family: ${BRAND.font}; font-size: 26px; font-weight: 800; color: ${BRAND.text}; letter-spacing: -0.5px;">Account Locked</h2>
+        <p style="margin: 0 0 8px; font-family: ${BRAND.font}; font-size: 16px; color: ${BRAND.textSecondary};">Hi ${escapeHtml(userName)},</p>
+      </div>
+
+      ${alertBanner(`Your account has been temporarily locked for ${lockoutMinutes} minutes due to multiple failed login attempts.`, "danger")}
+
+      <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: ${BRAND.rowAlt}; border: 1px solid ${BRAND.border}; border-radius: 8px;">
+        <tr>
+          <td style="padding: 20px 24px;">
+            <p style="margin: 0 0 6px; font-family: ${BRAND.font}; font-size: 14px; font-weight: 700; color: ${BRAND.text};">Need immediate access?</p>
+            <p style="margin: 0; font-family: ${BRAND.font}; font-size: 13px; line-height: 23px; color: ${BRAND.textSecondary};">
+              You can regain access immediately by securely resetting your password:
+            </p>
+            <div style="text-align: center; margin-top: 16px;">
+              <!--[if mso]>
+              <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="${safeResetUrl}" style="height:50px;v-text-anchor:middle;width:240px;" arcsize="16%" fillcolor="${BRAND.danger}" stroke="f">
+              <w:anchorlock/>
+              <center style="color:#ffffff;font-family:Arial,sans-serif;font-size:15px;font-weight:700;">Reset Password &#8594;</center>
+              </v:roundrect>
+              <![endif]-->
+              <!--[if !mso]><!-->
+              <a href="${safeResetUrl}" target="_blank"
+                 style="display: inline-block; background-color: ${BRAND.danger}; border-radius: 8px; font-family: ${BRAND.font}; font-size: 15px; font-weight: 700; line-height: 50px; height: 50px; padding: 0 36px; color: #ffffff; text-decoration: none; text-align: center; min-width: 180px; letter-spacing: 0.2px;">
+                Reset Password &#8594;
+              </a>
+              <!--<![endif]-->
+            </div>
+          </td>
+        </tr>
+      </table>
+
+      ${autoFooter("If you did not attempt to sign in, your account may be under a brute-force attack. Your account remains secure as long as your password is safe.")}
+    `, "Account temporarily locked due to failed login attempts", BRAND.danger);
+
+    const text = [
+      `Hi ${userName},`,
+      "",
+      `Your CyberSense account has been temporarily locked for ${lockoutMinutes} minutes due to multiple failed login attempts.`,
+      "",
+      "If you need immediate access, you can reset your password:",
+      safeResetUrl,
+      "",
+      "If you did not attempt to sign in, your account remains secure as long as your password is safe."
+    ].join("\n");
+    return { subject, html, text };
+  },
+
+  // ── 11. NEW SIGN-IN ───────────────────────────────────────────
+  newSignIn({ userName, ipAddress, userAgent, time, resetUrl }) {
+    const subject = `New sign-in to your ${BRAND.name} account`;
+    const safeResetUrl = normalizeUrl(resetUrl);
+    
+    const html = layout(`
+      ${greeting(userName, "We noticed a new sign-in to your account from an unrecognized device or location.")}
+      
+      ${detailTable(`
+        ${detailRow("Time", escapeHtml(formatDate(time)))}
+        ${detailRow("IP Address", escapeHtml(ipAddress))}
+        ${detailRow("Device/Browser", escapeHtml(userAgent), true)}
+      `)}
+
+      <div style="margin-top: 28px;">
+        ${alertBanner("If this was you, you can safely ignore this email. If you don't recognize this activity, please reset your password immediately.", "warning")}
+      </div>
+      
+      ${ctaButton(safeResetUrl, "Secure Account", BRAND.warning)}
+    `, "New sign-in to your CyberSense account", BRAND.warning);
+
+    const text = [
+      `Hi ${userName},`,
+      "",
+      "We noticed a new sign-in to your account from an unrecognized device or location.",
+      "",
+      `Time: ${formatDate(time)}`,
+      `IP Address: ${ipAddress}`,
+      `Device: ${userAgent}`,
+      "",
+      "If this was you, you can safely ignore this email.",
+      "If you don't recognize this activity, reset your password immediately:",
+      safeResetUrl
+    ].join("\n");
+
+    return { subject, html, text };
+  },
+
 };
 
 module.exports = emailTemplates;
