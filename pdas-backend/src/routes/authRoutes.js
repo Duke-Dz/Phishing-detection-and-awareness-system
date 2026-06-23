@@ -13,6 +13,8 @@ const {
   resetPassword,
   setupMfa,
   verifyEmail,
+  getSessions,
+  revokeSession,
 } = require("../controllers/authController");
 const { asyncHandler } = require("../middleware/errorHandler");
 const { protect } = require("../middleware/authMiddleware");
@@ -28,8 +30,19 @@ const {
   verifyEmailValidator,
   resendVerificationValidator,
 } = require("../middleware/validators");
+const rateLimit = require("express-rate-limit");
 
 const router = express.Router();
+
+const sessionLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 30,
+  keyGenerator: (req) => req.user ? req.user.user_id : req.ip,
+  message: {
+    success: false,
+    message: "Too many session requests from this user, please try again after 15 minutes",
+  },
+});
 
 /**
  * @swagger
@@ -226,6 +239,9 @@ router.post("/logout", protect, asyncHandler(logout));
  *         description: Not authenticated
  */
 router.get("/me", protect, asyncHandler(getMe));
+
+router.get("/sessions", protect, sessionLimiter, asyncHandler(getSessions));
+router.delete("/sessions/:id", protect, sessionLimiter, asyncHandler(revokeSession));
 
 /**
  * @swagger

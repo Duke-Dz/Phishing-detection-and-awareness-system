@@ -1,5 +1,7 @@
 const bcrypt = require("bcryptjs");
-const { User, PasswordResetToken, EmailVerificationToken, PendingRegistration } = require("../models");
+const { Op } = require("sequelize");
+const { User, PasswordResetToken, EmailVerificationToken, PendingRegistration, RefreshToken, SecurityEvent } = require("../models");
+const { logSecurityEvent } = require("../utils/securityLogger");
 const {
   issueTokenPair,
   revokeRefreshToken,
@@ -80,13 +82,65 @@ const login = async (req, res) => {
   const whereClause = isEmail ? { email: identifier } : { username: identifier };
 
   const user = await User.scope("withPassword").findOne({ where: whereClause });
+  const genericErrorMsg = "Incorrect email, username, or password.";
 
-  if (!user || !(await bcrypt.compare(req.body.password, user.password_hash))) {
-    throw createError("Invalid credentials", 401);
+  if (!user) {
+    throw createError(genericErrorMsg, 401);
   }
 
   if (!user.is_active) {
     throw createError("This account has been disabled", 403);
+  }
+
+  // Check if account is currently locked
+  if (user.locked_until && new Date() < user.locked_until) {
+    await User.increment('failed_login_attempts', { where: { user_id: user.user_id } });
+    await User.update({ last_failed_login: new Date() }, { where: { user_id: user.user_id } });
+    throw createError(genericErrorMsg, 401);
+  }
+
+  const isMatch = await bcrypt.compare(req.body.password, user.password_hash);
+
+  if (!isMatch) {
+    // Increment failed attempts and update last failed login atomically
+    await User.increment('failed_login_attempts', { where: { user_id: user.user_id } });
+    await User.update({ last_failed_login: new Date() }, { where: { user_id: user.user_id } });
+
+    const updatedUser = await User.findByPk(user.user_id);
+    const attempts = updatedUser.failed_login_attempts;
+
+    let lockoutMinutes = 0;
+    if (attempts >= 10) {
+      lockoutMinutes = 60;
+    } else if (attempts >= 5) {
+      lockoutMinutes = 15;
+    }
+
+    if (lockoutMinutes > 0) {
+      const lockedUntil = new Date(Date.now() + lockoutMinutes * 60 * 1000);
+      await User.update({ locked_until: lockedUntil }, { where: { user_id: user.user_id } });
+
+      const resetToken = generateToken();
+      await PasswordResetToken.create({
+        user_id: user.user_id,
+        token_hash: hashToken(resetToken),
+        expires_at: new Date(Date.now() + 60 * 60 * 1000),
+      });
+
+      const resetUrl = `${config.frontendUrl.replace(/\/$/, "")}/reset-password?token=${encodeURIComponent(resetToken)}`;
+      const template = emailTemplates.accountLocked({
+        userName: user.full_name,
+        lockoutMinutes,
+        resetUrl,
+      });
+
+      logSecurityEvent(user.user_id, 'ACCOUNT_LOCKED', req, { lockoutMinutes, attempts });
+      sendMail({ to: user.email, ...template }).catch(err => console.error('[AccountLocked Email Error]:', err));
+    } else {
+      logSecurityEvent(user.user_id, 'LOGIN_FAILED', req, { reason: 'wrong_password', attempts });
+    }
+
+    throw createError(genericErrorMsg, 401);
   }
 
   if (user.mfa_enabled) {
@@ -99,14 +153,44 @@ const login = async (req, res) => {
     }
 
     if (!verifyTotp(user.mfa_secret, req.body.mfa_code)) {
-      throw createError("Invalid multi-factor authentication code", 401);
+      logSecurityEvent(user.user_id, 'LOGIN_FAILED', req, { reason: 'invalid_mfa' });
+      throw createError(genericErrorMsg, 401);
     }
   }
 
+  user.failed_login_attempts = 0;
+  user.locked_until = null;
   user.last_login = new Date();
   await user.save();
 
-  const tokens = await issueTokenPair(user, req.body.remember_me === true);
+  const pastLogins = await SecurityEvent.findAll({
+    where: { user_id: user.user_id, event_type: 'LOGIN_SUCCESS' },
+    order: [['created_at', 'DESC']],
+    limit: 3
+  });
+
+  const currentIp = req.ip || req.connection?.remoteAddress || null;
+  const currentUa = req.headers['user-agent'] || null;
+
+  if (pastLogins.length > 0) {
+    const isKnown = pastLogins.some(log => log.ip_address === currentIp && log.user_agent === currentUa);
+    if (!isKnown) {
+      const resetUrl = `${config.frontendUrl.replace(/\/$/, "")}/forgot-password`;
+      
+      const template = emailTemplates.newSignIn({
+        userName: user.full_name,
+        ipAddress: currentIp || 'Unknown IP',
+        userAgent: currentUa || 'Unknown Device',
+        time: new Date(),
+        resetUrl
+      });
+      sendMail({ to: user.email, ...template }).catch(err => console.error('[NewSignIn Email Error]:', err));
+    }
+  }
+
+  logSecurityEvent(user.user_id, 'LOGIN_SUCCESS', req, { method: 'password' });
+
+  const tokens = await issueTokenPair(user, req.body.remember_me === true, req);
 
   res.json({
     success: true,
@@ -119,7 +203,12 @@ const login = async (req, res) => {
 const refresh = async (req, res) => {
   requireFields(req.body, ["refreshToken"]);
 
-  const tokenPair = await rotateRefreshToken(req.body.refreshToken);
+  const tokenPair = await rotateRefreshToken(req.body.refreshToken, req);
+  
+  if (tokenPair && tokenPair.error === 'ReplayDetected') {
+    throw createError("Token replay detected. All sessions revoked for security.", 401);
+  }
+
   if (!tokenPair) {
     throw createError("Invalid or expired refresh token", 401);
   }
@@ -146,6 +235,8 @@ const logout = async (req, res) => {
   } else if (req.body && req.body.refreshToken) {
     await revokeRefreshToken(req.body.refreshToken);
   }
+
+  logSecurityEvent(req.user.user_id, 'LOGOUT', req);
 
   res.json({
     success: true,
@@ -246,6 +337,9 @@ const forgotPassword = async (req, res) => {
       userName: user.full_name,
       expiryMinutes,
     });
+
+    logSecurityEvent(user.user_id, 'PASSWORD_RESET_REQUESTED', req);
+
     sendMail({ to: user.email, ...template }).catch(() => {});
   }
 
@@ -286,6 +380,8 @@ const resetPassword = async (req, res) => {
   // Revoke all refresh tokens (force re-login)
   await revokeUserRefreshTokens(user.user_id);
 
+  logSecurityEvent(user.user_id, 'PASSWORD_RESET_COMPLETED', req);
+
   // Send confirmation email
   const template = emailTemplates.passwordChanged({ userName: user.full_name });
   sendMail({ to: user.email, ...template }).catch(() => {});
@@ -312,6 +408,8 @@ const changePassword = async (req, res) => {
   validatePassword(new_password);
   user.password_hash = await bcrypt.hash(new_password, 12);
   await user.save();
+
+  logSecurityEvent(req.user.user_id, 'PASSWORD_CHANGED', req);
 
   // Send confirmation email
   const template = emailTemplates.passwordChanged({ userName: user.full_name });
@@ -360,6 +458,9 @@ const verifyEmail = async (req, res) => {
 
   await pendingReg.destroy();
 
+  logSecurityEvent(user.user_id, 'EMAIL_VERIFIED', req);
+  logSecurityEvent(user.user_id, 'ACCOUNT_REGISTERED', req);
+
   res.json({
     success: true,
     message: "Email verified successfully. You may now log in.",
@@ -403,6 +504,55 @@ const resendVerification = async (req, res) => {
   });
 };
 
+const getSessions = async (req, res) => {
+  const sessions = await RefreshToken.findAll({
+    where: {
+      user_id: req.user.user_id,
+      revoked_at: null,
+      expires_at: { [Op.gt]: new Date() }
+    },
+    order: [['last_used_at', 'DESC']]
+  });
+
+  const currentIp = req.ip || req.connection?.remoteAddress || null;
+  const currentUa = req.headers['user-agent'] || null;
+
+  const sessionData = sessions.map(s => ({
+    id: s.refresh_token_id,
+    user_agent: s.user_agent,
+    ip_address: s.ip_address,
+    last_used_at: s.last_used_at || s.created_at,
+    created_at: s.created_at,
+    is_current: (s.ip_address === currentIp && s.user_agent === currentUa)
+  }));
+
+  res.json({
+    success: true,
+    data: sessionData
+  });
+};
+
+const revokeSession = async (req, res) => {
+  const session = await RefreshToken.findOne({
+    where: {
+      refresh_token_id: req.params.id,
+      user_id: req.user.user_id
+    }
+  });
+
+  if (!session) {
+    throw createError("You do not have permission to revoke this session.", 403);
+  }
+
+  session.revoked_at = new Date();
+  await session.save();
+
+  res.json({
+    success: true,
+    message: "Session revoked successfully"
+  });
+};
+
 module.exports = {
   changePassword,
   disableMfa,
@@ -417,4 +567,6 @@ module.exports = {
   resetPassword,
   setupMfa,
   verifyEmail,
+  getSessions,
+  revokeSession,
 };

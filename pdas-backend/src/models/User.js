@@ -74,6 +74,19 @@ const User = sequelize.define(
       type: DataTypes.BOOLEAN,
       defaultValue: true,
     },
+    failed_login_attempts: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0,
+      allowNull: false,
+    },
+    locked_until: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
+    last_failed_login: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
   },
   {
     tableName: "users",
