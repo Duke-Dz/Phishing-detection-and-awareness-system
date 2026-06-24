@@ -38,12 +38,20 @@ export const AuthShell = ({
       style={{ borderRadius: "var(--auth-card-radius)" }}
     >
       {showHeaderBrand && (
-        <div className={`auth-header-logo mb-3 ${isImmersive ? "lg:hidden flex justify-center" : "flex justify-center"}`}>
+        <div
+          className={`auth-header-logo mb-3 ${isImmersive ? "lg:hidden flex justify-center" : "flex justify-center"}`}
+        >
           <CyberSenseLogo variant="compact" />
         </div>
       )}
 
-      <header className={!isImmersive || showHeaderBrand ? "text-center" : "text-center lg:text-left"}>
+      <header
+        className={
+          !isImmersive || showHeaderBrand
+            ? "text-center"
+            : "text-center lg:text-left"
+        }
+      >
         <h1
           id={headingId}
           className="auth-heading text-2xl font-bold text-black sm:text-[1.75rem] lg:text-[1.9rem]"
@@ -54,7 +62,9 @@ export const AuthShell = ({
         {description && (
           <p
             className={`mt-2 text-[0.93rem] leading-[1.7] text-black ${
-              !isImmersive || showHeaderBrand ? "mx-auto max-w-[22rem]" : "max-w-xl"
+              !isImmersive || showHeaderBrand
+                ? "mx-auto max-w-[22rem]"
+                : "max-w-xl"
             }`}
           >
             {description}
@@ -81,7 +91,9 @@ export const AuthShell = ({
               <AuthBrandPanel title={brandTitle} subtitle={brandSubtitle} />
             </div>
 
-            <div className="flex justify-center lg:justify-start">{formCard}</div>
+            <div className="flex justify-center lg:justify-start">
+              {formCard}
+            </div>
           </div>
         </div>
       </div>
@@ -89,8 +101,8 @@ export const AuthShell = ({
   }
 
   return (
-    <div className="auth-immersive-bg auth-single-shell relative grid min-h-[100svh] overflow-x-hidden overflow-y-auto px-4 py-5 text-slate-900 sm:p-6 lg:p-8">
-      <div className="auth-single-panel relative z-10 w-full">
+    <div className="auth-immersive-bg auth-single-shell relative grid min-h-[100svh] overflow-x-hidden overflow-y-auto px-4 py-8 text-slate-900 sm:p-6 lg:p-8">
+      <div className="auth-single-panel relative z-10 w-full max-w-[26rem] mx-auto">
         {formCard}
       </div>
     </div>
