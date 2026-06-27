@@ -16,8 +16,14 @@ const resetPasswordSchema = z
   .object({
     new_password: z
       .string()
-      .min(PASSWORD_RULES.minLength, `Password must be at least ${PASSWORD_RULES.minLength} characters.`)
-      .max(PASSWORD_RULES.maxLength, `Password must be ${PASSWORD_RULES.maxLength} characters or fewer.`),
+      .min(
+        PASSWORD_RULES.minLength,
+        `Password must be at least ${PASSWORD_RULES.minLength} characters.`,
+      )
+      .max(
+        PASSWORD_RULES.maxLength,
+        `Password must be ${PASSWORD_RULES.maxLength} characters or fewer.`,
+      ),
     confirm_password: z.string().min(1, "Please confirm your password."),
   })
   .refine((data) => data.new_password === data.confirm_password, {
@@ -54,7 +60,10 @@ export default function ResetPasswordPage() {
   });
 
   const passwordValue = useWatch({ control, name: "new_password" });
-  const passwordState = useMemo(() => evaluatePassword(passwordValue), [passwordValue]);
+  const passwordState = useMemo(
+    () => evaluatePassword(passwordValue),
+    [passwordValue],
+  );
   const showChecklist = passwordValue.length > 0;
 
   const onSubmit = async (values) => {
@@ -79,15 +88,22 @@ export default function ResetPasswordPage() {
         layout="single"
         showHeaderBrand
         footer={
-          <Link to="/login" className="text-sm font-semibold text-black no-underline hover:text-cyber-700">
+          <Link
+            to="/login"
+            className="text-sm font-semibold text-black no-underline hover:text-cyber-700"
+          >
             Back to sign in -&gt;
           </Link>
         }
       >
         <div className="auth-alert auth-alert-warning" role="alert">
-          This reset link is missing or invalid. Please request a new password reset.
+          This reset link is missing or invalid. Please request a new password
+          reset.
         </div>
-        <Link to="/forgot-password" className="auth-btn-primary mt-4 no-underline">
+        <Link
+          to="/forgot-password"
+          className="auth-btn-primary mt-4 no-underline"
+        >
           <KeyRound size={16} />
           Request reset link
         </Link>
@@ -109,7 +125,10 @@ export default function ResetPasswordPage() {
       footer={
         <>
           <p className="text-sm text-black">Back to your account?</p>
-          <Link to="/login" className="text-sm font-semibold text-black no-underline hover:text-cyber-700">
+          <Link
+            to="/login"
+            className="text-sm font-semibold text-black no-underline hover:text-cyber-700"
+          >
             Back to sign in -&gt;
           </Link>
         </>
@@ -127,15 +146,20 @@ export default function ResetPasswordPage() {
             aria-live="polite"
           >
             <div className="auth-success-icon">
-              <CheckCircle2 size={26} className="text-cyber-600" aria-hidden="true" />
+              <CheckCircle2
+                size={26}
+                className="text-cyber-600"
+                aria-hidden="true"
+              />
             </div>
             <div className="auth-alert auth-alert-success">
-              Your password has been reset successfully. All previous sessions have been revoked.
+              Your password has been reset successfully. All previous sessions
+              have been revoked.
             </div>
             <Link to="/login" className="auth-btn-primary no-underline">
               <KeyRound size={16} />
               Back to sign in
-            </Link> 
+            </Link>
           </Motion.div>
         ) : (
           <Motion.form
@@ -171,7 +195,11 @@ export default function ResetPasswordPage() {
               />
             </div>
 
-            <PasswordChecklist id="reset-password-checklist" passwordState={passwordState} show={showChecklist} />
+            <PasswordChecklist
+              id="reset-password-checklist"
+              passwordState={passwordState}
+              show={showChecklist}
+            />
 
             <AnimatePresence mode="wait">
               {submitError && (
@@ -189,8 +217,16 @@ export default function ResetPasswordPage() {
               )}
             </AnimatePresence>
 
-            <button type="submit" disabled={isSubmitting} className="auth-btn-primary">
-              {isSubmitting ? <Loader2 className="animate-spin" size={16} /> : <CheckCircle2 size={16} />}
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="auth-btn-primary"
+            >
+              {isSubmitting ? (
+                <Loader2 className="animate-spin" size={16} />
+              ) : (
+                <CheckCircle2 size={16} />
+              )}
               {isSubmitting ? "Updating..." : "Update password"}
             </button>
           </Motion.form>
