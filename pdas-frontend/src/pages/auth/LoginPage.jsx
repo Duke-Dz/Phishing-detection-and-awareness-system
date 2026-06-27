@@ -79,7 +79,7 @@ export default function LoginPage() {
         <Toast message={submitError} onClose={() => setSubmitError("")} />
       )}
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-2.5">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
         <div>
           <label className="auth-label" htmlFor="login-identifier">
             Email or username
