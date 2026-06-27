@@ -1272,6 +1272,14 @@ input[type="password"].auth-field {
     margin: 0 !important;
   }
 
+  .auth-single-panel--mobile-full {
+    min-height: calc(100svh - 2rem);
+  }
+
+  .auth-single-panel--mobile-full.auth-glass-card {
+    justify-content: flex-start;
+  }
+
   .auth-glass-card {
     width: 100%;
     margin: 0 auto !important;

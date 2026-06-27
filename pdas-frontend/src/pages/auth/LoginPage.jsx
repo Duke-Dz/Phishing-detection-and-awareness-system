@@ -49,7 +49,9 @@ export default function LoginPage() {
         "/dashboard";
       navigate(destination, { replace: true });
     } catch (error) {
-      setSubmitError("Incorrect email, username, or password. Please try again.");
+      setSubmitError(
+        "Incorrect email, username, or password. Please try again.",
+      );
     }
   };
 
@@ -58,6 +60,7 @@ export default function LoginPage() {
       heading="Welcome back"
       layout="single"
       showHeaderBrand
+      mobileCardMode="full"
       footer={
         <>
           <p className="text-sm text-black">New to CyberSense?</p>
@@ -137,13 +140,24 @@ export default function LoginPage() {
             {...register("remember_me")}
             className="h-4 w-4 rounded border-gray-300 text-cyber-600 focus:ring-cyber-500"
           />
-          <label htmlFor="login-remember" className="ml-2 text-[13px] text-[#6B7280]">
+          <label
+            htmlFor="login-remember"
+            className="ml-2 text-[13px] text-[#6B7280]"
+          >
             Remember me
           </label>
         </div>
 
-        <button type="submit" disabled={isSubmitting} className="auth-btn-primary">
-          {isSubmitting ? <Loader2 className="animate-spin" size={16} /> : <KeyRound size={16} />}
+        <button
+          type="submit"
+          disabled={isSubmitting}
+          className="auth-btn-primary"
+        >
+          {isSubmitting ? (
+            <Loader2 className="animate-spin" size={16} />
+          ) : (
+            <KeyRound size={16} />
+          )}
           {isSubmitting ? "Signing in..." : "Sign in"}
         </button>
       </form>
