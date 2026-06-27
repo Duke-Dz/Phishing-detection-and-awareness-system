@@ -47,17 +47,10 @@ export const AuthShell = ({
         )}
       </header>
 
-      <div
-        className={`mt-3.5 w-full sm:mt-4 ${isCompactMobileCard ? "flex-1" : "flex-1"}`}
-      >
-        {children}
-      </div>
-
+      <div className="mt-3.5 w-full min-w-0 sm:mt-4 flex-1">{children}</div>
       {footer && (
-        <div
-          className={`w-full border-t border-slate-200/60 pt-3 ${isCompactMobileCard ? "mt-auto" : "mt-3.5 sm:mt-4"}`}
-        >
-          <div className="auth-footer-pill flex w-full justify-center text-sm">
+        <div className="w-full border-t border-slate-200/60 pt-3 mt-4">
+          <div className="auth-footer-pill w-full flex items-center justify-center text-sm">
             {footer}
           </div>
         </div>
