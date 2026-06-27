@@ -16,11 +16,13 @@ export const AuthShell = ({
   footer,
   layout = "immersive",
   showHeaderBrand = false,
+  mobileCardMode = "standard",
   brandTitle,
   brandSubtitle,
 }) => {
   const headingId = useId();
   const isImmersive = layout === "immersive";
+  const isCompactMobileCard = mobileCardMode === "full";
 
   useEffect(() => {
     if (typeof document !== "undefined" && heading) {
@@ -90,7 +92,7 @@ export const AuthShell = ({
     <div className="auth-immersive-bg auth-single-shell">
       <main
         aria-labelledby={headingId}
-        className="auth-form-enter auth-single-panel auth-glass-card relative flex w-full flex-col justify-center overflow-visible px-5 py-5 sm:px-7 sm:py-7"
+        className={`auth-form-enter auth-single-panel auth-glass-card relative flex w-full flex-col justify-center overflow-visible px-5 py-5 sm:px-7 sm:py-7 ${isCompactMobileCard ? "auth-single-panel--mobile-full" : ""}`}
         style={{ borderRadius: "var(--auth-card-radius)" }}
       >
         {/* Stacked logo header inside the card */}
