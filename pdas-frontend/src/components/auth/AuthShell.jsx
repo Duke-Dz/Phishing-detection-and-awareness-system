@@ -44,7 +44,7 @@ export const AuthShell = ({
       <div className="mt-3.5 w-full min-w-0 sm:mt-4">{children}</div>
 
       {footer && (
-        <div className="mt-auto w-full border-t border-slate-200/60 pt-3">
+        <div className="w-full border-t border-slate-200/60 pt-3 mt-4">
           <div className="auth-footer-pill w-full flex items-center justify-center text-sm">
             {footer}
           </div>
