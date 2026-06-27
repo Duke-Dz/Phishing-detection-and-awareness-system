@@ -105,6 +105,7 @@ export default function ResetPasswordPage() {
       }
       layout="single"
       showHeaderBrand
+      mobileCardMode="full"
       footer={
         <>
           <p className="text-sm text-black">Back to your account?</p>
