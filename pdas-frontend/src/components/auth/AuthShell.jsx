@@ -2,13 +2,6 @@ import { useEffect, useId } from "react";
 import { AuthBrandPanel } from "./AuthBrandPanel";
 import AuthLogoHeader from "./AuthLogoHeader";
 import CyberSenseLogo from "./CyberSenseLogo";
-
-/**
- * Auth page shell with an optional brand panel.
- *
- * layout = "immersive" (default): side-by-side brand panel + form
- * layout = "single": centered form card, no brand panel
- */
 export const AuthShell = ({
   heading,
   description,
@@ -30,7 +23,6 @@ export const AuthShell = ({
     }
   }, [heading]);
 
-  // Unified inner content to prevent code duplication
   const innerContent = (
     <>
       <header className="flex flex-col items-center text-center">
@@ -47,11 +39,12 @@ export const AuthShell = ({
         )}
       </header>
 
-      <div className="mt-3.5 w-full min-w-0 sm:mt-4 flex-1 flex flex-col justify-center">
-        {children}
-      </div>
+      {/* FIX 1: removed flex-1, flex, flex-col, justify-center — was stretching this
+               div to fill all remaining card height, creating fake whitespace */}
+      <div className="mt-3.5 w-full min-w-0 sm:mt-4">{children}</div>
+
       {footer && (
-        <div className="w-full border-t border-slate-200/60 pt-3 mt-4">
+        <div className="mt-auto w-full border-t border-slate-200/60 pt-3">
           <div className="auth-footer-pill w-full flex items-center justify-center text-sm">
             {footer}
           </div>
@@ -87,16 +80,13 @@ export const AuthShell = ({
       </div>
     );
   }
-
-  // Single Layout (Login, Register, Forgot Password, Reset Password, Verify Email)
   return (
     <div className="auth-immersive-bg flex min-h-screen flex-col items-center justify-center px-4 sm:px-0">
       <main
         aria-labelledby={headingId}
-        className={`auth-form-enter auth-single-panel auth-glass-card relative flex w-full flex-col ${isCompactMobileCard ? "justify-between" : "justify-center"} overflow-visible p-6 sm:p-8 ${isCompactMobileCard ? "auth-single-panel--mobile-full" : ""}`}
+        className={`auth-form-enter auth-single-panel auth-glass-card relative flex w-full flex-col justify-start overflow-visible p-6 sm:p-8 ${isCompactMobileCard ? "auth-single-panel--mobile-full" : ""}`}
         style={{ borderRadius: "var(--auth-card-radius)" }}
       >
-        {/* Stacked logo header inside the card */}
         {showHeaderBrand && <AuthLogoHeader />}
         {innerContent}
       </main>
