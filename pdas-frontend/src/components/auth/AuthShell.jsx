@@ -54,7 +54,9 @@ export const AuthShell = ({
       </div>
 
       {footer && (
-        <div className={`w-full border-t border-slate-200/60 pt-3 sm:mt-4 ${isCompactMobileCard ? "mt-3 sm:mt-3" : "mt-3.5"}`}>
+        <div
+          className={`w-full border-t border-slate-200/60 pt-3 sm:mt-4 ${isCompactMobileCard ? "mt-3 sm:mt-3" : "mt-3.5"}`}
+        >
           <div className="auth-footer-pill flex w-full justify-center text-sm">
             {footer}
           </div>
@@ -96,7 +98,7 @@ export const AuthShell = ({
     <div className="auth-immersive-bg auth-single-shell">
       <main
         aria-labelledby={headingId}
-          className={`auth-form-enter auth-single-panel auth-glass-card relative flex w-full flex-col ${isCompactMobileCard ? "justify-start" : "justify-center"} overflow-visible px-5 py-5 sm:px-7 sm:py-7 ${isCompactMobileCard ? "auth-single-panel--mobile-full" : ""}`}
+        className={`auth-form-enter auth-single-panel auth-glass-card relative flex w-full flex-col ${isCompactMobileCard ? "justify-start" : "justify-center"} overflow-visible px-5 py-5 sm:px-7 sm:py-7 ${isCompactMobileCard ? "auth-single-panel--mobile-full" : ""}`}
         style={{ borderRadius: "var(--auth-card-radius)" }}
       >
         {/* Stacked logo header inside the card */}

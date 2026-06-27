@@ -1280,6 +1280,55 @@ input[type="password"].auth-field {
     justify-content: flex-start;
   }
 
+  .auth-single-panel--mobile-full.auth-glass-card {
+    padding: 0.95rem 0.95rem 1rem !important;
+  }
+
+  .auth-single-panel--mobile-full .auth-heading,
+  .auth-single-panel--mobile-full h1.auth-heading {
+    font-size: 1.2rem !important;
+    line-height: 1.15 !important;
+  }
+
+  .auth-single-panel--mobile-full .auth-description {
+    margin-top: 0.2rem !important;
+    font-size: 0.8rem !important;
+    line-height: 1.45 !important;
+    max-width: 24rem;
+  }
+
+  .auth-single-panel--mobile-full .auth-label {
+    margin-bottom: 0.2rem !important;
+    font-size: 0.75rem !important;
+  }
+
+  .auth-single-panel--mobile-full .auth-label-row {
+    margin-bottom: 0.3rem !important;
+  }
+
+  .auth-single-panel--mobile-full .auth-field {
+    height: 2.85rem !important;
+  }
+
+  .auth-single-panel--mobile-full .auth-footer-pill {
+    padding: 0.55rem 0.75rem !important;
+    font-size: 0.78rem !important;
+  }
+
+  .auth-single-panel--mobile-full .auth-btn-primary {
+    min-height: 2.9rem !important;
+    height: auto !important;
+  }
+
+  .auth-single-panel--mobile-full .auth-pw-toggle {
+    width: 2rem;
+    height: 2rem;
+  }
+
+  .auth-single-panel--mobile-full .space-y-2\.5 > * + * {
+    margin-top: 0.65rem !important;
+  }
+
   .auth-glass-card {
     width: 100%;
     margin: 0 auto !important;
