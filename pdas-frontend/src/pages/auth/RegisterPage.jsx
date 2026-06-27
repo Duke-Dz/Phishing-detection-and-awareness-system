@@ -175,8 +175,8 @@ export default function RegisterPage() {
         {submitError && (
           <Toast message={submitError} onClose={() => setSubmitError("")} />
         )}
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-2.5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
             <div>
               <label className="auth-label" htmlFor="reg-firstname">
                 First name
@@ -243,7 +243,7 @@ export default function RegisterPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
             <div>
               <label className="auth-label" htmlFor="reg-username">
                 Username
@@ -316,9 +316,9 @@ export default function RegisterPage() {
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: 4, scale: 0.95 }}
                   transition={{ duration: 0.15 }}
-                  className="auth-pw-popover absolute z-50 bg-white shadow-[0_4px_16px_rgba(0,0,0,0.12)] rounded-[8px] p-[12px_16px] w-[calc(100vw-32px)] max-w-[260px] top-full left-0 mt-2 sm:bottom-auto sm:top-0 sm:left-full sm:ml-3 sm:mb-0 sm:w-[240px]"
+                  className="auth-pw-popover absolute z-50 bg-white shadow-[0_4px_16px_rgba(0,0,0,0.12)] rounded-[8px] p-[10px_14px] w-full max-w-[260px] bottom-full left-0 mb-2 sm:bottom-auto sm:top-0 sm:left-full sm:ml-3 sm:mb-0 sm:w-[220px]"
                 >
-                  <div className="absolute -top-[6px] left-[20px] w-0 h-0 border-b-[6px] border-b-white border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent sm:hidden" />
+                  <div className="absolute -bottom-[6px] left-[20px] w-0 h-0 border-t-[6px] border-t-white border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent sm:hidden" />
                   <div className="absolute top-[32px] -left-[6px] hidden sm:block w-0 h-0 border-t-[6px] border-t-transparent border-r-[6px] border-r-white border-b-[6px] border-b-transparent" />
 
                   <ul className="flex flex-col gap-1.5">
@@ -357,7 +357,7 @@ export default function RegisterPage() {
             </AnimatePresence>
           </div>
 
-          <div className="mt-2">
+          <div className="mt-1.5">
             <div className="flex items-start gap-2">
               <input
                 type="checkbox"

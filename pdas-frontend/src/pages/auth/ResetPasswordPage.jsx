@@ -134,7 +134,7 @@ export default function ResetPasswordPage() {
             <Link to="/login" className="auth-btn-primary no-underline">
               <KeyRound size={16} />
               Back to sign in
-            </Link>
+            </Link> 
           </Motion.div>
         ) : (
           <Motion.form
@@ -143,9 +143,9 @@ export default function ResetPasswordPage() {
             animate={{ opacity: 1 }}
             transition={{ duration: 0.2 }}
             onSubmit={handleSubmit(onSubmit)}
-            className="space-y-4"
+            className="space-y-2.5"
           >
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
               <AuthPasswordField
                 id="reset-new-password"
                 label="New password"

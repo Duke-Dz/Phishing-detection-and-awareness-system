@@ -102,7 +102,7 @@ export default function ForgotPasswordPage() {
           {submitError && (
             <Toast message={submitError} onClose={() => setSubmitError("")} />
           )}
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-2.5">
           <div>
             <label className="auth-label" htmlFor="forgot-email">
               Email address

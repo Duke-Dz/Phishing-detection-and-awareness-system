@@ -139,21 +139,23 @@ function OrbitRing() {
   );
 }
 
-export default function CyberSenseLogo({ variant = "default" }) {
+export default function CyberSenseLogo({ variant = "default", stacked = false }) {
   const isCompact = variant === "compact";
   const canvasClass = isCompact
-    ? "relative h-[64px] w-[64px] flex-shrink-0 sm:h-[76px] sm:w-[76px]"
+    ? "relative h-[40px] w-[40px] flex-shrink-0 sm:h-[48px] sm:w-[48px]"
     : "relative h-[96px] w-[96px] flex-shrink-0 sm:h-[104px] sm:w-[104px]";
   const wordmarkSize = isCompact
-    ? "clamp(1.08rem, 4.6vw, 1.32rem)"
+    ? "0.9375rem"
     : "clamp(1.45rem, 4vw, 1.8rem)";
 
-  return (
-    <div
-      className={`auth-logo-container flex items-center justify-center ${
+  const containerClass = stacked
+    ? "auth-logo-container flex flex-col items-center justify-center gap-2"
+    : `auth-logo-container flex items-center justify-center ${
         isCompact ? "auth-logo-compact gap-2.5" : "gap-3.5"
-      }`}
-    >
+      }`;
+
+  return (
+    <div className={containerClass}>
       <h2 className="sr-only">CyberSense animated logo</h2>
 
       <div className={canvasClass}>
