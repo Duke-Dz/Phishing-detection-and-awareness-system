@@ -175,7 +175,7 @@ export default function RegisterPage() {
         {submitError && (
           <Toast message={submitError} onClose={() => setSubmitError("")} />
         )}
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-2.5">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
             <div>
               <label className="auth-label" htmlFor="reg-firstname">

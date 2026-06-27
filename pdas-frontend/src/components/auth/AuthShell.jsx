@@ -33,7 +33,7 @@ export const AuthShell = ({
   // Unified inner content to prevent code duplication
   const innerContent = (
     <>
-      <header className="flex flex-col items-center text-center">
+      <header className="flex flex-col items-center text-center mb-6">
         <h1
           id={headingId}
           className="auth-heading font-bold tracking-tight text-slate-900"
@@ -90,10 +90,10 @@ export const AuthShell = ({
 
   // Single Layout (Login, Register, Forgot Password, Reset Password, Verify Email)
   return (
-    <div className="auth-immersive-bg auth-single-shell">
+    <div className="auth-immersive-bg min-h-screen grid place-items-center p-4">
       <main
         aria-labelledby={headingId}
-        className={`auth-form-enter auth-single-panel auth-glass-card relative flex w-full flex-col ${isCompactMobileCard ? "justify-between" : "justify-center"} overflow-visible px-5 py-5 sm:px-7 sm:py-7 ${isCompactMobileCard ? "auth-single-panel--mobile-full" : ""}`}
+        className="auth-form-enter auth-glass-card relative w-full max-w-md overflow-y-auto p-5 sm:p-8"
         style={{ borderRadius: "var(--auth-card-radius)" }}
       >
         {/* Stacked logo header inside the card */}
