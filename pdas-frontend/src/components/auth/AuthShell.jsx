@@ -87,10 +87,10 @@ export const AuthShell = ({
 
   // Single Layout (Login, Register, Forgot Password, Reset Password, Verify Email)
   return (
-    <div className="auth-immersive-bg min-h-screen overflow-y-auto flex items-center justify-center py-8 px-4 sm:px-6">
+    <div className="auth-immersive-bg flex min-h-screen flex-col items-center justify-center px-4 py-6 sm:px-6 lg:p-8">
       <main
         aria-labelledby={headingId}
-        className="auth-form-enter auth-glass-card relative w-full max-w-[460px] mx-auto shadow-2xl rounded-2xl border border-white/10 flex-col justify-center overflow-y-auto px-5 py-5 sm:px-7 sm:py-7"
+        className="auth-form-enter auth-glass-card relative flex w-full max-w-[460px] flex-col justify-center overflow-y-auto px-5 py-5 sm:px-7 sm:py-7"
         style={{ borderRadius: "var(--auth-card-radius)" }}
       >
         {/* Stacked logo header inside the card */}
