@@ -68,7 +68,7 @@ export const AuthShell = ({
             <div className="flex w-full justify-center lg:justify-start">
               <main
                 aria-labelledby={headingId}
-                className="auth-form-enter auth-glass-card relative w-full max-w-[22rem] px-5 py-5 sm:px-7 sm:py-7"
+                className="auth-form-enter auth-glass-card relative w-full max-w-[24rem] px-5 py-5 sm:max-w-[26rem] sm:px-7 sm:py-7"
                 style={{ borderRadius: "var(--auth-card-radius)" }}
               >
                 {showHeaderBrand && (
@@ -87,10 +87,10 @@ export const AuthShell = ({
 
   // Single Layout (Login, Register, Forgot Password, Reset Password, Verify Email)
   return (
-    <div className="auth-immersive-bg flex min-h-screen flex-col items-center justify-center px-4 py-6 sm:px-6 lg:p-8">
+    <div className="auth-immersive-bg auth-single-shell">
       <main
         aria-labelledby={headingId}
-        className="auth-form-enter auth-glass-card relative flex w-full max-w-[460px] flex-col justify-center overflow-y-auto px-5 py-5 sm:px-7 sm:py-7"
+        className="auth-form-enter auth-single-panel auth-glass-card relative flex w-full flex-col justify-center overflow-visible px-5 py-5 sm:px-7 sm:py-7"
         style={{ borderRadius: "var(--auth-card-radius)" }}
       >
         {/* Stacked logo header inside the card */}
