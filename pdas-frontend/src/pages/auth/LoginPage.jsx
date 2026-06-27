@@ -76,7 +76,7 @@ export default function LoginPage() {
         <Toast message={submitError} onClose={() => setSubmitError("")} />
       )}
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-2.5">
         <div>
           <label className="auth-label" htmlFor="login-identifier">
             Email or username
@@ -130,14 +130,14 @@ export default function LoginPage() {
           }
         />
 
-        <div className="flex items-center">
+        <div className="mb-4 flex items-center">
           <input
             id="login-remember"
             type="checkbox"
             {...register("remember_me")}
             className="h-4 w-4 rounded border-gray-300 text-cyber-600 focus:ring-cyber-500"
           />
-          <label htmlFor="login-remember" className="ml-2 text-[14px] text-[#6B7280]">
+          <label htmlFor="login-remember" className="ml-2 text-[13px] text-[#6B7280]">
             Remember me
           </label>
         </div>

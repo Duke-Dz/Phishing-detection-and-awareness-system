@@ -151,13 +151,13 @@ export default function VerifyEmailPage() {
       footer={
         <>
           <p className="text-sm text-black">Wrong email?</p>
-          <Link to="/register" className="text-sm font-semibold text-black no-underline hover:text-cyber-700">
+          <Link to="/register" className="auth-bottom-link">
             Start over -&gt;
           </Link>
         </>
       }
     >
-      <div className="space-y-6">
+      <div className="space-y-4">
         <div className="flex justify-center pt-2">
           <div className="w-16 h-16 rounded-full bg-cyber-50 flex items-center justify-center border-2 border-cyber-100 shadow-inner">
             <Mail className="w-8 h-8 text-cyber-600" />
