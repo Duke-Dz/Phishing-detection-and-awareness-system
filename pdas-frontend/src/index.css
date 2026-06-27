@@ -587,6 +587,7 @@ body {
 
 .auth-field {
   width: 100%;
+  box-sizing: border-box;
   height: 2.5rem;
   border-radius: var(--auth-field-radius);
   border: 1.5px solid #d1d5db;
@@ -1120,17 +1121,7 @@ input[type="password"].auth-field {
     letter-spacing: 0.3px;
   }
 
-  .auth-glass-card .grid-cols-2,
-  .auth-glass-card [class*="grid-cols-2"] {
-    grid-template-columns: 1fr !important;
-    gap: 16px !important;
-  }
 
-  .auth-form-grid {
-    display: flex !important;
-    flex-direction: column !important;
-    gap: 16px !important;
-  }
 
   .auth-field::placeholder {
     font-size: 15px;
