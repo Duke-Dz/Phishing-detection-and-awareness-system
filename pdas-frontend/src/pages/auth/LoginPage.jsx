@@ -133,7 +133,7 @@ export default function LoginPage() {
           }
         />
 
-        <div className="mb-4 flex items-center">
+        <div className="flex items-center">
           <input
             id="login-remember"
             type="checkbox"
