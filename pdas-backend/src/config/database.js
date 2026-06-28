@@ -20,7 +20,7 @@ module.exports = {
   development: baseConfig,
   test: {
     ...baseConfig,
-    database: `${process.env.DB_NAME || "phishguard_db"}_test`,
+    database: `${process.env.DB_NAME || "cybersense_db"}_test`,
   },
   production: {
     ...baseConfig,
