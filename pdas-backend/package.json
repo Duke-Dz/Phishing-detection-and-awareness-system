@@ -7,7 +7,9 @@
     "test": "tests"
   },
   "scripts": {
-    "test": "node --test",
+    "test": "node --test tests/**/*.test.js",
+    "test:unit": "node --test tests/security-utils.test.js tests/unit/**/*.test.js",
+    "test:integration": "node --test tests/integration/**/*.test.js",
     "start": "node server.js",
     "dev": "nodemon server.js",
     "db:migrate": "sequelize-cli db:migrate",
