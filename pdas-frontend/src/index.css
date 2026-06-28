@@ -1086,7 +1086,7 @@ input[type="password"].auth-field {
     padding-bottom: env(safe-area-inset-bottom);
   }
 
-  .auth-glass-card {
+  .auth-glass-card:not(.auth-single-panel) {
     margin: 0 12px;
     padding: 24px 20px 28px !important;
     border-radius: 1.25rem;
@@ -1263,9 +1263,6 @@ input[type="password"].auth-field {
     margin: 0 !important;
   }
 
-  .auth-single-panel--mobile-full {
-    min-height: calc(100dvh - 2rem);
-  }
   .auth-single-panel--mobile-full.auth-glass-card {
     padding: 0.95rem 0.95rem 1rem !important;
   }
