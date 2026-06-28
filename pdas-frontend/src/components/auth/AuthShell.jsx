@@ -4,6 +4,7 @@ import AuthLogoHeader from "./AuthLogoHeader";
 import CyberSenseLogo from "./CyberSenseLogo";
 export const AuthShell = ({
   heading,
+  pageTitle,
   description,
   children,
   footer,
@@ -19,10 +20,13 @@ export const AuthShell = ({
   const isCompactMobileCard = mobileCardMode === "full";
 
   useEffect(() => {
-    if (typeof document !== "undefined" && heading) {
-      document.title = `${heading} | CyberSense`;
+    if (typeof document !== "undefined") {
+      const titleToUse = pageTitle || heading;
+      if (titleToUse) {
+        document.title = `${titleToUse} • CyberSense`;
+      }
     }
-  }, [heading]);
+  }, [heading, pageTitle]);
 
   const innerContent = (
     <>
