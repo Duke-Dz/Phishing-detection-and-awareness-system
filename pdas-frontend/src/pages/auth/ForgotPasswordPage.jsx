@@ -72,7 +72,7 @@ export default function ForgotPasswordPage() {
 
   return (
     <AuthShell
-      heading={sent ? "Email sent" : "Forgot password?"}
+      heading={sent ? "Email sent" : "Reset password"}
       description={
         sent
           ? undefined
