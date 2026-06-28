@@ -58,6 +58,7 @@ export default function LoginPage() {
   return (
     <AuthShell
       heading="Welcome back"
+      description="Sign in to access your dashboard"
       layout="single"
       showHeaderBrand
       mobileCardMode="full"
