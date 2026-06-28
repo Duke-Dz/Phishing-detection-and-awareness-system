@@ -22,6 +22,7 @@ const { expandShortUrl, followRedirects, analyzePageContent } = require("./conte
 const { analyzeSender, analyzeReplyBehaviour } = require("../utils/senderAnalyzer");
 const { generateUserGuide } = require("../utils/userGuideGenerator");
 const { ENGINE_VERSION } = require("./detectionConstants");
+const { analyzeSmsText } = require("./smsTextAnalyzer");
 const logger = require("../utils/logger");
 
 // ── Constants ──────────────────────────────────────────────────────────
@@ -140,11 +141,15 @@ const SCORING_WEIGHTS = {
  * Compute final SMS/email score with rules escalation and blacklist-neutral redistribution.
  * @returns {{ score: number, reason: string, effectiveWeights: object }}
  */
-const computeMessageScore = (rulesScore, blacklistScore, mlScore, threatIntel = null) => {
+const computeMessageScore = (rulesScore, blacklistScore, mlScore, threatIntel = null, llmScore = null) => {
+  const hasLlm = typeof llmScore === "number";
+
   if (hasConfirmedThreatIntel(threatIntel) || blacklistScore >= 80) {
-    const weights = SCORING_WEIGHTS.blacklist_confirmed;
+    const weights = hasLlm 
+      ? { rules: 0.30, blacklist: 0.35, ml: 0.15, llm: 0.20 }
+      : SCORING_WEIGHTS.blacklist_confirmed;
     const score = Math.round(
-      (rulesScore * weights.rules) + (blacklistScore * weights.blacklist) + (mlScore * weights.ml),
+      (rulesScore * weights.rules) + (blacklistScore * weights.blacklist) + (mlScore * weights.ml) + (hasLlm ? llmScore * weights.llm : 0),
     );
     return {
       score: Math.max(70, Math.min(100, score)),
@@ -154,8 +159,10 @@ const computeMessageScore = (rulesScore, blacklistScore, mlScore, threatIntel = 
   }
 
   if (rulesScore >= 75) {
-    const weights = SCORING_WEIGHTS.rules_escalation;
-    const score = Math.round((rulesScore * weights.rules) + (mlScore * weights.ml));
+    const weights = hasLlm
+      ? { rules: 0.40, ml: 0.20, llm: 0.40 }
+      : SCORING_WEIGHTS.rules_escalation;
+    const score = Math.round((rulesScore * weights.rules) + (mlScore * weights.ml) + (hasLlm ? llmScore * weights.llm : 0));
     return {
       score: Math.max(70, Math.min(100, score)),
       reason: "rules_escalation",
@@ -164,8 +171,10 @@ const computeMessageScore = (rulesScore, blacklistScore, mlScore, threatIntel = 
   }
 
   if (blacklistScore === 0) {
-    const weights = SCORING_WEIGHTS.blacklist_neutral;
-    const score = Math.round((rulesScore * weights.rules) + (mlScore * weights.ml));
+    const weights = hasLlm
+      ? { rules: 0.40, ml: 0.30, llm: 0.30 }
+      : SCORING_WEIGHTS.blacklist_neutral;
+    const score = Math.round((rulesScore * weights.rules) + (mlScore * weights.ml) + (hasLlm ? llmScore * weights.llm : 0));
     return {
       score: Math.min(100, score),
       reason: "blacklist_neutral",
@@ -173,9 +182,11 @@ const computeMessageScore = (rulesScore, blacklistScore, mlScore, threatIntel = 
     };
   }
 
-  const weights = SCORING_WEIGHTS.weighted_average;
+  const weights = hasLlm
+    ? { rules: 0.30, blacklist: 0.20, ml: 0.20, llm: 0.30 }
+    : SCORING_WEIGHTS.weighted_average;
   const score = Math.round(
-    (rulesScore * weights.rules) + (blacklistScore * weights.blacklist) + (mlScore * weights.ml),
+    (rulesScore * weights.rules) + (blacklistScore * weights.blacklist) + (mlScore * weights.ml) + (hasLlm ? llmScore * weights.llm : 0),
   );
   return {
     score: Math.min(100, score),
@@ -882,12 +893,33 @@ const analyzeMessage = async (content, scanType = "email", options = {}) => {
   // ── Layer 3: ML scoring ──
   const layer3 = runMessageMlScoring(text);
 
+  // ── Layer 4: SMS Text Analysis ──
+  let llmScore = null;
+  let claudeAnalysis = null;
+  if (scanType === "sms") {
+    const claudeResult = await analyzeSmsText(text, sender);
+    if (claudeResult.success) {
+      claudeAnalysis = claudeResult.analysis;
+      llmScore = claudeResult.risk_score;
+      if (claudeAnalysis.red_flags && claudeAnalysis.red_flags.length > 0) {
+        claudeAnalysis.red_flags.forEach(flag => {
+          layer1.signals.push({
+            name: "llm_red_flag",
+            points: 10,
+            evidence: `Claude AI Analysis: ${flag}`
+          });
+        });
+      }
+    }
+  }
+
   // ── Compute weighted score with rules escalation and blacklist-neutral redistribution ──
   const { score: riskScore, reason: scoringReason, effectiveWeights } = computeMessageScore(
     layer1.score,
     layer2.score,
     layer3.score,
     layer2.threatIntel,
+    llmScore
   );
 
   const userGuide = generateUserGuide(
@@ -925,6 +957,7 @@ const analyzeMessage = async (content, scanType = "email", options = {}) => {
         rules: { score: layer1.score, signals: layer1.signals },
         blacklist: { score: layer2.score, signals: layer2.signals },
         ml: { score: layer3.score, features: layer3.features },
+        ...(claudeAnalysis && { llm: claudeAnalysis }),
       },
       threat_intelligence: layer2.threatIntel,
       external_api_usage: layer2.externalApiUsage || [],

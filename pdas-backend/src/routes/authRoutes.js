@@ -38,6 +38,7 @@ const sessionLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 30,
   keyGenerator: (req) => req.user ? req.user.user_id : req.ip,
+  validate: { keyGeneratorIpFallback: false },
   message: {
     success: false,
     message: "Too many session requests from this user, please try again after 15 minutes",
