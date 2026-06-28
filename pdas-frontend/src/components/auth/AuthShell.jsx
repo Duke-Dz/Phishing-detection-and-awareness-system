@@ -12,6 +12,7 @@ export const AuthShell = ({
   mobileCardMode = "standard",
   brandTitle,
   brandSubtitle,
+  panelClassName = "",
 }) => {
   const headingId = useId();
   const isImmersive = layout === "immersive";
@@ -84,7 +85,7 @@ export const AuthShell = ({
     <div className="auth-single-shell auth-immersive-bg">
       <main
         aria-labelledby={headingId}
-        className={`auth-form-enter auth-single-panel auth-glass-card relative flex w-full flex-col justify-start overflow-visible p-6 sm:p-8 ${isCompactMobileCard ? "auth-single-panel--mobile-full" : ""}`}
+        className={`auth-form-enter auth-single-panel auth-glass-card relative flex w-full flex-col justify-start overflow-visible p-6 sm:p-8 ${isCompactMobileCard ? "auth-single-panel--mobile-full" : ""} ${panelClassName}`}
         style={{ borderRadius: "var(--auth-card-radius)" }}
       >
         {showHeaderBrand && <AuthLogoHeader />}
