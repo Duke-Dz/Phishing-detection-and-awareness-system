@@ -81,6 +81,7 @@ export default function ForgotPasswordPage() {
       layout="single"
       showHeaderBrand
       mobileCardMode="full"
+      panelClassName="auth-panel--compact"
       footer={
         <>
           <p className="text-sm text-black">Remember your password?</p>
