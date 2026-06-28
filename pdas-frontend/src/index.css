@@ -432,7 +432,7 @@ body {
 }
 
 .auth-single-panel {
-  width: min(100%, 30rem);
+  width: min(100%, 28rem); /* 448px = max-w-md, industry standard */
 }
 
 .auth-bg-orb {
@@ -1504,9 +1504,4 @@ input[type="password"].auth-field {
   }
 }
 
-/* ── Compact card: forgot password desktop width only ── */
-@media (min-width: 641px) {
-  .auth-panel--compact {
-    width: min(100%, 28rem) !important; /* 448px = max-w-md, measured from PayHero reference */
-  }
-}
+
