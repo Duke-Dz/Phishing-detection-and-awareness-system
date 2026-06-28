@@ -81,7 +81,7 @@ export const AuthShell = ({
     );
   }
   return (
-    <div className="auth-immersive-bg flex min-h-screen flex-col items-center justify-center px-4 sm:px-0">
+    <div className="auth-single-shell auth-immersive-bg">
       <main
         aria-labelledby={headingId}
         className={`auth-form-enter auth-single-panel auth-glass-card relative flex w-full flex-col justify-start overflow-visible p-6 sm:p-8 ${isCompactMobileCard ? "auth-single-panel--mobile-full" : ""}`}
