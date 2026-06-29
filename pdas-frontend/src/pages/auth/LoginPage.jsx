@@ -78,7 +78,7 @@ export default function LoginPage() {
         </>
       }
     >
-      <form noValidate onSubmit={handleSubmit(onSubmit)} className="w-full flex flex-col gap-4 sm:gap-5">
+      <form onSubmit={handleSubmit(onSubmit)} className="w-full flex flex-col gap-4 sm:gap-5">
         {apiError && (
           <div className="auth-alert auth-alert-error" role="alert">
             <AlertCircle size={16} className="shrink-0 mt-0.5" aria-hidden="true" />
@@ -115,12 +115,9 @@ export default function LoginPage() {
               spellCheck={false}
               placeholder="you@example.com"
               required
-              className={`auth-field auth-field-has-icon ${errors.identifier ? "auth-field-error" : ""}`}
+              className="auth-field auth-field-has-icon"
             />
           </div>
-          {errors.identifier && (
-            <p className="auth-error-msg">{errors.identifier.message}</p>
-          )}
         </div>
 
         <AuthPasswordField

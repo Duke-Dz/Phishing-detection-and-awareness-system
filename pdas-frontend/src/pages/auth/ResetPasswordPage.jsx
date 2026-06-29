@@ -174,7 +174,6 @@ export default function ResetPasswordPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.2 }}
-            noValidate
             onSubmit={handleSubmit(onSubmit)}
             className="space-y-2.5"
           >
