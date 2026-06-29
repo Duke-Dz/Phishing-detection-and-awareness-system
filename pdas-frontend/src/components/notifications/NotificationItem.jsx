@@ -1,1 +1,0 @@
-// Individual notification list item
