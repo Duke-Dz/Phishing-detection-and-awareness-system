@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Link, useLocation } from "react-router-dom";
 import { z } from "zod";
-import { Toast } from "../../components/common/Toast";
+import { toast } from "sonner";
 import { AuthShell } from "../../components/auth/AuthShell";
 import { authService } from "../../services/authService";
 
@@ -20,7 +20,7 @@ export default function ForgotPasswordPage() {
   const location = useLocation();
   const defaultEmail = location.state?.email || "";
 
-  const [submitError, setSubmitError] = useState("");
+
   const [sent, setSent] = useState(false);
   const [submittedEmail, setSubmittedEmail] = useState(defaultEmail);
   const [resendCountdown, setResendCountdown] = useState(0);
@@ -38,16 +38,16 @@ export default function ForgotPasswordPage() {
   });
 
   const onSubmit = async (values) => {
-    setSubmitError("");
     const email = values.email.trim().toLowerCase();
 
     try {
       await authService.forgotPassword(email);
       setSubmittedEmail(email);
       setSent(true);
+      toast.success("Reset link sent!");
       return true;
     } catch (error) {
-      setSubmitError(
+      toast.error(
         "We could not send a reset link right now. Please try again in a moment.",
       );
       return false;
@@ -123,10 +123,7 @@ export default function ForgotPasswordPage() {
           </button>
         </div>
       ) : (
-        <>
-          {submitError && (
-            <Toast message={submitError} onClose={() => setSubmitError("")} />
-          )}
+
           <form onSubmit={handleSubmit(onSubmit)} className="w-full flex flex-col gap-4 sm:gap-5">
             <div>
               <label className="auth-label" htmlFor="forgot-email">
@@ -164,7 +161,6 @@ export default function ForgotPasswordPage() {
               {!isSubmitting && <ArrowRight size={16} />}
             </button>
           </form>
-        </>
       )}
     </AuthShell>
   );

@@ -13,7 +13,7 @@ import { useForm, useWatch } from "react-hook-form";
 import { Link, useNavigate } from "react-router-dom";
 import { z } from "zod";
 import { AnimatePresence, motion as Motion } from "framer-motion";
-import { Toast } from "../../components/common/Toast";
+import { toast } from "sonner";
 
 import { AuthPasswordField } from "../../components/auth/AuthPasswordField";
 import { AuthShell } from "../../components/auth/AuthShell";
@@ -95,7 +95,7 @@ const registerSchema = z
 export default function RegisterPage() {
   const { register: registerAccount } = useAuth();
   const navigate = useNavigate();
-  const [submitError, setSubmitError] = useState("");
+
   const [isPasswordFocused, setIsPasswordFocused] = useState(false);
 
   // DO NOT CHANGE: empty fields validate on submit only
@@ -135,7 +135,6 @@ export default function RegisterPage() {
   );
 
   const onSubmit = async (values) => {
-    setSubmitError("");
     try {
       await registerAccount({
         full_name: `${values.first_name.trim()} ${values.last_name.trim()}`,
@@ -143,12 +142,13 @@ export default function RegisterPage() {
         email: values.email.trim().toLowerCase(),
         password: values.password,
       });
+      toast.success("Account created! Check your email.");
       navigate(
         `/verify-email?email=${encodeURIComponent(values.email.trim().toLowerCase())}`,
         { replace: true },
       );
     } catch (error) {
-      setSubmitError(error.message || "Unable to create your account.");
+      toast.error(error.message || "Unable to create your account.");
     }
   };
 
@@ -171,10 +171,7 @@ export default function RegisterPage() {
         </>
       }
     >
-      <>
-        {submitError && (
-          <Toast message={submitError} onClose={() => setSubmitError("")} />
-        )}
+
         <form onSubmit={handleSubmit(onSubmit)} className="w-full flex flex-col gap-4 sm:gap-5">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
             <div>
@@ -400,7 +397,6 @@ export default function RegisterPage() {
             {!isSubmitting && <ArrowRight size={16} />}
           </button>
         </form>
-      </>
     </AuthShell>
   );
 }

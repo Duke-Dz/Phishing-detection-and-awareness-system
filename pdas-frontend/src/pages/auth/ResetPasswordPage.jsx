@@ -3,6 +3,7 @@ import { CheckCircle2, KeyRound, Loader2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { Link, useSearchParams } from "react-router-dom";
+import { toast } from "sonner";
 import { z } from "zod";
 import { AnimatePresence, motion as Motion } from "framer-motion";
 import { AuthPasswordField } from "../../components/auth/AuthPasswordField";
@@ -44,7 +45,7 @@ const resetPasswordSchema = z
 export default function ResetPasswordPage() {
   const [searchParams] = useSearchParams();
   const token = searchParams.get("token") || "";
-  const [submitError, setSubmitError] = useState("");
+
   const [success, setSuccess] = useState(false);
 
   const {
@@ -67,7 +68,6 @@ export default function ResetPasswordPage() {
   const showChecklist = passwordValue.length > 0;
 
   const onSubmit = async (values) => {
-    setSubmitError("");
     try {
       await authService.resetPassword({
         token,
@@ -75,8 +75,9 @@ export default function ResetPasswordPage() {
         confirm_password: values.confirm_password,
       });
       setSuccess(true);
+      toast.success("Password updated successfully!");
     } catch (error) {
-      setSubmitError(error.message || "Unable to reset the password.");
+      toast.error(error.message || "Unable to reset the password.");
     }
   };
 
@@ -201,21 +202,7 @@ export default function ResetPasswordPage() {
               show={showChecklist}
             />
 
-            <AnimatePresence mode="wait">
-              {submitError && (
-                <Motion.div
-                  key="reset-error"
-                  initial={{ opacity: 0, y: -6 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -6 }}
-                  transition={{ duration: 0.2 }}
-                  className="auth-alert auth-alert-error"
-                  role="alert"
-                >
-                  {submitError}
-                </Motion.div>
-              )}
-            </AnimatePresence>
+
 
             <button
               type="submit"

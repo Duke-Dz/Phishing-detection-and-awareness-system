@@ -1,1 +1,0 @@
-// Status/label badge component

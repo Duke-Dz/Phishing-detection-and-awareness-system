@@ -1,4 +1,5 @@
 import { BrowserRouter } from "react-router-dom";
+import { Toaster } from "sonner";
 import { AuthProvider } from "./context/AuthContext";
 import AppRouter from "./router/index.jsx";
 
@@ -8,6 +9,19 @@ function App() {
       <AuthProvider>
         <AppRouter />
       </AuthProvider>
+      <Toaster 
+        position="top-center" 
+        richColors 
+        closeButton 
+        theme="light"
+        toastOptions={{
+          style: {
+            fontFamily: "Inter, sans-serif",
+            fontSize: "0.95rem"
+          },
+          className: "cyber-toast"
+        }}
+      />
     </BrowserRouter>
   );
 }

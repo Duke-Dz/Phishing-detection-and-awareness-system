@@ -4,7 +4,7 @@ import { AnimatePresence, motion as Motion } from "framer-motion";
 import { CheckCircle2, RotateCw, Mail } from "lucide-react";
 import { AuthShell } from "../../components/auth/AuthShell";
 import { authService } from "../../services/authService";
-import { Toast } from "../../components/common/Toast";
+import { toast } from "sonner";
 
 export default function VerifyEmailPage() {
   const [searchParams] = useSearchParams();
@@ -12,7 +12,7 @@ export default function VerifyEmailPage() {
   const token = searchParams.get("token") || "";
   const navigate = useNavigate();
 
-  const [submitError, setSubmitError] = useState("");
+  const [hasError, setHasError] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [resending, setResending] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
@@ -25,35 +25,37 @@ export default function VerifyEmailPage() {
   }, [resendCooldown]);
 
   const handleVerify = useCallback(async (verificationToken) => {
-    setSubmitError("");
+    setHasError(false);
     setSubmitting(true);
     try {
       await authService.verifyEmail({ token: verificationToken });
       setSuccess(true);
+      toast.success("Email verified!");
       // Auto redirect to login after 3 seconds
       setTimeout(() => navigate("/login", { replace: true }), 3000);
     } catch (error) {
-      setSubmitError(error.message || "Unable to verify the link.");
+      toast.error(error.message || "Unable to verify the link.");
+      setHasError(true);
     } finally {
       setSubmitting(false);
     }
   }, [navigate]);
 
   useEffect(() => {
-    if (token && !submitting && !success && !submitError) {
+    if (token && !submitting && !success && !hasError) {
       handleVerify(token);
     }
-  }, [token, submitting, success, submitError, handleVerify]);
+  }, [token, submitting, success, hasError, handleVerify]);
 
   const handleResend = useCallback(async () => {
     if (resendCooldown > 0 || !email) return;
-    setSubmitError("");
     setResending(true);
     try {
       await authService.resendVerification(email);
       setResendCooldown(60);
+      toast.success("Verification link resent!");
     } catch (error) {
-      setSubmitError(error.message || "Unable to resend the link.");
+      toast.error(error.message || "Unable to resend the link.");
     } finally {
       setResending(false);
     }
@@ -83,11 +85,11 @@ export default function VerifyEmailPage() {
   if (token) {
     return (
       <AuthShell
-        heading={success ? "Email verified!" : submitError ? "Verification failed" : "Verifying email..."}
+        heading={success ? "Email verified!" : hasError ? "Verification failed" : "Verifying email..."}
         description={
           success
             ? "Your account is now active. Redirecting you to sign in..."
-            : submitError
+            : hasError
             ? "The link may be invalid or expired."
             : "Please wait while we verify your secure link."
         }
@@ -113,7 +115,7 @@ export default function VerifyEmailPage() {
                 Sign in to your account
               </Link>
             </Motion.div>
-          ) : submitError ? (
+          ) : hasError ? (
             <Motion.div
               key="verify-error"
               initial={{ opacity: 0 }}
@@ -121,7 +123,7 @@ export default function VerifyEmailPage() {
               transition={{ duration: 0.2 }}
               className="space-y-4"
             >
-              <div className="auth-alert auth-alert-error">{submitError}</div>
+              <div className="auth-alert auth-alert-error">The link may be invalid or expired.</div>
               <Link to="/register" className="auth-btn-secondary no-underline text-center flex justify-center">
                 Register again
               </Link>
@@ -168,7 +170,7 @@ export default function VerifyEmailPage() {
           Click the link in the email to activate your account. If you don't see it, check your spam folder.
         </p>
 
-        {submitError && <div className="auth-alert auth-alert-error">{submitError}</div>}
+
 
         <div className="pt-2">
           <button
