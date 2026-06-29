@@ -32,14 +32,14 @@ export default function VerifyEmailPage() {
     try {
       await authService.verifyEmail({ token: verificationToken });
       setSuccess(true);
-      toast.success("Email verified!");
+      toast.success("Email verified. You can sign in.");
       // Auto redirect to login after 3 seconds
       setTimeout(() => navigate("/login", { replace: true }), 3000);
     } catch (error) {
       if (error.message === "Network Error") {
-        setCardError("We're having trouble connecting right now. Please check your internet connection and try again.");
+        setCardError("No connection. Please try again.");
       } else {
-        setCardError(error.message || "Unable to verify the link.");
+        setCardError("Link expired. Request a new one.");
       }
       setHasError(true);
     } finally {
@@ -60,12 +60,12 @@ export default function VerifyEmailPage() {
     try {
       await authService.resendVerification(email);
       setResendCooldown(60);
-      toast.success("Verification link resent!");
+      toast.success("Reset link sent to your email.");
     } catch (error) {
       if (error.message === "Network Error") {
-        setCardError("We're having trouble connecting right now. Please check your internet connection and try again.");
+        setCardError("No connection. Please try again.");
       } else {
-        setCardError(error.message || "Unable to resend the link.");
+        setCardError("Something went wrong. Retry.");
       }
     } finally {
       setResending(false);
