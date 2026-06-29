@@ -2,6 +2,8 @@ import { useEffect, useId } from "react";
 import { AuthBrandPanel } from "./AuthBrandPanel";
 import AuthLogoHeader from "./AuthLogoHeader";
 import CyberSenseLogo from "./CyberSenseLogo";
+import { CardErrorToast } from "../ui/CardErrorToast";
+
 export const AuthShell = ({
   heading,
   pageTitle,
@@ -14,6 +16,8 @@ export const AuthShell = ({
   brandTitle,
   brandSubtitle,
   panelClassName = "",
+  cardError = null,
+  onClearCardError = () => {},
 }) => {
   const headingId = useId();
   const isImmersive = layout === "immersive";
@@ -72,6 +76,7 @@ export const AuthShell = ({
                 className="auth-form-enter auth-glass-card relative w-full max-w-[24rem] px-5 py-5 sm:max-w-[26rem] sm:px-7 sm:py-7"
                 style={{ borderRadius: "var(--auth-card-radius)" }}
               >
+                <CardErrorToast message={cardError} onClose={onClearCardError} />
                 {showHeaderBrand && (
                   <div className="mb-4 flex w-full justify-center lg:hidden">
                     <CyberSenseLogo variant="compact" className="h-10 w-auto" />
@@ -92,6 +97,7 @@ export const AuthShell = ({
         className={`auth-form-enter auth-single-panel auth-glass-card relative flex w-full flex-col justify-start overflow-visible p-6 sm:p-8 ${isCompactMobileCard ? "auth-single-panel--mobile-full" : ""} ${panelClassName}`}
         style={{ borderRadius: "var(--auth-card-radius)" }}
       >
+        <CardErrorToast message={cardError} onClose={onClearCardError} />
         {showHeaderBrand && <AuthLogoHeader />}
         {innerContent}
       </main>

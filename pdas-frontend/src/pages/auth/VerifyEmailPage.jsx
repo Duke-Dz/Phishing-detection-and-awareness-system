@@ -17,6 +17,7 @@ export default function VerifyEmailPage() {
   const [resending, setResending] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
   const [success, setSuccess] = useState(false);
+  const [cardError, setCardError] = useState(null);
 
   useEffect(() => {
     if (resendCooldown <= 0) return;
@@ -26,6 +27,7 @@ export default function VerifyEmailPage() {
 
   const handleVerify = useCallback(async (verificationToken) => {
     setHasError(false);
+    setCardError(null);
     setSubmitting(true);
     try {
       await authService.verifyEmail({ token: verificationToken });
@@ -34,7 +36,11 @@ export default function VerifyEmailPage() {
       // Auto redirect to login after 3 seconds
       setTimeout(() => navigate("/login", { replace: true }), 3000);
     } catch (error) {
-      toast.error(error.message || "Unable to verify the link.");
+      if (error.message === "Network Error") {
+        setCardError("We're having trouble connecting right now. Please check your internet connection and try again.");
+      } else {
+        setCardError(error.message || "Unable to verify the link.");
+      }
       setHasError(true);
     } finally {
       setSubmitting(false);
@@ -50,12 +56,17 @@ export default function VerifyEmailPage() {
   const handleResend = useCallback(async () => {
     if (resendCooldown > 0 || !email) return;
     setResending(true);
+    setCardError(null);
     try {
       await authService.resendVerification(email);
       setResendCooldown(60);
       toast.success("Verification link resent!");
     } catch (error) {
-      toast.error(error.message || "Unable to resend the link.");
+      if (error.message === "Network Error") {
+        setCardError("We're having trouble connecting right now. Please check your internet connection and try again.");
+      } else {
+        setCardError(error.message || "Unable to resend the link.");
+      }
     } finally {
       setResending(false);
     }
@@ -68,6 +79,8 @@ export default function VerifyEmailPage() {
         description="We need an email address or a verification token to proceed."
         layout="single"
         showHeaderBrand
+        cardError={cardError}
+        onClearCardError={() => setCardError(null)}
         footer={
           <Link to="/register" className="text-sm font-semibold text-black no-underline hover:text-cyber-700">
             Back to registration
@@ -95,6 +108,8 @@ export default function VerifyEmailPage() {
         }
         layout="single"
         showHeaderBrand
+        cardError={cardError}
+        onClearCardError={() => setCardError(null)}
       >
         <AnimatePresence mode="wait">
           {success ? (
@@ -150,6 +165,8 @@ export default function VerifyEmailPage() {
       description={`We sent a secure verification link to ${email}.`}
       layout="single"
       showHeaderBrand
+      cardError={cardError}
+      onClearCardError={() => setCardError(null)}
       footer={
         <>
           <p className="text-sm text-black">Wrong email?</p>

@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowRight, AtSign, CheckCircle2, Loader2, Send, AlertCircle } from "lucide-react";
+import { ArrowRight, AtSign, CheckCircle2, Loader2, Send } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Link, useLocation } from "react-router-dom";
@@ -24,7 +24,7 @@ export default function ForgotPasswordPage() {
   const [sent, setSent] = useState(false);
   const [submittedEmail, setSubmittedEmail] = useState(defaultEmail);
   const [resendCountdown, setResendCountdown] = useState(0);
-  const [apiError, setApiError] = useState("");
+  const [cardError, setCardError] = useState(null);
 
   // DO NOT CHANGE: empty fields validate on submit only
   const {
@@ -39,6 +39,7 @@ export default function ForgotPasswordPage() {
   });
 
   const onSubmit = async (values) => {
+    setCardError(null);
     const email = values.email.trim().toLowerCase();
 
     try {
@@ -46,13 +47,13 @@ export default function ForgotPasswordPage() {
       setSubmittedEmail(email);
       setSent(true);
       toast.success("Reset link sent!");
-      setApiError("");
+      setCardError(null);
       return true;
     } catch (error) {
       if (error.message === "Network Error") {
-        setApiError("Unable to connect to the server. Please check your connection or backend URL.");
+        setCardError("We're having trouble connecting right now. Please check your internet connection and try again.");
       } else {
-        setApiError("We could not send a reset link right now. Please try again in a moment.");
+        setCardError("We could not send a reset link right now. Please try again in a moment.");
       }
       return false;
     }
@@ -85,6 +86,8 @@ export default function ForgotPasswordPage() {
       layout="single"
       showHeaderBrand
       mobileCardMode="full"
+      cardError={cardError}
+      onClearCardError={() => setCardError(null)}
       footer={
         <>
           <p className="text-sm text-black">Remember your password?</p>
@@ -129,13 +132,6 @@ export default function ForgotPasswordPage() {
       ) : (
 
           <form onSubmit={handleSubmit(onSubmit)} className="w-full flex flex-col gap-4 sm:gap-5">
-            {apiError && (
-              <div className="auth-alert auth-alert-error" role="alert">
-                <AlertCircle size={16} className="shrink-0 mt-0.5" aria-hidden="true" />
-                <span>{apiError}</span>
-              </div>
-            )}
-
             <div>
               <label className="auth-label" htmlFor="forgot-email">
                 Email address
