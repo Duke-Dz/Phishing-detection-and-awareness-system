@@ -128,7 +128,7 @@ export default function ForgotPasswordPage() {
         </div>
       ) : (
 
-          <form noValidate onSubmit={handleSubmit(onSubmit)} className="w-full flex flex-col gap-4 sm:gap-5">
+          <form onSubmit={handleSubmit(onSubmit)} className="w-full flex flex-col gap-4 sm:gap-5">
             {apiError && (
               <div className="auth-alert auth-alert-error" role="alert">
                 <AlertCircle size={16} className="shrink-0 mt-0.5" aria-hidden="true" />
@@ -153,12 +153,9 @@ export default function ForgotPasswordPage() {
                   spellCheck={false}
                   placeholder="you@example.com"
                   required
-                  className={`auth-field auth-field-has-icon ${errors.email ? "auth-field-error" : ""}`}
+                  className="auth-field auth-field-has-icon"
                 />
               </div>
-              {errors.email && (
-                <p className="auth-error-msg">{errors.email.message}</p>
-              )}
             </div>
 
             <button
