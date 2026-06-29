@@ -1,8 +1,16 @@
 import { AlertCircle, X } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { createPortal } from "react-dom";
 
 export const CardErrorToast = ({ message, onClose }) => {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    return () => setMounted(false);
+  }, []);
+
   useEffect(() => {
     if (message) {
       const timer = setTimeout(() => {
@@ -12,10 +20,10 @@ export const CardErrorToast = ({ message, onClose }) => {
     }
   }, [message, onClose]);
 
-  return (
+  const toastContent = (
     <AnimatePresence>
       {message && (
-        <div className="fixed top-4 left-1/2 -translate-x-1/2 w-full max-w-sm px-4 z-[100] pointer-events-none">
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 w-full max-w-sm px-4 z-[9999] pointer-events-none">
           <motion.div
             initial={{ y: -20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
@@ -39,4 +47,8 @@ export const CardErrorToast = ({ message, onClose }) => {
       )}
     </AnimatePresence>
   );
+
+  if (!mounted) return null;
+
+  return createPortal(toastContent, document.body);
 };
