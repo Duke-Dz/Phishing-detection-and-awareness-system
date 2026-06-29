@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { z } from "zod";
-import { Toast } from "../../components/common/Toast";
+import { toast } from "sonner";
 import { AuthPasswordField } from "../../components/auth/AuthPasswordField";
 import { AuthShell } from "../../components/auth/AuthShell";
 import { useAuth } from "../../hooks/useAuth";
@@ -20,7 +20,7 @@ export default function LoginPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const [submitError, setSubmitError] = useState("");
+
 
   // DO NOT CHANGE: empty fields validate on submit only
   const {
@@ -36,22 +36,20 @@ export default function LoginPage() {
   });
 
   const onSubmit = async (values) => {
-    setSubmitError("");
     try {
       const response = await login({
         identifier: values.identifier.trim(),
         password: values.password,
         remember_me: values.remember_me,
       });
+      toast.success("Welcome back!");
       const destination =
         location.state?.from?.pathname ||
         ROLE_DESTINATIONS[response.data.role] ||
         "/dashboard";
       navigate(destination, { replace: true });
     } catch (error) {
-      setSubmitError(
-        "Incorrect email, username, or password. Please try again.",
-      );
+      toast.error(error.message || "Incorrect email, username, or password. Please try again.");
     }
   };
 
@@ -76,10 +74,6 @@ export default function LoginPage() {
         </>
       }
     >
-      {submitError && (
-        <Toast message={submitError} onClose={() => setSubmitError("")} />
-      )}
-
       <form onSubmit={handleSubmit(onSubmit)} className="w-full flex flex-col gap-4 sm:gap-5">
         <div>
           <label className="auth-label" htmlFor="login-identifier">
