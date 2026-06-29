@@ -7,6 +7,7 @@ import {
   UserPlus,
   Check,
   X,
+  AlertCircle,
 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
@@ -97,6 +98,7 @@ export default function RegisterPage() {
   const navigate = useNavigate();
 
   const [isPasswordFocused, setIsPasswordFocused] = useState(false);
+  const [apiError, setApiError] = useState("");
 
   // DO NOT CHANGE: empty fields validate on submit only
   const {
@@ -148,7 +150,11 @@ export default function RegisterPage() {
         { replace: true },
       );
     } catch (error) {
-      toast.error(error.message || "Unable to create your account.");
+      if (error.message === "Network Error") {
+        setApiError("Unable to connect to the server. Please check your connection or backend URL.");
+      } else {
+        setApiError(error.message || "Unable to create your account.");
+      }
     }
   };
 
@@ -171,8 +177,14 @@ export default function RegisterPage() {
         </>
       }
     >
+        <form noValidate onSubmit={handleSubmit(onSubmit)} className="w-full flex flex-col gap-4 sm:gap-5">
+          {apiError && (
+            <div className="auth-alert auth-alert-error" role="alert">
+              <AlertCircle size={16} className="shrink-0 mt-0.5" aria-hidden="true" />
+              <span>{apiError}</span>
+            </div>
+          )}
 
-        <form onSubmit={handleSubmit(onSubmit)} className="w-full flex flex-col gap-4 sm:gap-5">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
             <div>
               <label className="auth-label" htmlFor="reg-firstname">
@@ -202,9 +214,12 @@ export default function RegisterPage() {
                   autoComplete="given-name"
                   placeholder="John"
                   required
-                  className="auth-field auth-field-has-icon pr-9"
+                  className={`auth-field auth-field-has-icon pr-9 ${errors.first_name ? "auth-field-error" : ""}`}
                 />
               </div>
+              {errors.first_name && (
+                <p className="auth-error-msg">{errors.first_name.message}</p>
+              )}
             </div>
 
             <div>
@@ -234,9 +249,12 @@ export default function RegisterPage() {
                   autoComplete="family-name"
                   placeholder="Doe"
                   required
-                  className="auth-field auth-field-has-icon pr-9"
+                  className={`auth-field auth-field-has-icon pr-9 ${errors.last_name ? "auth-field-error" : ""}`}
                 />
               </div>
+              {errors.last_name && (
+                <p className="auth-error-msg">{errors.last_name.message}</p>
+              )}
             </div>
           </div>
 
@@ -258,9 +276,12 @@ export default function RegisterPage() {
                   placeholder="johndoe"
                   minLength={3}
                   required
-                  className="auth-field auth-field-has-icon pr-9"
+                  className={`auth-field auth-field-has-icon pr-9 ${errors.username ? "auth-field-error" : ""}`}
                 />
               </div>
+              {errors.username && (
+                <p className="auth-error-msg">{errors.username.message}</p>
+              )}
             </div>
 
             <div>
@@ -280,7 +301,7 @@ export default function RegisterPage() {
                   spellCheck={false}
                   placeholder="you@example.com"
                   required
-                  className="auth-field auth-field-has-icon pr-9"
+                  className={`auth-field auth-field-has-icon pr-9 ${errors.email ? "auth-field-error" : ""}`}
                   style={{
                     textOverflow: "ellipsis",
                     overflow: "hidden",
@@ -288,6 +309,9 @@ export default function RegisterPage() {
                   }}
                 />
               </div>
+              {errors.email && (
+                <p className="auth-error-msg">{errors.email.message}</p>
+              )}
             </div>
           </div>
 

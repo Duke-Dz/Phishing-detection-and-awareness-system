@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { KeyRound, Loader2 } from "lucide-react";
+import { KeyRound, Loader2, AlertCircle } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { Link, useLocation, useNavigate } from "react-router-dom";
@@ -20,7 +20,7 @@ export default function LoginPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-
+  const [apiError, setApiError] = useState("");
 
   // DO NOT CHANGE: empty fields validate on submit only
   const {
@@ -49,7 +49,11 @@ export default function LoginPage() {
         "/dashboard";
       navigate(destination, { replace: true });
     } catch (error) {
-      toast.error(error.message || "Incorrect email, username, or password. Please try again.");
+      if (error.message === "Network Error") {
+        setApiError("Unable to connect to the server. Please check your connection or backend URL.");
+      } else {
+        setApiError(error.message || "Incorrect email, username, or password. Please try again.");
+      }
     }
   };
 
@@ -74,7 +78,14 @@ export default function LoginPage() {
         </>
       }
     >
-      <form onSubmit={handleSubmit(onSubmit)} className="w-full flex flex-col gap-4 sm:gap-5">
+      <form noValidate onSubmit={handleSubmit(onSubmit)} className="w-full flex flex-col gap-4 sm:gap-5">
+        {apiError && (
+          <div className="auth-alert auth-alert-error" role="alert">
+            <AlertCircle size={16} className="shrink-0 mt-0.5" aria-hidden="true" />
+            <span>{apiError}</span>
+          </div>
+        )}
+
         <div>
           <label className="auth-label" htmlFor="login-identifier">
             Email or username
@@ -104,9 +115,12 @@ export default function LoginPage() {
               spellCheck={false}
               placeholder="you@example.com"
               required
-              className="auth-field auth-field-has-icon"
+              className={`auth-field auth-field-has-icon ${errors.identifier ? "auth-field-error" : ""}`}
             />
           </div>
+          {errors.identifier && (
+            <p className="auth-error-msg">{errors.identifier.message}</p>
+          )}
         </div>
 
         <AuthPasswordField

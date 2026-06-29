@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { CheckCircle2, KeyRound, Loader2 } from "lucide-react";
+import { CheckCircle2, KeyRound, Loader2, AlertCircle } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { Link, useSearchParams } from "react-router-dom";
@@ -47,6 +47,7 @@ export default function ResetPasswordPage() {
   const token = searchParams.get("token") || "";
 
   const [success, setSuccess] = useState(false);
+  const [apiError, setApiError] = useState("");
 
   const {
     register,
@@ -76,8 +77,13 @@ export default function ResetPasswordPage() {
       });
       setSuccess(true);
       toast.success("Password updated successfully!");
+      setApiError("");
     } catch (error) {
-      toast.error(error.message || "Unable to reset the password.");
+      if (error.message === "Network Error") {
+        setApiError("Unable to connect to the server. Please check your connection or backend URL.");
+      } else {
+        setApiError(error.message || "Unable to reset the password.");
+      }
     }
   };
 
@@ -168,9 +174,17 @@ export default function ResetPasswordPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.2 }}
+            noValidate
             onSubmit={handleSubmit(onSubmit)}
             className="space-y-2.5"
           >
+            {apiError && (
+              <div className="auth-alert auth-alert-error" role="alert">
+                <AlertCircle size={16} className="shrink-0 mt-0.5" aria-hidden="true" />
+                <span>{apiError}</span>
+              </div>
+            )}
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
               <AuthPasswordField
                 id="reset-new-password"
