@@ -77,12 +77,12 @@ export default function ResetPasswordPage() {
         confirm_password: values.confirm_password,
       });
       setSuccess(true);
-      toast.success("Password updated successfully!");
+      toast.success("Password updated successfully.");
     } catch (error) {
       if (error.message === "Network Error") {
-        setCardError("We're having trouble connecting right now. Please check your internet connection and try again.");
+        setCardError("No connection. Please try again.");
       } else {
-        setCardError(error.message || "Unable to reset the password.");
+        setCardError("Password reset failed. Please try again.");
       }
     }
   };

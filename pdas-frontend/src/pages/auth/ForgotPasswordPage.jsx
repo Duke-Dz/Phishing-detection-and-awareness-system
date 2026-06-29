@@ -46,14 +46,14 @@ export default function ForgotPasswordPage() {
       await authService.forgotPassword(email);
       setSubmittedEmail(email);
       setSent(true);
-      toast.success("Reset link sent!");
+      toast.success("Reset link sent to your email.");
       setCardError(null);
       return true;
     } catch (error) {
       if (error.message === "Network Error") {
-        setCardError("We're having trouble connecting right now. Please check your internet connection and try again.");
+        setCardError("No connection. Please try again.");
       } else {
-        setCardError("We could not send a reset link right now. Please try again in a moment.");
+        setCardError("Something went wrong. Retry.");
       }
       return false;
     }

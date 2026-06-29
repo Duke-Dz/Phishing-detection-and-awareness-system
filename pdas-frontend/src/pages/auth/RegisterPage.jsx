@@ -144,16 +144,18 @@ export default function RegisterPage() {
         email: values.email.trim().toLowerCase(),
         password: values.password,
       });
-      toast.success("Account created! Check your email.");
+      toast.success("Account created successfully.");
       navigate(
         `/verify-email?email=${encodeURIComponent(values.email.trim().toLowerCase())}`,
         { replace: true },
       );
     } catch (error) {
       if (error.message === "Network Error") {
-        setCardError("We're having trouble connecting right now. Please check your internet connection and try again.");
+        setCardError("No connection. Please try again.");
+      } else if (error.message?.toLowerCase().includes("email") || error.message?.toLowerCase().includes("exist")) {
+        setCardError("Email already in use.");
       } else {
-        setCardError(error.message || "Unable to create your account.");
+        setCardError("Something went wrong. Retry.");
       }
     }
   };

@@ -43,7 +43,7 @@ export default function LoginPage() {
         password: values.password,
         remember_me: values.remember_me,
       });
-      toast.success("Welcome back!");
+      toast.success("Signed in successfully.");
       const destination =
         location.state?.from?.pathname ||
         ROLE_DESTINATIONS[response.data.role] ||
@@ -51,9 +51,9 @@ export default function LoginPage() {
       navigate(destination, { replace: true });
     } catch (error) {
       if (error.message === "Network Error") {
-        setCardError("We're having trouble connecting right now. Please check your internet connection and try again.");
+        setCardError("No connection. Please try again.");
       } else {
-        setCardError(error.message || "Incorrect email, username, or password. Please try again.");
+        setCardError("Invalid email or password.");
       }
     }
   };

@@ -23,7 +23,7 @@ export const CardErrorToast = ({ message, onClose }) => {
   const toastContent = (
     <AnimatePresence>
       {message && (
-        <div className="fixed top-4 left-1/2 -translate-x-1/2 w-full max-w-sm px-4 z-[9999] pointer-events-none">
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 w-full max-w-xs px-4 z-[9999] pointer-events-none">
           <motion.div
             initial={{ y: -20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
