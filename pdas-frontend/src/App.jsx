@@ -10,7 +10,7 @@ function App() {
         <AppRouter />
       </AuthProvider>
       <Toaster 
-        position="top-center" 
+        position="bottom-center" 
         richColors 
         closeButton 
         theme="light"
