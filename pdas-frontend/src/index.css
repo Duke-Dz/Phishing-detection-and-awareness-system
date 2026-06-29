@@ -1499,7 +1499,35 @@ input[type="password"].auth-field {
     padding: 1rem 0.875rem 1.25rem !important;
     border-radius: 0.875rem !important;
   }
+}
 
+/* --- Sonner Toast Customization --- */
+[data-sonner-toaster] [data-sonner-toast] {
+  font-family: inherit;
+  border-radius: 0.85rem !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+}
+
+[data-sonner-toaster] [data-sonner-toast][data-type="error"] {
+  background: rgba(254, 242, 242, 0.94) !important;
+  border: 1.5px solid rgba(252, 165, 165, 0.6) !important;
+  color: #b91c1c !important;
+}
+[data-sonner-toaster] [data-sonner-toast][data-type="error"] [data-icon] {
+  color: #ef4444 !important;
+}
+
+[data-sonner-toaster] [data-sonner-toast][data-type="success"] {
+  background: rgba(238, 246, 252, 0.94) !important;
+  border: 1.5px solid rgba(13, 81, 140, 0.32) !important;
+  color: #020617 !important;
+}
+[data-sonner-toaster] [data-sonner-toast][data-type="success"] [data-icon] {
+  color: #0d518c !important;
+}
+
+@media (max-width: 380px) {
   .auth-logo-compact > div:first-of-type {
     width: 3.75rem !important;
     height: 3.75rem !important;
