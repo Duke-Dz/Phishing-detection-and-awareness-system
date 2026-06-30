@@ -50,7 +50,9 @@ const loginValidator = [
   body("identifier")
     .trim()
     .notEmpty()
-    .withMessage("Email or username is required"),
+    .withMessage("Email is required")
+    .isEmail()
+    .withMessage("Must be a valid email address"),
 
   body("password").notEmpty().withMessage("Password is required"),
 ];
