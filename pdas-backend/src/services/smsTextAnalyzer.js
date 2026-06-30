@@ -14,7 +14,7 @@ const client = new Anthropic({
 async function analyzeSmsText(content, sender = "") {
   try {
     const response = await client.messages.create({
-      model: "claude-sonnet-4-6",
+      model: "claude-3-5-sonnet-latest",
       max_tokens: 1024,
       messages: [
         {

@@ -28,6 +28,8 @@ const trustedBrands = [
   "chase",
   "wellsfargo",
   "citibank",
+  "youtube",
+  "tesla",
   // Kenyan brands
   "safaricom",
   "mpesa",
@@ -40,6 +42,7 @@ const trustedBrands = [
   "kra",
   "nhif",
   "nssf",
+  "jumia",
 ];
 
 /**
@@ -142,6 +145,8 @@ const extractBaseName = (domain) => {
   return parts.slice(0, -1).join(".");
 };
 
+const url = require("url");
+
 /**
  * Checks whether a domain is a typosquat of a known trusted brand.
  * Strips the TLD, applies character substitution normalization (look-alike
@@ -157,7 +162,11 @@ const checkTyposquatting = (domain) => {
 
   if (!domain || typeof domain !== "string") return safe;
 
-  const withoutTld = extractBaseName(domain);
+  // Decode Punycode to Unicode (e.g., xn--pypal-4ve.com -> pаypal.com)
+  // This exposes homograph attacks to the Levenshtein distance check.
+  const decodedDomain = url.domainToUnicode(domain);
+
+  const withoutTld = extractBaseName(decodedDomain);
   if (!withoutTld) return safe;
 
   const baseDomain = withoutTld.split("-")[0];
@@ -175,12 +184,12 @@ const checkTyposquatting = (domain) => {
       const distance = levenshteinDistance(str, brand);
       const rawDistance = levenshteinDistance(raw, brand);
 
-      if (distance === 0 && label === "base" && raw !== brand) {
+      if (distance === 0 && label === "base" && withoutTld !== brand) {
         return {
           isTyposquat: true,
           matchedBrand: brand,
           editDistance: rawDistance,
-          attackType: "character_substitution",
+          attackType: raw !== brand ? "character_substitution" : "brand_impersonation_hyphenated",
         };
       }
 

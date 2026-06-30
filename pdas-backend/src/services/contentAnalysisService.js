@@ -7,7 +7,7 @@ const { promisify } = require("util");
 
 const dnsLookup = promisify(dns.lookup);
 
-const REQUEST_TIMEOUT_MS = 5000;
+const REQUEST_TIMEOUT_MS = 1500;
 const MAX_HTML_BYTES = 512 * 1024;
 
 const SHORTENER_DOMAINS = new Set([
@@ -23,6 +23,13 @@ const KNOWN_BRANDS = [
 ];
 
 const PRIVATE_HOSTNAMES = new Set(["localhost", "localhost.localdomain"]);
+
+const URGENCY_PHRASES = [
+  "act now", "immediately", "within 24 hours", "final warning",
+  "your account will be", "verify immediately", "unusual activity",
+  "has been compromised", "avoid charges", "expires today",
+  "last chance", "failure to act", "suspended", "account locked"
+];
 
 const isPrivateAddress = (address) => {
   if (!address || typeof address !== "string") return true;
@@ -255,11 +262,25 @@ const detectHiddenElements = (html) => {
   return { found: details.length > 0, details };
 };
 
+const checkUrgencyText = (html) => {
+  const details = [];
+  const textContent = html.replace(/<[^>]+>/g, " ").toLowerCase();
+  
+  for (const phrase of URGENCY_PHRASES) {
+    if (textContent.includes(phrase)) {
+      details.push(`Page contains urgency/pressure phrase: "${phrase}"`);
+    }
+  }
+  
+  return { found: details.length > 0, details: details.slice(0, 3) };
+};
+
 const analyzePageContent = (html, pageUrl) => {
   const safe = {
     hasCredentialHarvester: false,
     hasTitleMismatch: false,
     hasHiddenElements: false,
+    hasUrgency: false,
     details: [],
   };
 
@@ -271,12 +292,14 @@ const analyzePageContent = (html, pageUrl) => {
     const cred = detectCredentialForms(html, pageUrl);
     const title = checkTitleDomainMismatch(html, pageUrl);
     const hidden = detectHiddenElements(html);
+    const urgency = checkUrgencyText(html);
 
     return {
       hasCredentialHarvester: cred.found,
       hasTitleMismatch: title.found,
       hasHiddenElements: hidden.found,
-      details: [...cred.details, ...title.details, ...hidden.details],
+      hasUrgency: urgency.found,
+      details: [...cred.details, ...title.details, ...hidden.details, ...urgency.details],
     };
   } catch {
     return safe;

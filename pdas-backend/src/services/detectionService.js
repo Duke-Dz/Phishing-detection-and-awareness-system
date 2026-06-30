@@ -77,7 +77,8 @@ const addSignal = (signals, name, points, evidence) => {
 
 const scoreSignals = (signals, maxExpected) => {
   const rawPoints = signals.reduce((total, s) => total + s.points, 0);
-  return normaliseLayerScore(rawPoints, maxExpected);
+  // Accumulate risk directly rather than treating it as a percentage of a theoretical maximum
+  return Math.min(100, Math.round(rawPoints));
 };
 
 /**
@@ -616,12 +617,23 @@ const runContentAnalysis = async (url, domain) => {
     const shortResult = await expandShortUrl(url);
     if (shortResult.isShortened && shortResult.expandedUrl) {
       expandedUrl = shortResult.expandedUrl;
-      addSignal(
-        signals,
-        "shortened_url_expanded",
-        5,
-        `Shortened URL expands to: ${shortResult.expandedUrl}`,
-      );
+      const finalDomain = extractDomain(expandedUrl);
+      
+      if (riskyTlds.some((tld) => finalDomain.endsWith(tld))) {
+        addSignal(
+          signals,
+          "shortener_hides_risky_tld",
+          35,
+          `Shortened URL hides a destination on a high-risk TLD (${finalDomain})`
+        );
+      } else {
+        addSignal(
+          signals,
+          "shortened_url_expanded",
+          5,
+          `Shortened URL expands to: ${shortResult.expandedUrl}`
+        );
+      }
     }
 
     // ── Follow redirect chain ──
@@ -629,12 +641,24 @@ const runContentAnalysis = async (url, domain) => {
     const redirectResult = await followRedirects(targetUrl);
 
     if (redirectResult.hopCount >= 3) {
-      addSignal(
-        signals,
-        "excessive_redirects",
-        15,
-        `URL redirects ${redirectResult.hopCount} times before reaching final destination`,
-      );
+      const domains = redirectResult.chain ? redirectResult.chain.map(hop => extractDomain(hop.url)).filter(Boolean) : [];
+      const uniqueDomains = new Set(domains);
+      
+      if (uniqueDomains.size >= 3) {
+        addSignal(
+          signals,
+          "cross_domain_redirects",
+          25,
+          `URL redirects across ${uniqueDomains.size} different domains (suspicious evasion)`
+        );
+      } else {
+        addSignal(
+          signals,
+          "excessive_redirects",
+          15,
+          `URL redirects ${redirectResult.hopCount} times before reaching final destination`
+        );
+      }
     }
 
     if (redirectResult.timedOut) {
@@ -675,6 +699,24 @@ const runContentAnalysis = async (url, domain) => {
           10,
           "Page contains hidden forms or iframes (possible overlay attack)",
         );
+      }
+
+      if (pageAnalysis.hasUrgency) {
+        if (riskyTlds.some((tld) => domain.endsWith(tld))) {
+          addSignal(
+            signals,
+            "suspicious_tld_urgency",
+            40,
+            "Page uses urgency/pressure tactics while hosted on a high-risk TLD"
+          );
+        } else {
+          addSignal(
+            signals,
+            "urgency_pressure",
+            15,
+            "Page content uses urgency/pressure tactics"
+          );
+        }
       }
     }
   } catch (error) {
@@ -877,12 +919,22 @@ const analyzeMessage = async (content, scanType = "email", options = {}) => {
     layer1.score = Math.min(100, layer1.score + Math.round(senderRawPoints * 0.3));
   }
 
-  // ── Layer 2: Check any URLs found in the message ──
+  // ── Parallel Execution: Layer 2 (URLs) & Layer 4 (Claude SMS) ──
+  const urlMatches = text.match(/https?:\/\/[^\s]+/gi);
+  const urlPromise = (urlMatches && urlMatches.length > 0)
+    ? mergeEmbeddedUrlSignals(layer1, urlMatches)
+    : Promise.resolve(null);
+
+  const claudePromise = (scanType === "sms")
+    ? analyzeSmsText(text, sender)
+    : Promise.resolve(null);
+
+  const [embeddedResult, claudeResult] = await Promise.all([urlPromise, claudePromise]);
+
+  // ── Layer 2: Process embedded URLs ──
   const layer2 = { score: 0, signals: [], threatIntel: null };
   let embeddedUrlAnalyses = [];
-  const urlMatches = text.match(/https?:\/\/[^\s]+/gi);
-  if (urlMatches && urlMatches.length > 0) {
-    const embeddedResult = await mergeEmbeddedUrlSignals(layer1, urlMatches);
+  if (embeddedResult) {
     layer2.score = embeddedResult.layer2.score;
     layer2.signals = embeddedResult.layer2.signals;
     layer2.threatIntel = embeddedResult.layer2.threatIntel;
@@ -893,23 +945,20 @@ const analyzeMessage = async (content, scanType = "email", options = {}) => {
   // ── Layer 3: ML scoring ──
   const layer3 = runMessageMlScoring(text);
 
-  // ── Layer 4: SMS Text Analysis ──
+  // ── Layer 4: Process SMS Text Analysis (Claude) ──
   let llmScore = null;
   let claudeAnalysis = null;
-  if (scanType === "sms") {
-    const claudeResult = await analyzeSmsText(text, sender);
-    if (claudeResult.success) {
-      claudeAnalysis = claudeResult.analysis;
-      llmScore = claudeResult.risk_score;
-      if (claudeAnalysis.red_flags && claudeAnalysis.red_flags.length > 0) {
-        claudeAnalysis.red_flags.forEach(flag => {
-          layer1.signals.push({
-            name: "llm_red_flag",
-            points: 10,
-            evidence: `Claude AI Analysis: ${flag}`
-          });
+  if (claudeResult && claudeResult.success) {
+    claudeAnalysis = claudeResult.analysis;
+    llmScore = claudeResult.risk_score;
+    if (claudeAnalysis.red_flags && claudeAnalysis.red_flags.length > 0) {
+      claudeAnalysis.red_flags.forEach(flag => {
+        layer1.signals.push({
+          name: "llm_red_flag",
+          points: 10,
+          evidence: `Claude AI Analysis: ${flag}`
         });
-      }
+      });
     }
   }
 
