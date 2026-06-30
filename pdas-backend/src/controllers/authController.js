@@ -78,11 +78,10 @@ const login = async (req, res) => {
   requireFields(req.body, ["identifier", "password"]);
 
   const identifier = String(req.body.identifier).trim().toLowerCase();
-  const isEmail = identifier.includes("@");
-  const whereClause = isEmail ? { email: identifier } : { username: identifier };
+  const whereClause = { email: identifier };
 
   const user = await User.scope("withPassword").findOne({ where: whereClause });
-  const genericErrorMsg = "Incorrect email, username, or password.";
+  const genericErrorMsg = "Incorrect email or password.";
 
   if (!user) {
     throw createError(genericErrorMsg, 401);

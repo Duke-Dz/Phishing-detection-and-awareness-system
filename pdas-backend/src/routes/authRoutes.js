@@ -116,7 +116,7 @@ router.post("/register", registerValidator, validate, asyncHandler(register));
  *             properties:
  *               identifier:
  *                 type: string
- *                 description: Email address or username
+ *                 description: User's email address
  *               password:
  *                 type: string
  *                 format: password
