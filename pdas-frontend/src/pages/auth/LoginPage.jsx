@@ -11,7 +11,7 @@ import { useAuth } from "../../hooks/useAuth";
 import { ROLE_DESTINATIONS } from "../../utils/constants";
 
 const loginSchema = z.object({
-  identifier: z.string().trim().min(1, "Enter your email or username"),
+  email: z.string().trim().min(1, "Enter your email").email("Enter a valid email address"),
   password: z.string().min(1, "Enter your password"),
   remember_me: z.boolean().optional(),
 });
@@ -32,14 +32,14 @@ export default function LoginPage() {
     resolver: zodResolver(loginSchema),
     mode: "onTouched",
     reValidateMode: "onChange",
-    defaultValues: { identifier: "", password: "", remember_me: false },
+    defaultValues: { email: "", password: "", remember_me: false },
   });
 
   const onSubmit = async (values) => {
     setCardError(null);
     try {
       const response = await login({
-        identifier: values.identifier.trim(),
+        identifier: values.email.trim(),
         password: values.password,
         remember_me: values.remember_me,
       });
@@ -83,8 +83,8 @@ export default function LoginPage() {
     >
       <form onSubmit={handleSubmit(onSubmit)} className="w-full flex flex-col gap-4 sm:gap-5">
         <div>
-          <label className="auth-label" htmlFor="login-identifier">
-            Email or username
+          <label className="auth-label" htmlFor="login-email">
+            Email address
           </label>
           <div className="auth-field-wrap">
             <span className="auth-field-icon">
@@ -104,9 +104,10 @@ export default function LoginPage() {
               </svg>
             </span>
             <input
-              id="login-identifier"
-              {...register("identifier")}
-              autoComplete="username"
+              id="login-email"
+              {...register("email")}
+              type="email"
+              autoComplete="email"
               autoCapitalize="none"
               spellCheck={false}
               placeholder="you@example.com"
@@ -127,7 +128,7 @@ export default function LoginPage() {
           labelAction={
             <Link
               to="/forgot-password"
-              state={{ email: getValues("identifier") }}
+              state={{ email: getValues("email") }}
               className="text-[13px] font-normal text-[#6B7280] no-underline hover:text-[#0D518C]"
             >
               Forgot password?
