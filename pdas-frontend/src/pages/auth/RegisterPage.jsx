@@ -211,7 +211,7 @@ export default function RegisterPage() {
                   autoComplete="given-name"
                   placeholder="John"
                   required
-                  className="auth-field"
+                  className="auth-field auth-field-has-icon"
                 />
               </div>
             </div>
@@ -243,7 +243,7 @@ export default function RegisterPage() {
                   autoComplete="family-name"
                   placeholder="Doe"
                   required
-                  className="auth-field"
+                  className="auth-field auth-field-has-icon"
                 />
               </div>
             </div>
