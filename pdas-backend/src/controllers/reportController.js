@@ -73,13 +73,15 @@ const createReport = async (req, res) => {
   });
 
   // 1. Send receipt to the reporter
-  const receiptTemplate = emailTemplates.reportReceived({
-    userName: req.user.full_name,
-    reportId: report.report_id,
-    reportType: req.body.report_type,
-    frontendUrl: config.frontendUrl,
-  });
-  sendMail({ to: req.user.email, ...receiptTemplate }).catch(() => {});
+  if (req.user.email_notifications !== false) {
+    const receiptTemplate = emailTemplates.reportReceived({
+      userName: req.user.full_name,
+      reportId: report.report_id,
+      reportType: req.body.report_type,
+      frontendUrl: config.frontendUrl,
+    });
+    sendMail({ to: req.user.email, ...receiptTemplate }).catch(() => {});
+  }
 
   // 2. Alert all active admins and analysts
   try {
@@ -87,6 +89,7 @@ const createReport = async (req, res) => {
       where: {
         role: ["admin", "analyst"],
         is_active: true,
+        email_notifications: true,
       },
       attributes: ["email", "full_name"],
     });
@@ -185,7 +188,7 @@ const updateReportStatus = async (req, res) => {
   // Send status update email to report author
   try {
     const reportAuthor = await User.findByPk(report.user_id);
-    if (reportAuthor) {
+    if (reportAuthor?.email_notifications !== false) {
       const template = emailTemplates.reportStatusUpdate({
         userName: reportAuthor.full_name,
         reportId: report.report_id,

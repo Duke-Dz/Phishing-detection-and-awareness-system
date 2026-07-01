@@ -1,8 +1,6 @@
 const express = require("express");
 const {
   changePassword,
-  disableMfa,
-  enableMfa,
   forgotPassword,
   getMe,
   login,
@@ -11,7 +9,6 @@ const {
   register,
   resendVerification,
   resetPassword,
-  setupMfa,
   verifyEmail,
   getSessions,
   revokeSession,
@@ -23,7 +20,6 @@ const {
   registerValidator,
   loginValidator,
   refreshValidator,
-  mfaCodeValidator,
   forgotPasswordValidator,
   resetPasswordValidator,
   changePasswordValidator,
@@ -105,7 +101,7 @@ router.post("/register", registerValidator, validate, asyncHandler(register));
  *   post:
  *     tags: [Auth]
  *     summary: Login to an existing account
- *     description: Authenticate with email/username and password. If MFA is enabled on the account, an mfa_code field is also required.
+ *     description: Authenticate with an email address and password.
  *     requestBody:
  *       required: true
  *       content:
@@ -116,13 +112,11 @@ router.post("/register", registerValidator, validate, asyncHandler(register));
  *             properties:
  *               identifier:
  *                 type: string
+ *                 format: email
  *                 description: User's email address
  *               password:
  *                 type: string
  *                 format: password
- *               mfa_code:
- *                 type: string
- *                 description: Required if MFA is enabled on the account
  *     responses:
  *       200:
  *         description: Login successful
@@ -142,7 +136,7 @@ router.post("/register", registerValidator, validate, asyncHandler(register));
  *                 data:
  *                   type: object
  *       401:
- *         description: Invalid credentials or MFA required
+ *         description: Invalid credentials
  *       403:
  *         description: Account disabled
  */
@@ -246,97 +240,6 @@ router.delete("/sessions/:id", protect, sessionLimiter, asyncHandler(revokeSessi
 
 /**
  * @swagger
- * /auth/mfa/setup:
- *   post:
- *     tags: [Auth]
- *     summary: Set up MFA
- *     description: Generate a new MFA secret for the authenticated user. Returns the secret and an otpauth URL for scanning with an authenticator app.
- *     security:
- *       - bearerAuth: []
- *     responses:
- *       200:
- *         description: MFA secret generated
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                 message:
- *                   type: string
- *                 data:
- *                   type: object
- *                   properties:
- *                     secret:
- *                       type: string
- *                     otpauth_url:
- *                       type: string
- *       401:
- *         description: Not authenticated
- */
-router.post("/mfa/setup", protect, asyncHandler(setupMfa));
-
-/**
- * @swagger
- * /auth/mfa/enable:
- *   post:
- *     tags: [Auth]
- *     summary: Enable MFA
- *     description: Verify a TOTP code against the previously set up secret and enable MFA on the account.
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required: [mfa_code]
- *             properties:
- *               mfa_code:
- *                 type: string
- *                 example: "123456"
- *     responses:
- *       200:
- *         description: MFA enabled
- *       400:
- *         description: MFA not set up yet
- *       401:
- *         description: Invalid MFA code or not authenticated
- */
-router.post("/mfa/enable", protect, mfaCodeValidator, validate, asyncHandler(enableMfa));
-
-/**
- * @swagger
- * /auth/mfa/disable:
- *   post:
- *     tags: [Auth]
- *     summary: Disable MFA
- *     description: Disable multi-factor authentication by verifying the current TOTP code.
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required: [mfa_code]
- *             properties:
- *               mfa_code:
- *                 type: string
- *                 example: "123456"
- *     responses:
- *       200:
- *         description: MFA disabled
- *       401:
- *         description: Invalid MFA code or not authenticated
- */
-router.post("/mfa/disable", protect, mfaCodeValidator, validate, asyncHandler(disableMfa));
-
-/**
- * @swagger
  * /auth/forgot-password:
  *   post:
  *     tags: [Auth]
@@ -430,21 +333,18 @@ router.post("/change-password", protect, changePasswordValidator, validate, asyn
  *   post:
  *     tags: [Auth]
  *     summary: Verify email address
- *     description: Verify the user's email address using the 6-digit code sent via email during registration.
+ *     description: Verify the user's email address using the secure link token sent during registration.
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
  *             type: object
- *             required: [email, otp_code]
+ *             required: [token]
  *             properties:
- *               email:
+ *               token:
  *                 type: string
- *                 format: email
- *               otp_code:
- *                 type: string
- *                 description: 6-digit verification code
+ *                 description: Verification token from the emailed activation link
  *     responses:
  *       200:
  *         description: Email verified successfully
@@ -461,7 +361,7 @@ router.post("/verify-email", verifyEmailValidator, validate, asyncHandler(verify
  *   post:
  *     tags: [Auth]
  *     summary: Resend verification email
- *     description: Resend the email verification code. Fails if the email is already verified.
+ *     description: Resend the email verification link. Fails if the email is already verified.
  *     requestBody:
  *       required: true
  *       content:
@@ -475,7 +375,7 @@ router.post("/verify-email", verifyEmailValidator, validate, asyncHandler(verify
  *                 format: email
  *     responses:
  *       200:
- *         description: Verification code sent
+ *         description: Verification link sent
  *       400:
  *         description: Email is already verified
  */

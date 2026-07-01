@@ -1,113 +1,126 @@
 const nodemailer = require("nodemailer");
+const path = require("path");
 const config = require("../config/env");
 const logger = require("../utils/logger");
 const { generateUnsubscribeToken } = require("../utils/unsubscribeTokens");
 
-let transporter = null;
+const brandLogo = {
+  filename: "cybersense-logo.png",
+  path: path.resolve(__dirname, "../templates/assets/cybersense-logo.png"),
+  cid: "cybersense-logo",
+};
 
-/**
- * Asynchronously verify the connection to the SMTP server.
- */
-async function verifyConnection(transport) {
-  try {
-    await transport.verify();
-    logger.info("Mail service connection verified successfully");
-  } catch (error) {
-    logger.error("Mail service connection verification failed", {
-      error: error.message,
+let transporter;
+let state = {
+  configured: Boolean(config.mail.host && config.mail.user && config.mail.pass),
+  status: config.mail.host && config.mail.user && config.mail.pass ? "configured" : "disabled",
+  last_attempt_at: null,
+  last_success_at: null,
+  last_error: null,
+};
+
+const recipientDomain = (address = "") => String(address).split("@")[1] || "invalid";
+
+const withDeadline = (operation, timeoutMs, message) => {
+  let timer;
+  const deadline = new Promise((_, reject) => {
+    timer = setTimeout(() => {
+      const error = new Error(message);
+      error.code = "ETIMEDOUT";
+      reject(error);
+    }, timeoutMs);
+  });
+  return Promise.race([operation, deadline]).finally(() => clearTimeout(timer));
+};
+
+const resetTransporter = () => {
+  transporter?.close();
+  transporter = undefined;
+};
+
+const createTransporter = () => {
+  if (!state.configured) return null;
+  if (!transporter) {
+    transporter = nodemailer.createTransport({
       host: config.mail.host,
       port: config.mail.port,
+      secure: config.mail.port === 465,
+      auth: { user: config.mail.user, pass: config.mail.pass },
+      connectionTimeout: 5000,
+      greetingTimeout: 5000,
+      socketTimeout: 15000,
+      family: 4,
     });
+    logger.debug("mail.transport.created", { host: config.mail.host, port: config.mail.port });
   }
-}
+  return transporter;
+};
 
-/**
- * Creates a nodemailer transporter if mail is configured.
- */
-function createTransporter() {
-  if (!config.mail.host || !config.mail.user) {
-    logger.warn("Mail service is not fully configured (missing host or user).");
+const isMailConfigured = () => state.configured;
+const getMailStatus = () => ({ ...state });
+
+const verifyConnection = async () => {
+  const transport = createTransporter();
+  if (!transport) return false;
+  try {
+    await withDeadline(transport.verify(), 10000, "SMTP verification timed out");
+    state = { ...state, status: "available", last_success_at: new Date().toISOString(), last_error: null };
+    logger.info("mail.connection.available", { host: config.mail.host, port: config.mail.port });
+    return true;
+  } catch (error) {
+    resetTransporter();
+    state = { ...state, status: "unavailable", last_error: error.code || error.name };
+    logger.warn("mail.connection.unavailable", { host: config.mail.host, port: config.mail.port, error });
+    return false;
+  }
+};
+
+const sendMail = async ({ to, subject, html, text }) => {
+  const transport = createTransporter();
+  if (!transport) {
+    logger.debug("mail.send.skipped", { reason: "not_configured", recipient_domain: recipientDomain(to) });
     return null;
   }
 
-  const transport = nodemailer.createTransport({
-    host: config.mail.host,
-    port: config.mail.port,
-    secure: config.mail.port === 465, // true for 465, false for other ports
-    auth: {
-      user: config.mail.user,
-      pass: config.mail.pass,
-    },
-    // Prevent long hangs during DNS/connection
-    connectionTimeout: 10000,
-    // Force IPv4 to prevent 2-minute DNS resolution timeouts (Node 17+ issue with IPv6 and Mailtrap)
-    family: 4,
-  });
-
-  logger.info(
-    `Mail service initialized (${config.mail.host}:${config.mail.port})`
-  );
-
-  // Non-blocking verification check
-  verifyConnection(transport);
-
-  return transport;
-}
-
-// Initialize transporter on module load
-transporter = createTransporter();
-
-/**
- * Returns true if MAIL_HOST and MAIL_USER are both set.
- */
-function isMailConfigured() {
-  return !!(config.mail.host && config.mail.user);
-}
-
-/**
- * Sends an email using the configured transporter.
- * Gracefully degrades if mail is not configured or sending fails.
- *
- * @param {Object} options
- * @param {string} options.to - Recipient email address
- * @param {string} options.subject - Email subject
- * @param {string} options.html - HTML body
- * @param {string} [options.text] - Plain text body
- * @returns {Promise<Object|null>} Nodemailer info object on success, null otherwise
- */
-async function sendMail({ to, subject, html, text }) {
-  if (!isMailConfigured() || !transporter) {
-    logger.info(`Mail not configured — skipping email to ${to}: ${subject}`);
-    return null;
-  }
-
+  state = { ...state, status: "sending", last_attempt_at: new Date().toISOString() };
   try {
     const unsubscribeToken = generateUnsubscribeToken(to);
-    const unsubscribeUrl = `${config.frontendUrl}/unsubscribe?email=${encodeURIComponent(to)}&token=${unsubscribeToken}`;
-    const privacyUrl = `${config.frontendUrl}/privacy`;
-
-    const finalHtml = html ? html.replace(/\{\{UNSUBSCRIBE_URL\}\}/g, unsubscribeUrl).replace(/\{\{PRIVACY_URL\}\}/g, privacyUrl) : html;
-    const finalText = text ? text.replace(/\{\{UNSUBSCRIBE_URL\}\}/g, unsubscribeUrl).replace(/\{\{PRIVACY_URL\}\}/g, privacyUrl) : text;
-
-    const info = await transporter.sendMail({
+    const frontendUrl = config.frontendUrl.replace(/\/$/, "");
+    const unsubscribeUrl = `${frontendUrl}/unsubscribe?email=${encodeURIComponent(to)}&token=${encodeURIComponent(unsubscribeToken)}`;
+    const replacements = (value) => value
+      ?.replace(/\{\{UNSUBSCRIBE_URL\}\}/g, unsubscribeUrl)
+      .replace(/\{\{PRIVACY_URL\}\}/g, `${frontendUrl}/privacy`);
+    const info = await withDeadline(transport.sendMail({
       from: config.mail.from,
       to,
       subject,
-      html: finalHtml,
-      text: finalText,
-    });
-    
-    logger.info(`Email sent successfully to ${to}`, { messageId: info.messageId });
+      html: replacements(html),
+      text: replacements(text),
+      attachments: [brandLogo],
+      headers: {
+        "List-Unsubscribe": `<${unsubscribeUrl}>`,
+      },
+    }), 20000, "SMTP send timed out");
+    state = { ...state, status: "available", last_success_at: new Date().toISOString(), last_error: null };
+    logger.debug("mail.send.succeeded", { message_id: info.messageId, recipient_domain: recipientDomain(to) });
     return info;
   } catch (error) {
-    logger.error("Failed to send email", {
-      to,
-      subject,
-      error: error.message,
-      stack: error.stack,
-    });
-    return null;
+    resetTransporter();
+    const status = ["EAUTH", "EENVELOPE"].includes(error.code) ? "rejected" : "unavailable";
+    state = { ...state, status, last_error: error.code || error.name };
+    logger.error("mail.send.failed", { recipient_domain: recipientDomain(to), status, error });
+    throw error;
   }
-}
+};
 
-module.exports = { isMailConfigured, sendMail };
+const closeMailService = async () => {
+  resetTransporter();
+};
+
+module.exports = {
+  closeMailService,
+  getMailStatus,
+  isMailConfigured,
+  sendMail,
+  verifyConnection,
+};

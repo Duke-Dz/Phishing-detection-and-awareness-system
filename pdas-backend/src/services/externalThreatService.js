@@ -17,6 +17,27 @@ const VT_MAX_PER_DAY = 500;
 const vtRequestTimestamps = [];
 let vtDailyCount = 0;
 let vtDailyResetTime = Date.now() + 24 * 60 * 60 * 1000;
+const providerState = {
+  google_safe_browsing: { status: "unknown", last_attempt_at: null, last_success_at: null, reason: null },
+  virustotal: { status: "unknown", last_attempt_at: null, last_success_at: null, reason: null },
+};
+
+const recordProviderState = (source, result) => {
+  const now = new Date().toISOString();
+  const reason = result.reason || null;
+  let status = result.status;
+  if (reason === "api_key_missing" || reason === "disabled") status = "disabled";
+  else if (reason === "rate_limited") status = "rate_limited";
+  else if (/http_(401|403)|submit_http_(401|403)/.test(reason || "")) status = "rejected";
+  else if (["queried", "submitted"].includes(result.status) && ["matched", "no_match", "not_in_database"].includes(reason)) status = "successful";
+  else if (result.status === "failed") status = "unavailable";
+  providerState[source] = {
+    status,
+    reason,
+    last_attempt_at: result.status === "skipped" ? providerState[source].last_attempt_at : now,
+    last_success_at: status === "successful" ? now : providerState[source].last_success_at,
+  };
+};
 
 const parseBoolEnv = (key, defaultValue = true) => {
   const value = process.env[key];
@@ -184,6 +205,7 @@ const checkGoogleSafeBrowsing = async (url) => {
   if (!apiKey) {
     logger.debug("Google Safe Browsing API key not configured - skipping");
     result.reason = "api_key_missing";
+    recordProviderState(result.source, result);
     return result;
   }
 
@@ -232,6 +254,8 @@ const checkGoogleSafeBrowsing = async (url) => {
     result.status = "failed";
     result.reason = "exception";
     return result;
+  } finally {
+    recordProviderState(result.source, result);
   }
 };
 
@@ -250,12 +274,14 @@ const checkVirusTotal = async (url) => {
   if (!apiKey) {
     logger.debug("VirusTotal API key not configured - skipping");
     result.reason = "api_key_missing";
+    recordProviderState(result.source, result);
     return result;
   }
 
   if (!canMakeVtRequest()) {
     logger.debug("VirusTotal rate limit reached - skipping");
     result.reason = "rate_limited";
+    recordProviderState(result.source, result);
     return result;
   }
 
@@ -360,6 +386,8 @@ const checkVirusTotal = async (url) => {
     result.status = "failed";
     result.reason = "exception";
     return result;
+  } finally {
+    recordProviderState(result.source, result);
   }
 };
 
@@ -512,6 +540,7 @@ const getApiStatus = () => {
     google_safe_browsing: {
       configured: Boolean(gsbKey && gsbKey.length > 0),
       enabled: config.googleEnabled,
+      ...providerState.google_safe_browsing,
     },
     virustotal: {
       configured: Boolean(vtKey && vtKey.length > 0),
@@ -519,6 +548,7 @@ const getApiStatus = () => {
       min_local_score: config.virusTotalMinLocalScore,
       daily_quota_remaining: VT_MAX_PER_DAY - vtDailyCount,
       requests_this_minute: vtRequestTimestamps.filter((t) => t > Date.now() - 60000).length,
+      ...providerState.virustotal,
     },
   };
 };

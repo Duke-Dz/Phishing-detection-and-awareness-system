@@ -7,13 +7,19 @@ const { createScanJob } = require("../services/scanJobService");
 const { createError, requireFields, validateUrl } = require("../utils/validators");
 const { buildPaginationMeta, getPagination } = require("../utils/pagination");
 const cacheService = require("../services/cacheService");
+const logger = require("../utils/logger");
 
 const persistScan = async ({ user_id, report_id = null, analysis }) => {
   const scanResult = await persistScanResult({ user_id, report_id, analysis });
 
-  await createScanNotification({ user_id, scanResult, report_id: scanResult.report_id });
+  createScanNotification({ user_id, scanResult, report_id: scanResult.report_id })
+    .catch((error) => {
+      logger.warn("scan.notification.failed", {
+        scan_id: scanResult.scan_id,
+        error_code: error.original?.code || error.code || error.name,
+      });
+    });
 
-  // Invalidate dashboard cache so new scan appears in stats immediately
   cacheService.del(cacheService.keys.dashboardStats(user_id));
 
   return scanResult;

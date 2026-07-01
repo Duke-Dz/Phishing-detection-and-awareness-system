@@ -7,9 +7,21 @@ services:
     environment:
       DB_HOST: db
       NODE_ENV: production
-      SCAN_WORKER_ENABLED: "true"
     ports:
       - "5000:5000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  worker:
+    build: .
+    command: ["node", "worker.js"]
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      DB_HOST: db
+      NODE_ENV: production
     depends_on:
       db:
         condition: service_healthy

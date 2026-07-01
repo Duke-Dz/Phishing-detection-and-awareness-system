@@ -10,10 +10,10 @@ test("Scan Endpoints", async (t) => {
     agent = await createAgent();
     token = createUserToken();
     mockDb.ScanResult.records = [
-      { scan_id: "scan-123", target: "http://example.com", classification: "safe" }
+      { scan_id: "00000000-0000-4000-8000-000000000123", user_id: "user-1", target: "http://example.com", classification: "safe" }
     ];
     mockDb.ScanJob.records = [
-      { job_id: "job-123", status: "completed" }
+      { job_id: "00000000-0000-4000-8000-000000000124", user_id: "user-1", status: "completed" }
     ];
   });
 
@@ -26,8 +26,7 @@ test("Scan Endpoints", async (t) => {
       headers: { Authorization: `Bearer ${token}` },
       body: { url: "http://example.com" }
     });
-    // Can be 200 or 202 depending on background scan
-    assert.ok(res.status === 200 || res.status === 202);
+    assert.ok(res.status === 201 || res.status === 202);
     assert.equal(res.body.success, true);
   });
 
@@ -36,7 +35,7 @@ test("Scan Endpoints", async (t) => {
       headers: { Authorization: `Bearer ${token}` },
       body: { content: "Win a free prize", sender: "Unknown" }
     });
-    assert.ok(res.status === 200 || res.status === 202);
+    assert.ok(res.status === 201 || res.status === 202);
     assert.equal(res.body.success, true);
   });
 
@@ -50,20 +49,20 @@ test("Scan Endpoints", async (t) => {
   });
 
   await t.test("GET /api/scan/:scanId", async () => {
-    const res = await agent.get("/api/scan/scan-123", {
+    const res = await agent.get("/api/scan/00000000-0000-4000-8000-000000000123", {
       headers: { Authorization: `Bearer ${token}` }
     });
     assert.equal(res.status, 200);
     assert.equal(res.body.success, true);
-    assert.equal(res.body.data.scan_id, "scan-123");
+    assert.equal(res.body.data.scan_id, "00000000-0000-4000-8000-000000000123");
   });
 
   await t.test("GET /api/scan/jobs/:jobId", async () => {
-    const res = await agent.get("/api/scan/jobs/job-123", {
+    const res = await agent.get("/api/scan/jobs/00000000-0000-4000-8000-000000000124", {
       headers: { Authorization: `Bearer ${token}` }
     });
     assert.equal(res.status, 200);
     assert.equal(res.body.success, true);
-    assert.equal(res.body.data.job_id, "job-123");
+    assert.equal(res.body.data.job_id, "00000000-0000-4000-8000-000000000124");
   });
 });

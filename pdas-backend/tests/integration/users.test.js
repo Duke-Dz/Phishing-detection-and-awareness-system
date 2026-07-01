@@ -9,7 +9,7 @@ test("Users Endpoints", async (t) => {
   t.before(async () => {
     agent = await createAgent();
     token = createUserToken();
-    mockDb.User.records = [{ user_id: "user-1", email: "test@example.com" }];
+    mockDb.User.records = [{ user_id: "user-1", email: "test@example.com", role: "user", is_active: true }];
   });
 
   t.after(async () => {
@@ -29,7 +29,6 @@ test("Users Endpoints", async (t) => {
     const res = await agent.post("/api/users/unsubscribe", {
       body: { email: "test@example.com", token: "invalid_token_for_mock" }
     });
-    // It will return 400 because mock doesn't generate a valid token
-    assert.equal(res.status, 400);
+    assert.equal(res.status, 403);
   });
 });

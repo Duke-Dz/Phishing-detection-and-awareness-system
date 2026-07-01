@@ -15,6 +15,7 @@ const PendingRegistration = sequelize.define(
     username: {
       type: DataTypes.STRING(50),
       allowNull: false,
+      unique: true,
     },
     full_name: {
       type: DataTypes.STRING(100),
@@ -39,6 +40,7 @@ const PendingRegistration = sequelize.define(
     timestamps: true,
     underscored: true,
     indexes: [
+      { fields: ["username"], unique: true },
       { fields: ["verification_token_hash"], unique: true },
       { fields: ["expires_at"] },
     ],

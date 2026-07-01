@@ -1,5 +1,3 @@
-const logger = require("../utils/logger");
-
 const asyncHandler = (handler) => (req, res, next) =>
   Promise.resolve(handler(req, res, next)).catch(next);
 
@@ -10,14 +8,40 @@ const notFound = (req, _res, next) => {
 };
 
 const errorHandler = (err, req, res, _next) => {
-  const statusCode = err.statusCode || 500;
+  let statusCode = err.statusCode || 500;
+  let message = err.message;
+  let code = err.publicCode || "REQUEST_FAILED";
+  let details = err.details;
 
-  logger.error(`${statusCode} ${req.method} ${req.originalUrl} - ${err.message}`);
+  if (err.name === "SequelizeUniqueConstraintError") {
+    statusCode = 409;
+    code = "RESOURCE_CONFLICT";
+    message = "An account already exists with one or more of those details.";
+    details = err.errors?.map((item) => ({ field: item.path, message: item.message }));
+  } else if (err.name === "SequelizeValidationError") {
+    statusCode = 400;
+    code = "VALIDATION_ERROR";
+    message = "One or more account details are invalid.";
+    details = err.errors?.map((item) => ({ field: item.path, message: item.message }));
+  } else if (err.name === "SequelizeConnectionError") {
+    statusCode = 503;
+    code = "SERVICE_UNAVAILABLE";
+    message = "The service is temporarily unavailable. Please try again shortly.";
+  } else if (statusCode >= 500) {
+    message = "We could not complete your request. Please try again shortly.";
+    code = statusCode === 503 ? "SERVICE_UNAVAILABLE" : "INTERNAL_ERROR";
+    details = undefined;
+  }
+
+  res.locals.requestError = err;
 
   res.status(statusCode).json({
     success: false,
-    message: err.message || "Internal Server Error",
-    ...(process.env.NODE_ENV === "development" && { stack: err.stack }),
+    code,
+    message,
+    ...(details ? { details } : {}),
+    ...(err.retryAfterSeconds ? { retry_after_seconds: err.retryAfterSeconds } : {}),
+    request_id: req.id,
   });
 };
 

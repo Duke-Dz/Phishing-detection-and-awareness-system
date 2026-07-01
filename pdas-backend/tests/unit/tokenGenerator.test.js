@@ -1,6 +1,6 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const { generateToken, generateOtp, hashToken } = require("../../src/utils/tokenGenerator");
+const { generateToken, hashToken } = require("../../src/utils/tokenGenerator");
 
 test("generateToken creates a hex string of default 32 bytes (64 chars)", () => {
   const token = generateToken();
@@ -12,13 +12,6 @@ test("generateToken creates a hex string of default 32 bytes (64 chars)", () => 
 test("generateToken creates a hex string of specified byte length", () => {
   const token = generateToken(16);
   assert.equal(token.length, 32);
-});
-
-test("generateOtp creates a 6-digit numeric string", () => {
-  const otp = generateOtp();
-  assert.equal(typeof otp, "string");
-  assert.equal(otp.length, 6);
-  assert.match(otp, /^[0-9]{6}$/);
 });
 
 test("hashToken returns a consistent SHA-256 hex string", () => {

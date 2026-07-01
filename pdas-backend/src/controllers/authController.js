@@ -1,6 +1,6 @@
 const bcrypt = require("bcryptjs");
 const { Op } = require("sequelize");
-const { User, PasswordResetToken, EmailVerificationToken, PendingRegistration, RefreshToken, SecurityEvent } = require("../models");
+const { User, PasswordResetToken, PendingRegistration, RefreshToken, SecurityEvent } = require("../models");
 const { logSecurityEvent } = require("../utils/securityLogger");
 const {
   issueTokenPair,
@@ -8,23 +8,43 @@ const {
   revokeUserRefreshTokens,
   rotateRefreshToken,
 } = require("../utils/authTokens");
-const { buildOtpAuthUrl, generateMfaSecret, verifyTotp } = require("../utils/mfa");
 const {
   createError,
   normalizeEmail,
   requireFields,
   validatePassword,
 } = require("../utils/validators");
-const { generateOtp, generateToken, hashToken } = require("../utils/tokenGenerator");
-const { sendMail, isMailConfigured } = require("../services/mailService");
+const { generateToken, hashToken } = require("../utils/tokenGenerator");
+const mailService = require("../services/mailService");
 const emailTemplates = require("../templates/emailTemplates");
 const config = require("../config/env");
+const logger = require("../utils/logger");
+const VERIFICATION_RESEND_COOLDOWN_SECONDS = 120;
 
 const sanitizeUser = (user) => {
   const data = user.toJSON();
   delete data.password_hash;
-  delete data.mfa_secret;
   return data;
+};
+
+const notifyOnNewSignIn = async (user, req, historyPromise) => {
+  const pastLogins = await historyPromise;
+
+  const currentIp = req.ip || req.connection?.remoteAddress || null;
+  const currentUa = req.headers["user-agent"] || null;
+  const isKnown = pastLogins.some((event) =>
+    event.ip_address === currentIp && event.user_agent === currentUa);
+
+  if (pastLogins.length > 0 && !isKnown) {
+    const template = emailTemplates.newSignIn({
+      userName: user.full_name,
+      ipAddress: currentIp || "Unknown IP",
+      userAgent: currentUa || "Unknown Device",
+      time: new Date(),
+      resetUrl: `${config.frontendUrl.replace(/\/$/, "")}/forgot-password`,
+    });
+    await mailService.sendMail({ to: user.email, ...template });
+  }
 };
 
 const register = async (req, res) => {
@@ -39,8 +59,11 @@ const register = async (req, res) => {
     throw createError("Email is already registered", 409);
   }
 
-  const existingUsername = await User.findOne({ where: { username } });
-  if (existingUsername) {
+  const [existingUsername, pendingUsername] = await Promise.all([
+    User.findOne({ where: { username } }),
+    PendingRegistration.findOne({ where: { username } }),
+  ]);
+  if (existingUsername || pendingUsername) {
     throw createError("Username is already taken", 409);
   }
 
@@ -66,11 +89,12 @@ const register = async (req, res) => {
     userName: req.body.full_name,
   });
   
-  sendMail({ to: email, ...template }).catch(() => {});
+  mailService.sendMail({ to: email, ...template }).catch(() => {});
 
   res.status(201).json({
     success: true,
-    message: "Registration pending. Please check your email to verify your account.",
+    message: "Registration pending. Please check your verification email to activate your account.",
+    resend_available_in: VERIFICATION_RESEND_COOLDOWN_SECONDS,
   });
 };
 
@@ -134,7 +158,7 @@ const login = async (req, res) => {
       });
 
       logSecurityEvent(user.user_id, 'ACCOUNT_LOCKED', req, { lockoutMinutes, attempts });
-      sendMail({ to: user.email, ...template }).catch(err => console.error('[AccountLocked Email Error]:', err));
+      mailService.sendMail({ to: user.email, ...template }).catch(() => {});
     } else {
       logSecurityEvent(user.user_id, 'LOGIN_FAILED', req, { reason: 'wrong_password', attempts });
     }
@@ -142,50 +166,22 @@ const login = async (req, res) => {
     throw createError(genericErrorMsg, 401);
   }
 
-  if (user.mfa_enabled) {
-    if (!req.body.mfa_code) {
-      return res.status(401).json({
-        success: false,
-        message: "Multi-factor authentication code is required",
-        mfa_required: true,
-      });
-    }
-
-    if (!verifyTotp(user.mfa_secret, req.body.mfa_code)) {
-      logSecurityEvent(user.user_id, 'LOGIN_FAILED', req, { reason: 'invalid_mfa' });
-      throw createError(genericErrorMsg, 401);
-    }
-  }
-
   user.failed_login_attempts = 0;
   user.locked_until = null;
   user.last_login = new Date();
   await user.save();
 
-  const pastLogins = await SecurityEvent.findAll({
-    where: { user_id: user.user_id, event_type: 'LOGIN_SUCCESS' },
-    order: [['created_at', 'DESC']],
-    limit: 3
+  const signInHistoryPromise = SecurityEvent.findAll({
+    where: { user_id: user.user_id, event_type: "LOGIN_SUCCESS" },
+    order: [["createdAt", "DESC"]],
+    limit: 3,
   });
-
-  const currentIp = req.ip || req.connection?.remoteAddress || null;
-  const currentUa = req.headers['user-agent'] || null;
-
-  if (pastLogins.length > 0) {
-    const isKnown = pastLogins.some(log => log.ip_address === currentIp && log.user_agent === currentUa);
-    if (!isKnown) {
-      const resetUrl = `${config.frontendUrl.replace(/\/$/, "")}/forgot-password`;
-      
-      const template = emailTemplates.newSignIn({
-        userName: user.full_name,
-        ipAddress: currentIp || 'Unknown IP',
-        userAgent: currentUa || 'Unknown Device',
-        time: new Date(),
-        resetUrl
-      });
-      sendMail({ to: user.email, ...template }).catch(err => console.error('[NewSignIn Email Error]:', err));
-    }
-  }
+  notifyOnNewSignIn(user, req, signInHistoryPromise).catch((error) => {
+    logger.warn("auth.new_sign_in_notification.failed", {
+      request_id: req.id,
+      error_code: error.original?.code || error.code || error.name,
+    });
+  });
 
   logSecurityEvent(user.user_id, 'LOGIN_SUCCESS', req, { method: 'password' });
 
@@ -243,73 +239,6 @@ const logout = async (req, res) => {
   });
 };
 
-const setupMfa = async (req, res) => {
-  const secret = generateMfaSecret();
-  const user = await User.scope("withSecurity").findByPk(req.user.user_id);
-
-  user.mfa_secret = secret;
-  user.mfa_enabled = false;
-  await user.save();
-
-  res.json({
-    success: true,
-    message: "Scan this secret in an authenticator app, then verify it to enable MFA",
-    data: {
-      secret,
-      otpauth_url: buildOtpAuthUrl(user, secret),
-    },
-  });
-};
-
-const enableMfa = async (req, res) => {
-  requireFields(req.body, ["mfa_code"]);
-
-  const user = await User.scope("withSecurity").findByPk(req.user.user_id);
-  if (!user.mfa_secret) {
-    throw createError("Set up MFA before enabling it", 400);
-  }
-
-  if (!verifyTotp(user.mfa_secret, req.body.mfa_code)) {
-    throw createError("Invalid multi-factor authentication code", 401);
-  }
-
-  user.mfa_enabled = true;
-  await user.save();
-
-  // Send MFA enabled alert
-  const template = emailTemplates.mfaEnabled({ userName: user.full_name });
-  sendMail({ to: user.email, ...template }).catch(() => {});
-
-  res.json({
-    success: true,
-    message: "Multi-factor authentication enabled",
-    data: sanitizeUser(user),
-  });
-};
-
-const disableMfa = async (req, res) => {
-  requireFields(req.body, ["mfa_code"]);
-
-  const user = await User.scope("withSecurity").findByPk(req.user.user_id);
-  if (user.mfa_enabled && !verifyTotp(user.mfa_secret, req.body.mfa_code)) {
-    throw createError("Invalid multi-factor authentication code", 401);
-  }
-
-  user.mfa_enabled = false;
-  user.mfa_secret = null;
-  await user.save();
-
-  // Send MFA disabled alert
-  const template = emailTemplates.mfaDisabled({ userName: user.full_name });
-  sendMail({ to: user.email, ...template }).catch(() => {});
-
-  res.json({
-    success: true,
-    message: "Multi-factor authentication disabled",
-    data: sanitizeUser(user),
-  });
-};
-
 const forgotPassword = async (req, res) => {
   const email = normalizeEmail(req.body.email);
   const user = await User.findOne({ where: { email } });
@@ -339,7 +268,7 @@ const forgotPassword = async (req, res) => {
 
     logSecurityEvent(user.user_id, 'PASSWORD_RESET_REQUESTED', req);
 
-    sendMail({ to: user.email, ...template }).catch(() => {});
+    mailService.sendMail({ to: user.email, ...template }).catch(() => {});
   }
 
   res.json({
@@ -383,7 +312,7 @@ const resetPassword = async (req, res) => {
 
   // Send confirmation email
   const template = emailTemplates.passwordChanged({ userName: user.full_name });
-  sendMail({ to: user.email, ...template }).catch(() => {});
+  mailService.sendMail({ to: user.email, ...template }).catch(() => {});
 
   res.json({
     success: true,
@@ -412,7 +341,7 @@ const changePassword = async (req, res) => {
 
   // Send confirmation email
   const template = emailTemplates.passwordChanged({ userName: user.full_name });
-  sendMail({ to: user.email, ...template }).catch(() => {});
+  mailService.sendMail({ to: user.email, ...template }).catch(() => {});
 
   res.json({
     success: true,
@@ -483,23 +412,57 @@ const resendVerification = async (req, res) => {
     });
   }
 
+  const lastSentAt = pendingReg.updated_at || pendingReg.created_at;
+  const elapsedMs = lastSentAt ? Date.now() - new Date(lastSentAt).getTime() : Number.POSITIVE_INFINITY;
+  const cooldownMs = VERIFICATION_RESEND_COOLDOWN_SECONDS * 1000;
+  if (elapsedMs < cooldownMs) {
+    const retryAfterSeconds = Math.max(1, Math.ceil((cooldownMs - elapsedMs) / 1000));
+    const error = createError(
+      `Please wait ${retryAfterSeconds} seconds before requesting another verification email.`,
+      429,
+      "VERIFICATION_RESEND_COOLDOWN",
+    );
+    error.retryAfterSeconds = retryAfterSeconds;
+    throw error;
+  }
+
   const token = generateToken();
   const expiryHours = config.emailVerificationTokenExpiryHours || 24;
-
-  pendingReg.verification_token_hash = hashToken(token);
-  pendingReg.expires_at = new Date(Date.now() + expiryHours * 60 * 60 * 1000);
-  await pendingReg.save();
 
   const verificationUrl = `${config.frontendUrl.replace(/\/$/, "")}/verify-email?token=${encodeURIComponent(token)}`;
   const template = emailTemplates.emailVerification({
     verificationUrl,
     userName: pendingReg.full_name,
   });
-  await sendMail({ to: pendingReg.email, ...template });
+  try {
+    const delivery = await mailService.sendMail({ to: pendingReg.email, ...template });
+    if (!delivery && mailService.isMailConfigured()) {
+      throw new Error("Email delivery did not return a receipt");
+    }
+    if (!delivery && !mailService.isMailConfigured()) {
+      throw createError(
+        "Email delivery is not configured. Please contact the system administrator.",
+        503,
+        "EMAIL_DELIVERY_UNAVAILABLE",
+      );
+    }
+  } catch (error) {
+    if (error.statusCode) throw error;
+    throw createError(
+      "We could not send the verification email right now. Please try again in a few minutes.",
+      503,
+      "EMAIL_DELIVERY_UNAVAILABLE",
+    );
+  }
+
+  pendingReg.verification_token_hash = hashToken(token);
+  pendingReg.expires_at = new Date(Date.now() + expiryHours * 60 * 60 * 1000);
+  await pendingReg.save();
 
   res.json({
     success: true,
     message: "Verification link has been resent.",
+    resend_available_in: VERIFICATION_RESEND_COOLDOWN_SECONDS,
   });
 };
 
@@ -554,8 +517,6 @@ const revokeSession = async (req, res) => {
 
 module.exports = {
   changePassword,
-  disableMfa,
-  enableMfa,
   forgotPassword,
   getMe,
   login,
@@ -564,7 +525,6 @@ module.exports = {
   register,
   resendVerification,
   resetPassword,
-  setupMfa,
   verifyEmail,
   getSessions,
   revokeSession,

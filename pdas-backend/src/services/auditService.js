@@ -18,8 +18,6 @@ const ACTIONS = {
   AWARENESS_CREATE: "awareness.create",
   AWARENESS_UPDATE: "awareness.update",
   AWARENESS_DELETE: "awareness.delete",
-  MFA_ENABLE: "mfa.enable",
-  MFA_DISABLE: "mfa.disable",
   PASSWORD_CHANGE: "password.change",
   PASSWORD_RESET: "password.reset",
 };

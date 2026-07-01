@@ -11,7 +11,11 @@ test("Admin Endpoints", async (t) => {
     agent = await createAgent();
     adminToken = createAdminToken();
     userToken = createUserToken();
-    mockDb.User.records = [{ user_id: "u1", username: "test" }];
+    mockDb.User.records = [
+      { user_id: "admin-1", role: "admin", is_active: true, email: "admin@example.com" },
+      { user_id: "user-1", role: "user", is_active: true, email: "user@example.com" },
+      { user_id: "u1", full_name: "Test User", role: "user", is_active: true },
+    ];
     mockDb.ThreatIntelligence.records = [{ threat_id: "t1", domain: "evil.com" }];
   });
 

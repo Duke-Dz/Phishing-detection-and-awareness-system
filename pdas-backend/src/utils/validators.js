@@ -1,8 +1,12 @@
 const validator = require("validator");
 
-const createError = (message, statusCode = 400) => {
+const createError = (message, statusCode = 400, publicCode = "BAD_REQUEST", details = undefined) => {
   const error = new Error(message);
   error.statusCode = statusCode;
+  error.publicCode = publicCode;
+  if (details !== undefined) {
+    error.details = details;
+  }
   return error;
 };
 
