@@ -10,7 +10,7 @@ test("Reports Endpoints", async (t) => {
     agent = await createAgent();
     token = createUserToken();
     mockDb.Report.records = [
-      { report_id: "report-123", user_id: "user-1", status: "pending" }
+      { report_id: "00000000-0000-4000-8000-000000000125", user_id: "user-1", status: "pending" }
     ];
   });
 
@@ -37,7 +37,7 @@ test("Reports Endpoints", async (t) => {
   });
 
   await t.test("GET /api/reports/:id", async () => {
-    const res = await agent.get("/api/reports/report-123", {
+    const res = await agent.get("/api/reports/00000000-0000-4000-8000-000000000125", {
       headers: { Authorization: `Bearer ${token}` }
     });
     assert.equal(res.status, 200);

@@ -54,14 +54,6 @@ const User = sequelize.define(
       type: DataTypes.DATE,
       allowNull: true,
     },
-    mfa_enabled: {
-      type: DataTypes.BOOLEAN,
-      defaultValue: false,
-    },
-    mfa_secret: {
-      type: DataTypes.TEXT,
-      allowNull: true,
-    },
     email_verified: {
       type: DataTypes.BOOLEAN,
       defaultValue: false,
@@ -100,13 +92,10 @@ const User = sequelize.define(
       { fields: ["created_at"] },
     ],
     defaultScope: {
-      attributes: { exclude: ["password_hash", "mfa_secret"] },
+      attributes: { exclude: ["password_hash"] },
     },
     scopes: {
       withPassword: {
-        attributes: {},
-      },
-      withSecurity: {
         attributes: {},
       },
     },

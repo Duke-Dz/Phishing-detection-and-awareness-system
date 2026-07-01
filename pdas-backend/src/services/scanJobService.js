@@ -5,6 +5,7 @@ const { analyzeMessage, analyzeUrl } = require("./detectionService");
 const { createScanNotification } = require("./notificationService");
 const { persistScanResult } = require("./scanPersistenceService");
 const logger = require("../utils/logger");
+const config = require("../config/env");
 
 let workerTimer = null;
 let running = false;
@@ -39,12 +40,12 @@ const claimQueuedJobs = async (batchSize, maxAttempts) =>
       transaction,
     });
 
-    for (const job of jobs) {
+    await Promise.all(jobs.map(async (job) => {
       job.status = "processing";
       job.started_at = new Date();
       job.attempts += 1;
       await job.save({ transaction });
-    }
+    }));
 
     return jobs;
   });
@@ -84,33 +85,28 @@ const processQueuedScanJobs = async () => {
 
   running = true;
   try {
-    const batchSize = Number.parseInt(process.env.SCAN_WORKER_BATCH_SIZE || "5", 10);
-    const maxAttempts = Number.parseInt(process.env.SCAN_JOB_MAX_ATTEMPTS || "3", 10);
+    const batchSize = config.worker.batchSize;
+    const maxAttempts = config.worker.maxAttempts;
     const jobs = await claimQueuedJobs(batchSize, maxAttempts);
 
-    for (const job of jobs) {
-      await processJob(job);
-    }
+    await Promise.allSettled(jobs.map((job) => processJob(job)));
   } finally {
     running = false;
   }
 };
 
 const startScanJobWorker = () => {
-  if (workerTimer || process.env.SCAN_WORKER_ENABLED === "false") {
+  if (workerTimer) {
     return null;
   }
 
-  const intervalMs = Number.parseInt(process.env.SCAN_WORKER_INTERVAL_MS || "5000", 10);
+  const intervalMs = config.worker.intervalMs;
   workerTimer = setInterval(() => {
     processQueuedScanJobs().catch((error) => {
       logger.error(`Scan worker failed: ${error.message}`);
     });
   }, intervalMs);
 
-  if (process.env.WORKER_ONLY !== "true") {
-    workerTimer.unref();
-  }
   logger.info(`Scan job worker started with ${intervalMs}ms interval`);
   return workerTimer;
 };

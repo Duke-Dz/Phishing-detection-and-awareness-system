@@ -1,92 +1,109 @@
 const SIGNAL_MESSAGES = {
   urgency_pressure: "Creates panic by claiming your account is compromised",
   asks_for_sensitive_data: "Asks you to provide sensitive personal information",
-  contains_link: "Contains a link — always verify before clicking",
-  missing_https: "The link is not secure (doesn't use HTTPS)",
-  embedded_url_missing_https: "The link is not secure (doesn't use HTTPS)",
+  contains_link: "Contains a link; verify it before opening",
+  missing_https: "The link does not use HTTPS",
+  embedded_url_missing_https: "An embedded link does not use HTTPS",
   phishing_language: "Uses language commonly found in phishing messages",
-  embedded_url_financial_keyword_domain: "The link domain mimics a bank or financial service",
-  kenyan_impersonation: "Claims to be from a known Kenyan organisation",
-  brand_sender_mismatch: "Claims to be from a bank but sender is not a verified shortcode",
-  regular_number_sender: "Sent from a regular phone number, not a bank shortcode",
-  suspicious_reply_request: "Asks you to reply — legitimate banks never ask this via SMS",
-  legit_sender_suspicious_content: "Sender looks legitimate but the message content is suspicious",
+  embedded_url_financial_keyword_domain: "The link domain mimics a financial service",
+  kenyan_impersonation: "Claims to be from a known Kenyan organization",
+  brand_sender_mismatch: "The claimed brand does not match the sender",
+  regular_number_sender: "Sent from a regular number instead of a registered shortcode",
+  suspicious_reply_request: "Asks for a reply containing potentially sensitive information",
+  legit_sender_suspicious_content: "The sender looks legitimate but the content is suspicious",
 };
 
-const generateUserGuide = (classification, signals, senderAnalysis = null, replyAnalysis = null) => {
-  const redFlags = [];
-  const actions = [];
-  const verificationSteps = [];
+const titleFor = (scanType, classification) => {
+  if (classification === "phishing") return "High Risk: Phishing or Malware Detected";
+  if (classification === "suspicious") return scanType === "url" ? "Suspicious Link" : "Suspicious Message";
+  return scanType === "url" ? "Link appears safe" : "Message appears safe";
+};
 
-  signals.forEach((signal) => {
-    const msg = SIGNAL_MESSAGES[signal.name];
-    if (msg && !redFlags.includes(msg)) redFlags.push(msg);
-  });
+const summaryFor = (classification) => {
+  if (classification === "phishing") return "We found strong indicators of malicious activity.";
+  if (classification === "suspicious") return "We found indicators that require careful verification.";
+  return "We did not detect strong phishing indicators, but you should remain cautious.";
+};
 
+const actionsFor = (classification) => {
   if (classification === "phishing") {
-    actions.push(
-      "Do NOT click any links in this message",
-      "Do NOT reply to this message",
-      "Do NOT call any number mentioned in the message",
-      "Delete this message immediately",
-      "If you already clicked a link, change your passwords immediately",
-      "Contact your bank using the official number on the back of your card",
-    );
-    verificationSteps.push(
-      "Call your bank's official helpline to confirm if they sent this",
-      "Log in to your bank directly through the official app, not through any link",
-      "Check if the sender matches your bank's known shortcode",
-      "Forward suspicious messages to your carrier (e.g., 333 on Safaricom)",
-    );
-  } else if (classification === "suspicious") {
-    actions.push(
-      "Be cautious — do not click any links until you verify",
-      "Contact your bank or organisation directly to confirm",
-      "Do not provide any personal information",
-    );
-    verificationSteps.push(
-      "Call your bank using the number on the back of your card",
-      "Check the sender — legitimate banks use registered shortcodes",
-      "Visit your bank's official website directly, not through this link",
-    );
-  } else {
-    actions.push("This message appears safe, but always stay alert");
-    verificationSteps.push("If unsure, verify by contacting the organisation directly");
+    return [
+      "Do not open links, reply, or call numbers in the message",
+      "Delete or quarantine the message",
+      "If you interacted with it, change affected passwords immediately",
+      "Contact the organization through its official website or app",
+    ];
+  }
+  if (classification === "suspicious") {
+    return [
+      "Do not click links or reply until you verify the sender",
+      "Contact the organization through an official channel",
+      "Do not provide personal, financial, or authentication information",
+    ];
+  }
+  return ["Stay alert and verify unexpected requests through an official channel"];
+};
+
+const fromLegacyDetails = (details = {}) => {
+  const flags = [
+    ...(details.sms_red_flags || []),
+    ...(details.auth_failures || []),
+    ...(details.rules_matched || []),
+  ];
+  if (details.is_blacklisted) flags.unshift("The destination was blacklisted by a trusted threat source");
+  if (details.has_credential_harvester) flags.push("The page contains a suspected credential harvester");
+  return [...new Set(flags)];
+};
+
+const buildGuide = ({ scanType, classification, signals = [], details = {}, senderAnalysis, replyAnalysis }) => {
+  const redFlags = fromLegacyDetails(details);
+  for (const signal of Array.isArray(signals) ? signals : []) {
+    const message = SIGNAL_MESSAGES[signal?.name] || signal?.evidence;
+    if (message && !redFlags.includes(message)) redFlags.push(message);
   }
 
+  const verificationSteps = [
+    "Use the official app or type the organization's website address yourself",
+    "Contact the organization using a number from an official source",
+  ];
   if (senderAnalysis?.senderType === "phone_number") {
-    verificationSteps.push(
-      "This message came from a regular phone number — real banks use official shortcodes like MPESA, EQUITY, or KCB",
-      "You can reply to this number to test — legitimate bank shortcodes do not accept replies",
-    );
+    verificationSteps.push("Confirm why an organization is contacting you from a regular phone number");
   }
-
   if (senderAnalysis?.senderType === "known_shortcode") {
-    verificationSteps.push(
-      `Sender "${senderAnalysis.senderName}" is a known shortcode — but still verify the message content matches normal communications`,
-    );
+    verificationSteps.push(`The sender ${senderAnalysis.senderName} is recognized, but the content still needs to be credible`);
   }
-
   if (replyAnalysis?.explicitlyNoReply) {
-    verificationSteps.push(
-      "This message says not to reply — that is typical of legitimate automated bank messages",
-    );
+    verificationSteps.push("A no-reply notice is normal for automated messages but is not proof of legitimacy");
   }
 
-  const verdict = classification === "phishing"
-    ? "This message shows strong signs of being a phishing attempt"
-    : classification === "suspicious"
-      ? "This message has suspicious characteristics — proceed with caution"
-      : "This message appears legitimate";
-
+  const title = titleFor(scanType, classification);
+  const summary = summaryFor(classification);
+  const actions = actionsFor(classification);
   return {
-    verdict,
+    title,
+    summary,
+    verdict: summary,
+    redFlags,
     red_flags: redFlags,
+    actions,
     what_to_do: actions,
     how_to_verify: verificationSteps,
-    no_reply_note:
-      "Legitimate organisations like banks and telecoms send automated messages that do not accept replies. If you can reply and get a response, the sender may not be who they claim.",
   };
 };
 
-module.exports = { generateUserGuide };
+const generateUserGuide = (...args) => {
+  if (["url", "email", "sms"].includes(args[0])) {
+    const [scanType, classification, _score, details = {}] = args;
+    return buildGuide({ scanType, classification, details });
+  }
+  const [classification, signals = [], senderAnalysis = null, replyAnalysis = null] = args;
+  return buildGuide({
+    scanType: senderAnalysis ? "sms" : "email",
+    classification,
+    signals,
+    senderAnalysis,
+    replyAnalysis,
+  });
+};
+
+module.exports = { buildGuide, generateUserGuide };

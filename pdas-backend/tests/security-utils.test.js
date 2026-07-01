@@ -9,7 +9,6 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 
 // ── Existing Detection Engine Tests ─────────────────────────────────────
-const { generateMfaSecret, generateTotp, verifyTotp } = require("../src/utils/mfa");
 const { buildPaginationMeta, getPagination } = require("../src/utils/pagination");
 const { analyzePageContent } = require("../src/services/contentAnalysisService");
 const { checkTyposquatting } = require("../src/services/typosquattingService");
@@ -76,26 +75,6 @@ test("validateUrl throws for invalid URLs", () => {
 test("validateUrl accepts valid http/https URLs", () => {
   assert.equal(validateUrl("https://example.com"), "https://example.com");
   assert.equal(validateUrl("http://test.org/path"), "http://test.org/path");
-});
-
-// ── MFA / TOTP Tests ────────────────────────────────────────────────────
-
-test("TOTP verifier accepts the current authenticator code", () => {
-  const secret = generateMfaSecret();
-  const code = generateTotp(secret);
-  assert.equal(verifyTotp(secret, code), true);
-});
-
-test("TOTP verifier rejects malformed codes", () => {
-  const secret = generateMfaSecret();
-  assert.equal(verifyTotp(secret, "abc123"), false);
-  assert.equal(verifyTotp(secret, "123"), false);
-});
-
-test("MFA secret is 32 characters (base32 encoded)", () => {
-  const secret = generateMfaSecret();
-  assert.equal(secret.length, 32);
-  assert.match(secret, /^[A-Z2-7]+$/);
 });
 
 // ── Pagination Tests ────────────────────────────────────────────────────
@@ -505,13 +484,12 @@ test("audit service exports expected action constants", () => {
   assert.equal(ACTIONS.SCAN_URL, "scan.url");
   assert.equal(ACTIONS.REPORT_CREATE, "report.create");
   assert.equal(ACTIONS.ADMIN_ROLE_CHANGE, "admin.role_change");
-  assert.equal(ACTIONS.MFA_ENABLE, "mfa.enable");
   assert.equal(ACTIONS.PASSWORD_CHANGE, "password.change");
 });
 
 test("audit service ACTIONS covers all expected categories", () => {
   const actionValues = Object.values(ACTIONS);
-  assert.ok(actionValues.length >= 17, `Expected at least 17 actions, got ${actionValues.length}`);
+  assert.ok(actionValues.length >= 15, `Expected at least 15 actions, got ${actionValues.length}`);
   assert.ok(actionValues.some((a) => a.startsWith("auth.")));
   assert.ok(actionValues.some((a) => a.startsWith("scan.")));
   assert.ok(actionValues.some((a) => a.startsWith("report.")));

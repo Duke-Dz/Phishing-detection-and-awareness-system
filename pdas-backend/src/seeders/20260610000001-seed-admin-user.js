@@ -8,6 +8,7 @@ module.exports = {
     const adminEmail = process.env.SEED_ADMIN_EMAIL;
     const adminPassword = process.env.SEED_ADMIN_PASSWORD;
     const adminName = process.env.SEED_ADMIN_NAME || "System Administrator";
+    const adminUsername = process.env.SEED_ADMIN_USERNAME || "system_admin";
 
     if (!adminEmail || !adminPassword) {
       throw new Error("SEED_ADMIN_EMAIL and SEED_ADMIN_PASSWORD are required to seed the admin user");
@@ -22,12 +23,12 @@ module.exports = {
     await queryInterface.bulkInsert("users", [
       {
         user_id: "00000000-0000-4000-a000-000000000001",
+        username: adminUsername.toLowerCase(),
         full_name: adminName,
         email: adminEmail.toLowerCase(),
         password_hash: passwordHash,
         role: "admin",
         is_active: true,
-        mfa_enabled: false,
         created_at: new Date(),
         updated_at: new Date(),
       },

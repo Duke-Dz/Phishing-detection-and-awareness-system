@@ -42,7 +42,7 @@ const createScanNotification = async ({ user_id, scanResult, report_id }) => {
   if (scanResult.classification === "phishing") {
     try {
       const user = await User.findByPk(user_id);
-      if (user) {
+      if (user?.email_notifications !== false) {
         const details = scanResult.detection_details || {};
         const layers = details.layers || {};
         

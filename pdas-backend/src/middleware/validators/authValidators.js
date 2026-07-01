@@ -8,7 +8,8 @@ const registerValidator = [
     .isLength({ min: 3, max: 50 })
     .withMessage("Username must be between 3 and 50 characters")
     .matches(/^[a-zA-Z0-9_]+$/)
-    .withMessage("Username can only contain letters, numbers, and underscores"),
+    .withMessage("Username can only contain letters, numbers, and underscores")
+    .toLowerCase(),
 
   body("full_name")
     .trim()
@@ -63,18 +64,6 @@ const refreshValidator = [
     .withMessage("Refresh token is required")
     .isString()
     .withMessage("Refresh token must be a string"),
-];
-
-const mfaCodeValidator = [
-  body("mfa_code")
-    .notEmpty()
-    .withMessage("MFA code is required")
-    .isString()
-    .withMessage("MFA code must be a string")
-    .isLength({ min: 6, max: 6 })
-    .withMessage("MFA code must be 6 digits")
-    .matches(/^\d{6}$/)
-    .withMessage("MFA code must contain only digits"),
 ];
 
 const forgotPasswordValidator = [
@@ -181,7 +170,6 @@ module.exports = {
   registerValidator,
   loginValidator,
   refreshValidator,
-  mfaCodeValidator,
   forgotPasswordValidator,
   resetPasswordValidator,
   changePasswordValidator,

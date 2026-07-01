@@ -1,5 +1,3 @@
-const logger = require("../utils/logger");
-
 const metrics = {
   startedAt: new Date(),
   requests: 0,
@@ -29,10 +27,8 @@ const metricsMiddleware = (req, res, next) => {
       metrics.routeTimings[routeKey].maxMs = durationMs;
     }
 
-    // Slow request logging
-    if (durationMs > 200) {
+    if (durationMs > 1000) {
       metrics.slowRequests += 1;
-      logger.warn(`SLOW ${req.method} ${req.originalUrl} ${Math.round(durationMs)}ms`);
     }
   });
 

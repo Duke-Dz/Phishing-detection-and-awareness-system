@@ -22,7 +22,6 @@ const { expandShortUrl, followRedirects, analyzePageContent } = require("./conte
 const { analyzeSender, analyzeReplyBehaviour } = require("../utils/senderAnalyzer");
 const { generateUserGuide } = require("../utils/userGuideGenerator");
 const { ENGINE_VERSION } = require("./detectionConstants");
-const { analyzeSmsText } = require("./smsTextAnalyzer");
 const logger = require("../utils/logger");
 
 // ── Constants ──────────────────────────────────────────────────────────
@@ -142,15 +141,11 @@ const SCORING_WEIGHTS = {
  * Compute final SMS/email score with rules escalation and blacklist-neutral redistribution.
  * @returns {{ score: number, reason: string, effectiveWeights: object }}
  */
-const computeMessageScore = (rulesScore, blacklistScore, mlScore, threatIntel = null, llmScore = null) => {
-  const hasLlm = typeof llmScore === "number";
-
+const computeMessageScore = (rulesScore, blacklistScore, mlScore, threatIntel = null) => {
   if (hasConfirmedThreatIntel(threatIntel) || blacklistScore >= 80) {
-    const weights = hasLlm 
-      ? { rules: 0.30, blacklist: 0.35, ml: 0.15, llm: 0.20 }
-      : SCORING_WEIGHTS.blacklist_confirmed;
+    const weights = SCORING_WEIGHTS.blacklist_confirmed;
     const score = Math.round(
-      (rulesScore * weights.rules) + (blacklistScore * weights.blacklist) + (mlScore * weights.ml) + (hasLlm ? llmScore * weights.llm : 0),
+      (rulesScore * weights.rules) + (blacklistScore * weights.blacklist) + (mlScore * weights.ml),
     );
     return {
       score: Math.max(70, Math.min(100, score)),
@@ -160,10 +155,8 @@ const computeMessageScore = (rulesScore, blacklistScore, mlScore, threatIntel = 
   }
 
   if (rulesScore >= 75) {
-    const weights = hasLlm
-      ? { rules: 0.40, ml: 0.20, llm: 0.40 }
-      : SCORING_WEIGHTS.rules_escalation;
-    const score = Math.round((rulesScore * weights.rules) + (mlScore * weights.ml) + (hasLlm ? llmScore * weights.llm : 0));
+    const weights = SCORING_WEIGHTS.rules_escalation;
+    const score = Math.round((rulesScore * weights.rules) + (mlScore * weights.ml));
     return {
       score: Math.max(70, Math.min(100, score)),
       reason: "rules_escalation",
@@ -172,10 +165,8 @@ const computeMessageScore = (rulesScore, blacklistScore, mlScore, threatIntel = 
   }
 
   if (blacklistScore === 0) {
-    const weights = hasLlm
-      ? { rules: 0.40, ml: 0.30, llm: 0.30 }
-      : SCORING_WEIGHTS.blacklist_neutral;
-    const score = Math.round((rulesScore * weights.rules) + (mlScore * weights.ml) + (hasLlm ? llmScore * weights.llm : 0));
+    const weights = SCORING_WEIGHTS.blacklist_neutral;
+    const score = Math.round((rulesScore * weights.rules) + (mlScore * weights.ml));
     return {
       score: Math.min(100, score),
       reason: "blacklist_neutral",
@@ -183,11 +174,9 @@ const computeMessageScore = (rulesScore, blacklistScore, mlScore, threatIntel = 
     };
   }
 
-  const weights = hasLlm
-    ? { rules: 0.30, blacklist: 0.20, ml: 0.20, llm: 0.30 }
-    : SCORING_WEIGHTS.weighted_average;
+  const weights = SCORING_WEIGHTS.weighted_average;
   const score = Math.round(
-    (rulesScore * weights.rules) + (blacklistScore * weights.blacklist) + (mlScore * weights.ml) + (hasLlm ? llmScore * weights.llm : 0),
+    (rulesScore * weights.rules) + (blacklistScore * weights.blacklist) + (mlScore * weights.ml),
   );
   return {
     score: Math.min(100, score),
@@ -919,17 +908,11 @@ const analyzeMessage = async (content, scanType = "email", options = {}) => {
     layer1.score = Math.min(100, layer1.score + Math.round(senderRawPoints * 0.3));
   }
 
-  // ── Parallel Execution: Layer 2 (URLs) & Layer 4 (Claude SMS) ──
+  // Analyze embedded URLs before combining message risk layers.
   const urlMatches = text.match(/https?:\/\/[^\s]+/gi);
-  const urlPromise = (urlMatches && urlMatches.length > 0)
+  const embeddedResult = await ((urlMatches && urlMatches.length > 0)
     ? mergeEmbeddedUrlSignals(layer1, urlMatches)
-    : Promise.resolve(null);
-
-  const claudePromise = (scanType === "sms")
-    ? analyzeSmsText(text, sender)
-    : Promise.resolve(null);
-
-  const [embeddedResult, claudeResult] = await Promise.all([urlPromise, claudePromise]);
+    : Promise.resolve(null));
 
   // ── Layer 2: Process embedded URLs ──
   const layer2 = { score: 0, signals: [], threatIntel: null };
@@ -945,30 +928,12 @@ const analyzeMessage = async (content, scanType = "email", options = {}) => {
   // ── Layer 3: ML scoring ──
   const layer3 = runMessageMlScoring(text);
 
-  // ── Layer 4: Process SMS Text Analysis (Claude) ──
-  let llmScore = null;
-  let claudeAnalysis = null;
-  if (claudeResult && claudeResult.success) {
-    claudeAnalysis = claudeResult.analysis;
-    llmScore = claudeResult.risk_score;
-    if (claudeAnalysis.red_flags && claudeAnalysis.red_flags.length > 0) {
-      claudeAnalysis.red_flags.forEach(flag => {
-        layer1.signals.push({
-          name: "llm_red_flag",
-          points: 10,
-          evidence: `Claude AI Analysis: ${flag}`
-        });
-      });
-    }
-  }
-
   // ── Compute weighted score with rules escalation and blacklist-neutral redistribution ──
   const { score: riskScore, reason: scoringReason, effectiveWeights } = computeMessageScore(
     layer1.score,
     layer2.score,
     layer3.score,
-    layer2.threatIntel,
-    llmScore
+    layer2.threatIntel
   );
 
   const userGuide = generateUserGuide(
@@ -1006,7 +971,6 @@ const analyzeMessage = async (content, scanType = "email", options = {}) => {
         rules: { score: layer1.score, signals: layer1.signals },
         blacklist: { score: layer2.score, signals: layer2.signals },
         ml: { score: layer3.score, features: layer3.features },
-        ...(claudeAnalysis && { llm: claudeAnalysis }),
       },
       threat_intelligence: layer2.threatIntel,
       external_api_usage: layer2.externalApiUsage || [],

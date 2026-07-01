@@ -20,14 +20,14 @@ test("Email Endpoints", async (t) => {
       headers: { Authorization: `Bearer ${token}` },
       body: { content: "Subject: test\r\n\r\nBody" }
     });
-    assert.ok(res.status === 200 || res.status === 202);
+    assert.ok(res.status === 201 || res.status === 202);
     assert.equal(res.body.success, true);
   });
 
   await t.test("POST /api/email/headers", async () => {
     const res = await agent.post("/api/email/headers", {
       headers: { Authorization: `Bearer ${token}` },
-      body: { content: "Authentication-Results: mx.test.com; spf=pass" }
+      body: { headers: "Authentication-Results: mx.test.com; spf=pass" }
     });
     assert.equal(res.status, 200);
     assert.equal(res.body.success, true);

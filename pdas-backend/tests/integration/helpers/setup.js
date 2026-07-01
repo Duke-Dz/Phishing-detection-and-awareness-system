@@ -8,21 +8,50 @@ class MockModel {
     this.records = [];
   }
   
+  decorate(record) {
+    if (!record) return record;
+    if (!record.save) {
+      Object.defineProperty(record, "save", {
+        enumerable: false,
+        value: async () => record,
+      });
+    }
+    if (!record.update) {
+      Object.defineProperty(record, "update", {
+        enumerable: false,
+        value: async (values) => Object.assign(record, values),
+      });
+    }
+    if (!record.destroy) {
+      Object.defineProperty(record, "destroy", {
+        enumerable: false,
+        value: async () => 1,
+      });
+    }
+    if (!record.toJSON) {
+      Object.defineProperty(record, "toJSON", {
+        enumerable: false,
+        value: () => ({ ...record }),
+      });
+    }
+    return record;
+  }
+
   async findOne(options = {}) {
     if (options.where) {
-      return this.records.find(r => {
+      return this.decorate(this.records.find(r => {
         return Object.entries(options.where).every(([k, v]) => r[k] === v);
-      }) || null;
+      }) || null);
     }
-    return this.records[0] || null; 
+    return this.decorate(this.records[0] || null);
   }
   async findByPk(id) {
-    // For simplicity, just return records[0] or match id
-    return this.records.find(r => r.id === id || Object.values(r).includes(id)) || this.records[0] || null;
+    return this.decorate(this.records.find(r => r.id === id || r.key === id || r.user_id === id || r.report_id === id || r.scan_id === id || r.job_id === id) || null);
   }
-  async findAll() { return this.records; }
+  async findAll() { return this.records.map((record) => this.decorate(record)); }
+  async findAndCountAll() { return { rows: await this.findAll(), count: this.records.length }; }
   async create(data) { 
-    const record = { ...data, id: "mock-" + crypto.randomUUID(), _model: this.name };
+    const record = this.decorate({ ...data, id: "mock-" + crypto.randomUUID(), _model: this.name });
     this.records.push(record);
     return record; 
   }
@@ -35,6 +64,13 @@ class MockModel {
 
 process.env.JWT_SECRET = "test-secret";
 process.env.NODE_ENV = "test";
+process.env.MAIL_HOST = "";
+process.env.MAIL_USER = "";
+process.env.MAIL_PASS = "";
+process.env.GOOGLE_SAFE_BROWSING_ENABLED = "false";
+process.env.VIRUSTOTAL_ENABLED = "false";
+process.env.GOOGLE_SAFE_BROWSING_API_KEY = "";
+process.env.VIRUSTOTAL_API_KEY = "";
 
 const mockDb = {
   User: new MockModel("User"),
@@ -65,6 +101,8 @@ mockDb.sequelize = {
   },
   authenticate: async () => true,
   query: async () => [[]],
+  fn: (name, value) => ({ fn: name, value }),
+  col: (name) => ({ col: name }),
   define: (name, schema, options) => mockDb[name] || new MockModel(name)
 };
 

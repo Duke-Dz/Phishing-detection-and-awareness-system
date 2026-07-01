@@ -3,6 +3,7 @@ const assert = require("node:assert/strict");
 const bcrypt = require("bcryptjs");
 const { createAgent, mockDb } = require("./helpers/setup");
 const crypto = require("crypto");
+const { hashToken } = require("../../src/utils/tokenGenerator");
 
 test("Auth Endpoints", async (t) => {
   let agent;
@@ -17,6 +18,7 @@ test("Auth Endpoints", async (t) => {
       user_id: "test-user-id",
       email: "test@example.com",
       username: "testuser",
+      full_name: "Test User",
       password_hash: testPasswordHash,
       role: "user",
       is_active: true,
@@ -42,6 +44,8 @@ test("Auth Endpoints", async (t) => {
     assert.equal(res.status, 201);
     assert.equal(res.body.success, true);
     assert.match(res.body.message, /verification email/i);
+    assert.equal(res.body.resend_available_in, 120);
+    assert.equal(mockDb.PendingRegistration.records.at(-1).username, "newuser");
   });
 
   await t.test("POST /api/auth/login", async () => {
@@ -53,6 +57,133 @@ test("Auth Endpoints", async (t) => {
     });
     assert.equal(res.status, 200);
     assert.equal(res.body.success, true);
+    assert.ok(res.body.token);
+    assert.ok(res.body.refreshToken);
+    assert.equal(res.body.data.username, "testuser");
+    assert.equal(res.body.data.mfa_enabled, undefined);
+    assert.equal(res.body.data.mfa_secret, undefined);
+  });
+
+  await t.test("POST /api/auth/login rejects a username identifier", async () => {
+    const res = await agent.post("/api/auth/login", {
+      body: {
+        identifier: "testuser",
+        password: testPassword
+      }
+    });
+    assert.equal(res.status, 400);
+  });
+
+  await t.test("removed MFA endpoints return 404", async () => {
+    for (const path of ["/api/auth/mfa/setup", "/api/auth/mfa/enable", "/api/auth/mfa/disable"]) {
+      const res = await agent.post(path, { body: {} });
+      assert.equal(res.status, 404);
+    }
+  });
+
+  await t.test("POST /api/auth/resend-verification enforces a two-minute cooldown", async () => {
+    mockDb.PendingRegistration.records = [{
+      email: "cooldown@example.com",
+      username: "cooldownuser",
+      full_name: "Cooldown User",
+      password_hash: testPasswordHash,
+      verification_token_hash: hashToken("existing-verification-token"),
+      expires_at: new Date(Date.now() + 60_000),
+      updated_at: new Date(),
+    }];
+
+    const res = await agent.post("/api/auth/resend-verification", {
+      body: { email: "cooldown@example.com" }
+    });
+
+    assert.equal(res.status, 429);
+    assert.equal(res.body.code, "VERIFICATION_RESEND_COOLDOWN");
+    assert.ok(res.body.retry_after_seconds > 0);
+    assert.ok(res.body.retry_after_seconds <= 120);
+  });
+
+  await t.test("POST /api/auth/resend-verification rotates the link token", async () => {
+    const oldHash = hashToken("old-verification-token");
+    const pending = {
+      email: "pending@example.com",
+      username: "pendinguser",
+      full_name: "Pending User",
+      password_hash: testPasswordHash,
+      verification_token_hash: oldHash,
+      expires_at: new Date(Date.now() + 60_000),
+    };
+    mockDb.PendingRegistration.records = [pending];
+
+    const res = await agent.post("/api/auth/resend-verification", {
+      body: { email: pending.email }
+    });
+
+    assert.equal(res.status, 200);
+    assert.equal(res.body.success, true);
+    assert.equal(res.body.resend_available_in, 120);
+    assert.notEqual(pending.verification_token_hash, oldHash);
+  });
+
+  await t.test("POST /api/auth/verify-email activates an account from a link token", async () => {
+    const token = crypto.randomBytes(32).toString("hex");
+    mockDb.PendingRegistration.records = [{
+      email: "verified@example.com",
+      username: "verifieduser",
+      full_name: "Verified User",
+      password_hash: testPasswordHash,
+      verification_token_hash: hashToken(token),
+      expires_at: new Date(Date.now() + 60_000),
+    }];
+
+    const res = await agent.post("/api/auth/verify-email", {
+      body: { token }
+    });
+
+    assert.equal(res.status, 200);
+    assert.equal(res.body.success, true);
+    assert.equal(res.body.data.email, "verified@example.com");
+    assert.equal(res.body.data.username, "verifieduser");
+  });
+
+  await t.test("POST /api/auth/reset-password accepts a link token", async () => {
+    const token = crypto.randomBytes(32).toString("hex");
+    mockDb.PasswordResetToken.records = [{
+      token_hash: hashToken(token),
+      user_id: testUser.user_id,
+      used_at: null,
+      expires_at: new Date(Date.now() + 60_000),
+    }];
+
+    const res = await agent.post("/api/auth/reset-password", {
+      body: {
+        token,
+        new_password: "NewPassword123!",
+        confirm_password: "NewPassword123!"
+      }
+    });
+
+    assert.equal(res.status, 200);
+    assert.equal(res.body.success, true);
+    testPassword = "NewPassword123!";
+  });
+
+  await t.test("POST /api/auth/refresh rotates a refresh token", async () => {
+    const loginRes = await agent.post("/api/auth/login", {
+      body: { identifier: "test@example.com", password: testPassword }
+    });
+    const storedRefreshToken = mockDb.RefreshToken.records.find(
+      (record) => record.token_hash === hashToken(loginRes.body.refreshToken)
+    );
+    storedRefreshToken.revoked_at = null;
+    storedRefreshToken.replaced_by_hash = null;
+    storedRefreshToken.created_at = new Date();
+    storedRefreshToken.user = testUser;
+
+    const res = await agent.post("/api/auth/refresh", {
+      body: { refreshToken: loginRes.body.refreshToken }
+    });
+
+    assert.equal(res.status, 200);
     assert.ok(res.body.token);
     assert.ok(res.body.refreshToken);
   });
