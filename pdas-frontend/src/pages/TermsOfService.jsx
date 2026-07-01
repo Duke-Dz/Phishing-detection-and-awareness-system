@@ -1,97 +1,109 @@
-import { PublicPageLayout } from "../components/layout/PublicPageLayout";
+import { Scale } from "lucide-react";
+import {
+  LegalList,
+  LegalListItem,
+  LegalNotice,
+  LegalSection,
+  LegalSummary,
+  PublicPageLayout,
+} from "../components/layout/PublicPageLayout";
+
+const tableOfContents = [
+  { id: "agreement", label: "Agreement" },
+  { id: "service", label: "Our service" },
+  { id: "accounts", label: "Accounts" },
+  { id: "acceptable-use", label: "Acceptable use" },
+  { id: "submitted-content", label: "Submitted content" },
+  { id: "accuracy", label: "Detection results" },
+  { id: "availability", label: "Availability" },
+  { id: "intellectual-property", label: "Intellectual property" },
+  { id: "liability", label: "Liability" },
+  { id: "termination", label: "Termination" },
+  { id: "changes", label: "Changes" },
+  { id: "contact", label: "Contact" },
+];
 
 export default function TermsOfService() {
-  const tableOfContents = [
-    { id: "acceptance", label: "1. Acceptance of Terms" },
-    { id: "description", label: "2. Description of Service" },
-    { id: "accounts", label: "3. User Accounts & Registration" },
-    { id: "acceptable-use", label: "4. Acceptable Use Policy" },
-    { id: "intellectual-property", label: "5. Intellectual Property Rights" },
-    { id: "user-content", label: "6. User Content & Data" },
-    { id: "limitation", label: "7. Limitation of Liability" },
-    { id: "contact", label: "8. Contact Information" },
-  ];
-
   return (
     <PublicPageLayout
       title="Terms of Service"
-      lastUpdated={new Date().toLocaleDateString()}
-      effectiveDate="June 2026"
+      subtitle="These terms explain the rules for using CyberSense, what you can expect from the platform, and the responsibilities that come with your account."
+      icon={Scale}
+      documentType="Service agreement"
       tableOfContents={tableOfContents}
     >
-      <p className="text-lg text-slate-300 font-medium">
-        Welcome to CyberSense. By using our platform, you agree to these terms. 
-        Please read them carefully to understand your rights and responsibilities.
-      </p>
-
-      <h2 id="acceptance">1. Acceptance of Terms</h2>
-      <div className="public-section-tldr">
-        <strong>TL;DR:</strong> By creating an account or using our tools, you agree to follow these rules.
+      <div className="mb-10 rounded-2xl border border-slate-200 bg-slate-50 p-5 text-[15px] leading-7 text-slate-600">
+        Please read these Terms of Service before using CyberSense. By creating an account, accessing the platform, or submitting content for analysis, you agree to these terms. If you do not agree, do not use the service.
       </div>
-      <p>
-        By accessing or using the CyberSense platform, you agree to be bound by these Terms of Service and all applicable laws and regulations. If you do not agree with any of these terms, you are prohibited from using or accessing this site.
-      </p>
 
-      <h2 id="description">2. Description of Service</h2>
-      <div className="public-section-tldr">
-        <strong>TL;DR:</strong> We provide security scanning and threat detection tools as-is.
-      </div>
-      <p>
-        CyberSense provides a suite of cybersecurity tools designed to analyze, detect, and alert users about phishing attempts, malware, and other digital threats. The service is subject to continuous updates and may change without prior notice.
-      </p>
+      <LegalSection id="agreement" number="1" title="Agreement to these terms" summary="When these terms apply to you.">
+        <LegalSummary>Using CyberSense means that you accept this agreement and our Privacy Policy.</LegalSummary>
+        <p>These terms form an agreement between you and CyberSense. You must be legally capable of entering into this agreement and must comply with the laws that apply where you use the service.</p>
+      </LegalSection>
 
-      <h2 id="accounts">3. User Accounts & Registration</h2>
-      <div className="public-section-tldr">
-        <strong>TL;DR:</strong> Keep your password safe. You're responsible for what happens on your account.
-      </div>
-      <p>
-        To access certain features, you must register for an account. You agree to provide accurate, current, and complete information. You are responsible for safeguarding your password and for all activities that occur under your account.
-      </p>
+      <LegalSection id="service" number="2" title="The CyberSense service" summary="What the platform provides.">
+        <p>CyberSense provides tools for examining URLs, email content, and SMS messages for indicators commonly associated with phishing and related digital threats. The platform may also provide reporting, security notifications, threat history, and awareness training.</p>
+        <p>We may improve, replace, add, or retire features as the service evolves. Material changes that significantly affect users will be communicated through the platform or an appropriate contact channel.</p>
+      </LegalSection>
 
-      <h2 id="acceptable-use">4. Acceptable Use Policy</h2>
-      <div className="public-section-tldr">
-        <strong>TL;DR:</strong> Don't misuse our tools to harm others or violate laws.
-      </div>
-      <p>
-        You agree not to use CyberSense to:
-      </p>
-      <ul>
-        <li>Submit legally restricted, highly sensitive PII, or classified data not relevant to a security analysis.</li>
-        <li>Attempt to reverse engineer, decompile, or hack the CyberSense infrastructure.</li>
-        <li>Use the service for any illegal or unauthorized purpose.</li>
-      </ul>
+      <LegalSection id="accounts" number="3" title="Accounts and access" summary="Your responsibility for account security.">
+        <LegalSummary>Use accurate information, protect your password, and notify us if you suspect unauthorized access.</LegalSummary>
+        <LegalList>
+          <LegalListItem>Provide current and accurate registration information.</LegalListItem>
+          <LegalListItem>Keep your sign-in credentials private and use a strong, unique password.</LegalListItem>
+          <LegalListItem>Do not share an account or attempt to access another user’s account.</LegalListItem>
+          <LegalListItem>Tell us promptly if you believe your account or session has been compromised.</LegalListItem>
+        </LegalList>
+        <p>You are responsible for activity performed through your account unless that activity resulted from a security failure attributable to CyberSense.</p>
+      </LegalSection>
 
-      <h2 id="intellectual-property">5. Intellectual Property Rights</h2>
-      <div className="public-section-tldr">
-        <strong>TL;DR:</strong> We own the platform; you own your submitted data.
-      </div>
-      <p>
-        The CyberSense platform, including its original content, features, detection algorithms, and design, are owned by CyberSense and are protected by international copyright, trademark, and other intellectual property laws.
-      </p>
+      <LegalSection id="acceptable-use" number="4" title="Acceptable use" summary="How the security tools may and may not be used.">
+        <p>You may use CyberSense for legitimate personal, educational, defensive-security, and authorized organizational purposes. You must not:</p>
+        <LegalList>
+          <LegalListItem>Use the platform to facilitate fraud, harassment, unauthorized access, malware delivery, or any unlawful activity.</LegalListItem>
+          <LegalListItem>Probe, disrupt, overload, bypass, or interfere with the platform or its security controls.</LegalListItem>
+          <LegalListItem>Reverse engineer or extract protected source code, detection logic, or proprietary datasets except where applicable law expressly permits it.</LegalListItem>
+          <LegalListItem>Submit classified information, credentials, payment data, sensitive personal information, or content you are not authorized to analyze.</LegalListItem>
+          <LegalListItem>Automate requests in a way that exceeds documented limits or negatively affects other users.</LegalListItem>
+        </LegalList>
+      </LegalSection>
 
-      <h2 id="user-content">6. User Content & Data</h2>
-      <div className="public-section-tldr">
-        <strong>TL;DR:</strong> We scan what you submit to protect you and others, as outlined in our Privacy Policy.
-      </div>
-      <p>
-        By submitting URLs, emails, or files for scanning, you grant CyberSense the right to analyze this content. You represent that you have the right to submit such content for security analysis.
-      </p>
+      <LegalSection id="submitted-content" number="5" title="Content you submit" summary="Your rights and our limited permission to analyze content.">
+        <LegalSummary>You retain ownership of your content. You permit us to process it only as needed to provide and secure the service.</LegalSummary>
+        <p>You confirm that you have the right to submit URLs, messages, files, or other content for analysis. You grant CyberSense a limited, non-exclusive permission to process that content, generate security results, retain necessary records, and improve platform safety as described in our Privacy Policy.</p>
+      </LegalSection>
 
-      <h2 id="limitation">7. Limitation of Liability</h2>
-      <div className="public-section-tldr">
-        <strong>TL;DR:</strong> We do our best, but we aren't liable if a threat slips through or damages occur.
-      </div>
-      <p>
-        In no event shall CyberSense or its suppliers be liable for any damages (including, without limitation, damages for loss of data or profit, or due to business interruption) arising out of the use or inability to use the CyberSense platform.
-      </p>
+      <LegalSection id="accuracy" number="6" title="Detection results and security decisions" summary="Why results require informed judgment.">
+        <LegalNotice title="CyberSense supports security decisions; it does not replace professional judgment.">
+          Automated detection can produce false positives or fail to identify a threat. Do not rely on a single scan result where safety, finances, legal obligations, or sensitive systems are at risk.
+        </LegalNotice>
+        <p>Results are informational and should be assessed alongside the source, context, and other security controls. You remain responsible for decisions made using the output of the service.</p>
+      </LegalSection>
 
-      <h2 id="contact">8. Contact Information</h2>
-      <div className="public-section-tldr">
-        <strong>TL;DR:</strong> Need help? Email us.
-      </div>
-      <p>
-        If you have any questions about these Terms, please contact us at <a href="mailto:legal@cybersense.io">legal@cybersense.io</a>.
-      </p>
+      <LegalSection id="availability" number="7" title="Service availability" summary="Maintenance, updates, and interruptions.">
+        <p>We aim to operate CyberSense reliably, but uninterrupted availability is not guaranteed. Maintenance, security incidents, upstream providers, connectivity issues, or circumstances outside our control may temporarily affect the service.</p>
+      </LegalSection>
+
+      <LegalSection id="intellectual-property" number="8" title="Intellectual property" summary="Ownership of the platform and brand.">
+        <p>CyberSense and its licensors retain all rights in the platform, software, interface, branding, documentation, detection methods, and original content. These terms do not transfer ownership to you. Feedback may be used to improve the platform without an obligation to compensate you.</p>
+      </LegalSection>
+
+      <LegalSection id="liability" number="9" title="Disclaimers and limitation of liability" summary="Reasonable limits on responsibility.">
+        <p>To the extent permitted by applicable law, the service is provided on an “as available” basis without warranties that every threat will be detected or that every result will be error-free. CyberSense is not liable for indirect, incidental, special, consequential, or punitive losses arising from use of the service.</p>
+        <p>Nothing in these terms excludes liability that cannot lawfully be excluded or limits rights granted to you by mandatory consumer-protection law.</p>
+      </LegalSection>
+
+      <LegalSection id="termination" number="10" title="Suspension and termination" summary="When access may end.">
+        <p>You may stop using CyberSense at any time. We may restrict or suspend access where reasonably necessary to protect users, investigate misuse, comply with law, or address a serious breach of these terms. Where appropriate, we will provide notice and an opportunity to resolve the issue.</p>
+      </LegalSection>
+
+      <LegalSection id="changes" number="11" title="Changes to these terms" summary="How updates will be communicated.">
+        <p>We may update these terms to reflect changes in the service, law, or security practices. The effective date at the top of this page will be updated, and material changes will be communicated appropriately. Continued use after an update means you accept the revised terms.</p>
+      </LegalSection>
+
+      <LegalSection id="contact" number="12" title="Contact us" summary="Questions about this agreement.">
+        <p>For questions about these terms, contact <a className="font-bold text-cyber-700 underline decoration-cyber-200 underline-offset-4" href="mailto:legal@cybersense.io">legal@cybersense.io</a>.</p>
+      </LegalSection>
     </PublicPageLayout>
   );
 }

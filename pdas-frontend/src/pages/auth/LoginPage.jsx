@@ -50,11 +50,7 @@ export default function LoginPage() {
         "/dashboard";
       navigate(destination, { replace: true });
     } catch (error) {
-      if (error.message === "Network Error") {
-        setCardError("No connection. Please try again.");
-      } else {
-        setCardError("Invalid email or password.");
-      }
+      setCardError(error.message || "We could not sign you in. Please try again.");
     }
   };
 

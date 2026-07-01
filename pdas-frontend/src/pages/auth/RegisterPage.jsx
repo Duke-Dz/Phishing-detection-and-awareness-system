@@ -20,6 +20,7 @@ import { AuthShell } from "../../components/auth/AuthShell";
 import { useAuth } from "../../hooks/useAuth";
 import { PASSWORD_RULES } from "../../utils/constants";
 import { evaluatePassword } from "../../utils/passwordPolicy";
+import { setVerificationCooldown } from "../../utils/verificationCooldown";
 
 const registerSchema = z
   .object({
@@ -42,9 +43,9 @@ const registerSchema = z
     username: z
       .string()
       .trim()
-      .min(3, "Choose a username (min. 3 characters)")
-      .max(50, "Username is too long.")
-      .regex(/^[a-zA-Z0-9_]+$/, "Only letters, numbers, and underscores."),
+      .min(3, "Choose a username with at least 3 characters")
+      .max(50, "Username is too long")
+      .regex(/^[a-zA-Z0-9_]+$/, "Use only letters, numbers, and underscores"),
     email: z
       .string()
       .trim()
@@ -56,13 +57,6 @@ const registerSchema = z
     }),
   })
   .superRefine((values, ctx) => {
-    if (values.username && values.username.length < 3) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ["username"],
-        message: "Choose a username (min. 3 characters)",
-      });
-    }
     if (values.password) {
       if (values.password.length < 8) {
         ctx.addIssue({
@@ -138,24 +132,30 @@ export default function RegisterPage() {
   const onSubmit = async (values) => {
     setCardError(null);
     try {
-      await registerAccount({
+      const response = await registerAccount({
+        username: values.username.trim().toLowerCase(),
         full_name: `${values.first_name.trim()} ${values.last_name.trim()}`,
-        username: values.username.trim(),
         email: values.email.trim().toLowerCase(),
         password: values.password,
       });
-      toast.success("Account created successfully.");
+      const normalizedEmail = values.email.trim().toLowerCase();
+      setVerificationCooldown(normalizedEmail, response.resend_available_in || 120);
+      toast.success("Account created successfully.", {
+        position: "top-center",
+      });
       navigate(
-        `/verify-email?email=${encodeURIComponent(values.email.trim().toLowerCase())}`,
+        `/verify-email?email=${encodeURIComponent(normalizedEmail)}`,
         { replace: true },
       );
     } catch (error) {
-      if (error.message === "Network Error") {
-        setCardError("No connection. Please try again.");
+      if (error.code === "NETWORK_ERROR") {
+        setCardError(error.message);
+      } else if (error.message?.toLowerCase().includes("username")) {
+        setCardError("That username is already taken.");
       } else if (error.message?.toLowerCase().includes("email") || error.message?.toLowerCase().includes("exist")) {
         setCardError("Email already in use.");
       } else {
-        setCardError("Something went wrong. Retry.");
+        setCardError(error.message);
       }
     }
   };
@@ -249,29 +249,30 @@ export default function RegisterPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-            <div>
-              <label className="auth-label" htmlFor="reg-username">
-                Username
-              </label>
-              <div className="auth-field-wrap">
-                <span className="auth-field-icon">
-                  <Hash size={15} aria-hidden="true" />
-                </span>
-                <input
-                  id="reg-username"
-                  {...register("username")}
-                  autoComplete="username"
-                  autoCapitalize="none"
-                  spellCheck={false}
-                  placeholder="johndoe"
-                  minLength={3}
-                  required
-                  className="auth-field auth-field-has-icon"
-                />
-              </div>
+          <div>
+            <label className="auth-label" htmlFor="reg-username">
+              Username
+            </label>
+            <div className="auth-field-wrap">
+              <span className="auth-field-icon">
+                <Hash size={15} aria-hidden="true" />
+              </span>
+              <input
+                id="reg-username"
+                {...register("username")}
+                autoComplete="username"
+                autoCapitalize="none"
+                spellCheck={false}
+                placeholder="johndoe"
+                minLength={3}
+                maxLength={50}
+                required
+                className="auth-field auth-field-has-icon"
+              />
             </div>
+          </div>
 
+          <div>
             <div>
               <label className="auth-label" htmlFor="reg-email">
                 Email

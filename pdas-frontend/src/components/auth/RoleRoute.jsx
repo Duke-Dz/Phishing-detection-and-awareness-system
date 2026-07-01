@@ -1,21 +1,14 @@
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../hooks/useAuth";
 import { ROLE_DESTINATIONS } from "../../utils/constants";
-import { Shield } from "lucide-react";
+import { LoadingScreen } from "../common/LoadingScreen";
 
 export const RoleRoute = ({ allowedRoles, children }) => {
   const { user, loading, isAuthenticated } = useAuth();
   const location = useLocation();
 
   if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-cyber-900">
-        <div className="flex flex-col items-center gap-4">
-          <Shield size={40} className="animate-pulse text-cyber-500" />
-          <p className="text-sm font-medium text-slate-400">Loading...</p>
-        </div>
-      </div>
-    );
+    return <LoadingScreen />;
   }
 
   if (!isAuthenticated) {
