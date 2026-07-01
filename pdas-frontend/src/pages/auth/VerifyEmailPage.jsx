@@ -5,6 +5,12 @@ import { CheckCircle2, RotateCw, Mail } from "lucide-react";
 import { AuthShell } from "../../components/auth/AuthShell";
 import { authService } from "../../services/authService";
 import { toast } from "sonner";
+import {
+  clearVerificationCooldown,
+  formatCooldown,
+  getVerificationCooldown,
+  setVerificationCooldown,
+} from "../../utils/verificationCooldown";
 
 export default function VerifyEmailPage() {
   const [searchParams] = useSearchParams();
@@ -15,15 +21,17 @@ export default function VerifyEmailPage() {
   const [hasError, setHasError] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [resending, setResending] = useState(false);
-  const [resendCooldown, setResendCooldown] = useState(0);
+  const [resendCooldown, setResendCooldown] = useState(() => getVerificationCooldown(email));
   const [success, setSuccess] = useState(false);
   const [cardError, setCardError] = useState(null);
 
   useEffect(() => {
-    if (resendCooldown <= 0) return;
-    const timer = setTimeout(() => setResendCooldown((c) => c - 1), 1000);
-    return () => clearTimeout(timer);
-  }, [resendCooldown]);
+    if (!email || resendCooldown <= 0) return undefined;
+    const timer = window.setInterval(() => {
+      setResendCooldown(getVerificationCooldown(email));
+    }, 1000);
+    return () => window.clearInterval(timer);
+  }, [email, resendCooldown]);
 
   const handleVerify = useCallback(async (verificationToken) => {
     setHasError(false);
@@ -31,21 +39,20 @@ export default function VerifyEmailPage() {
     setSubmitting(true);
     try {
       await authService.verifyEmail({ token: verificationToken });
+      clearVerificationCooldown(email);
       setSuccess(true);
       toast.success("Email verified. You can sign in.");
       // Auto redirect to login after 3 seconds
       setTimeout(() => navigate("/login", { replace: true }), 3000);
     } catch (error) {
-      if (error.message === "Network Error") {
-        setCardError("No connection. Please try again.");
-      } else {
-        setCardError("Link expired. Request a new one.");
-      }
+      setCardError(error.code === "NETWORK_ERROR"
+        ? error.message
+        : error.message || "This verification link is invalid or has expired.");
       setHasError(true);
     } finally {
       setSubmitting(false);
     }
-  }, [navigate]);
+  }, [email, navigate]);
 
   useEffect(() => {
     if (token && !submitting && !success && !hasError) {
@@ -58,15 +65,17 @@ export default function VerifyEmailPage() {
     setResending(true);
     setCardError(null);
     try {
-      await authService.resendVerification(email);
-      setResendCooldown(60);
-      toast.success("Reset link sent to your email.");
+      const response = await authService.resendVerification(email);
+      const seconds = response.resend_available_in || 120;
+      setVerificationCooldown(email, seconds);
+      setResendCooldown(seconds);
+      toast.success("A new verification link has been sent.", { position: "top-center" });
     } catch (error) {
-      if (error.message === "Network Error") {
-        setCardError("No connection. Please try again.");
-      } else {
-        setCardError("Something went wrong. Retry.");
+      if (error.code === "VERIFICATION_RESEND_COOLDOWN" && error.retryAfter > 0) {
+        setVerificationCooldown(email, error.retryAfter);
+        setResendCooldown(error.retryAfter);
       }
+      setCardError(error.message);
     } finally {
       setResending(false);
     }
@@ -202,12 +211,17 @@ export default function VerifyEmailPage() {
                 Sending...
               </span>
             ) : resendCooldown > 0 ? (
-              `Resend link in ${resendCooldown}s`
+              `Resend available in ${formatCooldown(resendCooldown)}`
             ) : (
               "Resend verification link"
             )}
           </button>
         </div>
+        {resendCooldown > 0 && (
+          <p className="text-center text-xs font-medium text-slate-500">
+            For account security, another link can be requested after the timer ends.
+          </p>
+        )}
       </div>
     </AuthShell>
   );

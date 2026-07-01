@@ -1,1 +1,8 @@
-// Awareness API calls - list, get, create, update, delete content
+import api from "./api";
+
+export const awarenessService = {
+  async list(params = {}) {
+    const { data } = await api.get("/awareness", { params });
+    return data;
+  },
+};

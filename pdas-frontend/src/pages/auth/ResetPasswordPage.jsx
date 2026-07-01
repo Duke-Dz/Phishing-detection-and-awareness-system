@@ -79,11 +79,7 @@ export default function ResetPasswordPage() {
       setSuccess(true);
       toast.success("Password updated successfully.");
     } catch (error) {
-      if (error.message === "Network Error") {
-        setCardError("No connection. Please try again.");
-      } else {
-        setCardError("Password reset failed. Please try again.");
-      }
+      setCardError(error.message || "We could not reset your password. Please request a new link.");
     }
   };
 

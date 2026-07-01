@@ -1,104 +1,60 @@
 import api from "./api";
 
-const extractError = (error) => {
-  const message =
-    error?.response?.data?.message ||
-    error?.message ||
-    "An unexpected error occurred.";
-  throw new Error(message);
-};
-
 export const authService = {
   async register({ username, full_name, email, password }) {
-    try {
-      const { data } = await api.post("/auth/register", {
-        username,
-        full_name,
-        email,
-        password,
-      });
-      return data;
-    } catch (error) {
-      extractError(error);
-    }
+    const { data } = await api.post("/auth/register", {
+      username,
+      full_name,
+      email,
+      password,
+    });
+    return data;
   },
 
   async login({ identifier, password, remember_me }) {
-    try {
-      const { data } = await api.post("/auth/login", { identifier, password, remember_me });
-      return data;
-    } catch (error) {
-      extractError(error);
-    }
+    const { data } = await api.post("/auth/login", { identifier, password, remember_me });
+    return data;
   },
 
   async verifyEmail({ token }) {
-    try {
-      const { data } = await api.post("/auth/verify-email", { token });
-      return data;
-    } catch (error) {
-      extractError(error);
-    }
+    const { data } = await api.post("/auth/verify-email", { token });
+    return data;
   },
 
   async resendVerification(email) {
-    try {
-      const { data } = await api.post("/auth/resend-verification", { email });
-      return data;
-    } catch (error) {
-      extractError(error);
-    }
+    const { data } = await api.post("/auth/resend-verification", { email });
+    return data;
   },
 
   async forgotPassword(email) {
-    try {
-      const { data } = await api.post("/auth/forgot-password", { email });
-      return data;
-    } catch (error) {
-      extractError(error);
-    }
+    const { data } = await api.post("/auth/forgot-password", { email });
+    return data;
   },
 
   async resetPassword({ token, new_password, confirm_password }) {
-    try {
-      const { data } = await api.post("/auth/reset-password", {
-        token,
-        new_password,
-        confirm_password,
-      });
-      return data;
-    } catch (error) {
-      extractError(error);
-    }
+    const { data } = await api.post("/auth/reset-password", {
+      token,
+      new_password,
+      confirm_password,
+    });
+    return data;
   },
 
   async refreshToken(refreshToken) {
-    try {
-      const { data } = await api.post("/auth/refresh", { refreshToken });
-      return data;
-    } catch (error) {
-      extractError(error);
-    }
+    const { data } = await api.post("/auth/refresh", { refreshToken });
+    return data;
   },
 
   async getMe() {
-    try {
-      const { data } = await api.get("/auth/me");
-      return data;
-    } catch (error) {
-      extractError(error);
-    }
+    const { data } = await api.get("/auth/me");
+    return data;
   },
 
   async logout({ refreshToken, allDevices = false }) {
-    try {
-      const { data } = await api.post("/auth/logout", {
-        refreshToken,
-        all_devices: allDevices,
-      });
-      return data;
-    } catch (error) {
-      extractError(error);
-    }
+    const { data } = await api.post("/auth/logout", {
+      refreshToken,
+      all_devices: allDevices,
+    });
+    return data;
   },
 };

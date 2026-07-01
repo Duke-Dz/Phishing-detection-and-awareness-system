@@ -16,6 +16,7 @@ import TermsOfService from "../pages/TermsOfService.jsx";
 
 // Route guard
 import { RoleRoute } from "../components/auth/RoleRoute";
+import UserDashboard from "../pages/user/UserDashboard";
 
 const AppRouter = () => {
   return (
@@ -31,13 +32,8 @@ const AppRouter = () => {
       <Route
         path="/dashboard"
         element={
-          <RoleRoute allowedRoles={["user", "analyst", "admin"]}>
-            <div className="flex min-h-screen items-center justify-center bg-cyber-900">
-              <div className="text-center">
-                <h1 className="text-2xl font-bold text-white">User Dashboard</h1>
-                <p className="mt-2 text-slate-400">Coming soon</p>
-              </div>
-            </div>
+          <RoleRoute allowedRoles={["user"]}>
+            <UserDashboard />
           </RoleRoute>
         }
       />

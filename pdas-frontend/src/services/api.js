@@ -1,5 +1,37 @@
 import axios from 'axios';
 
+export class ApiError extends Error {
+  constructor(message, options = {}) {
+    super(message);
+    this.name = "ApiError";
+    Object.assign(this, options);
+  }
+}
+
+export const toApiError = (error) => {
+  if (error instanceof ApiError) return error;
+  const response = error?.response;
+  const payload = response?.data || {};
+  const validationMessage = payload.errors?.[0]?.message || payload.details?.[0]?.message;
+  const isNetworkError = !response;
+  const message = isNetworkError
+    ? "We could not connect to CyberSense. Check your internet connection and try again."
+    : validationMessage || payload.message || "We could not complete your request. Please try again.";
+
+  return new ApiError(message, {
+    status: response?.status || 0,
+    code: payload.code || (isNetworkError ? "NETWORK_ERROR" : "REQUEST_FAILED"),
+    fieldErrors: payload.errors || payload.details || [],
+    retryAfter: Number(payload.retry_after_seconds) || 0,
+    requestId: payload.request_id,
+    isNetworkError,
+    cause: error,
+  });
+};
+
+export const getErrorMessage = (error, fallback = "We could not complete your request. Please try again.") =>
+  toApiError(error).message || fallback;
+
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api',
   headers: {
@@ -66,7 +98,7 @@ api.interceptors.response.use(
       const refreshToken = localStorage.getItem('refresh_token');
       if (!refreshToken) {
         isRefreshing = false;
-        return Promise.reject(error);
+        return Promise.reject(toApiError(error));
       }
 
       return new Promise((resolve, reject) => {
@@ -88,7 +120,7 @@ api.interceptors.response.use(
             processQueue(err, null);
             localStorage.removeItem('access_token');
             localStorage.removeItem('refresh_token');
-            reject(err);
+            reject(toApiError(err));
           })
           .finally(() => {
             isRefreshing = false;
@@ -96,7 +128,7 @@ api.interceptors.response.use(
       });
     }
 
-    return Promise.reject(error);
+    return Promise.reject(toApiError(error));
   }
 );
 

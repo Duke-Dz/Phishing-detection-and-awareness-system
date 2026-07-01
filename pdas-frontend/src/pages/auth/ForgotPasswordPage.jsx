@@ -50,11 +50,7 @@ export default function ForgotPasswordPage() {
       setCardError(null);
       return true;
     } catch (error) {
-      if (error.message === "Network Error") {
-        setCardError("No connection. Please try again.");
-      } else {
-        setCardError("Something went wrong. Retry.");
-      }
+      setCardError(error.message || "We could not process the password-reset request.");
       return false;
     }
   };
