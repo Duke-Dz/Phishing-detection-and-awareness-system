@@ -146,19 +146,9 @@ export default function CyberSenseLogo({
   iconSize,
 }) {
   const isCompact = variant === "compact";
-<<<<<<< HEAD
   const iconSizeClasses = { sm: "h-10 w-10", md: "h-11 w-11", lg: "h-14 w-14" };
   const canvasClass = iconSize
     ? `relative flex-shrink-0 ${iconSizeClasses[iconSize] || iconSizeClasses.md}`
-=======
-  const sizeClasses = {
-    sm: "h-10 w-10",
-    md: "h-11 w-11",
-    lg: "h-14 w-14",
-  };
-  const canvasClass = iconSize
-    ? `relative flex-shrink-0 ${sizeClasses[iconSize] || sizeClasses.md}`
->>>>>>> eab6364e4f5e4817a57c01e0b794d420436675f8
     : isCompact
     ? "relative h-[40px] w-[40px] flex-shrink-0 sm:h-[48px] sm:w-[48px]"
     : "relative h-[96px] w-[96px] flex-shrink-0 sm:h-[104px] sm:w-[104px]";
