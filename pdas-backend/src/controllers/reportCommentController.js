@@ -1,5 +1,5 @@
 const { ReportComment, Report, User } = require("../models");
-const { createError } = require("../utils/validators");
+const { createError } = require("../utils/inputValidation");
 const sseService = require("../services/sseService");
 const auditService = require("../services/auditService");
 

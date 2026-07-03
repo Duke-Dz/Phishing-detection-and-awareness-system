@@ -23,7 +23,7 @@ const {
   normalizeEmail,
   validatePassword,
   validateUrl,
-} = require("../src/utils/validators");
+} = require("../src/utils/inputValidation");
 
 test("createError returns Error with correct message and status", () => {
   const err = createError("Test error", 404);

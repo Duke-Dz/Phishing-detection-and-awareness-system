@@ -1,5 +1,5 @@
 const { analyzeMessage } = require("../services/detectionService");
-const { createError, requireFields } = require("../utils/validators");
+const { createError, requireFields } = require("../utils/inputValidation");
 const { createScanNotification } = require("../services/notificationService");
 const { persistScanResult } = require("../services/scanPersistenceService");
 const { createScanJob } = require("../services/scanJobService");
