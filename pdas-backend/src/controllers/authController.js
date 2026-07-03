@@ -56,19 +56,26 @@ const register = async (req, res) => {
 
   const existingUser = await User.findOne({ where: { email } });
   if (existingUser) {
-    throw createError("Email is already registered", 409);
+    throw createError("Email already in use.", 409, "EMAIL_IN_USE");
   }
 
-  const [existingUsername, pendingUsername] = await Promise.all([
+  const [existingPendingEmail, existingUsername, pendingUsername] = await Promise.all([
+    PendingRegistration.findOne({ where: { email } }),
     User.findOne({ where: { username } }),
     PendingRegistration.findOne({ where: { username } }),
   ]);
-  if (existingUsername || pendingUsername) {
-    throw createError("Username is already taken", 409);
+
+  if (existingPendingEmail) {
+    throw createError(
+      "Email already pending verification.",
+      409,
+      "EMAIL_PENDING_VERIFICATION",
+    );
   }
 
-  // Delete any existing pending registration for this email
-  await PendingRegistration.destroy({ where: { email } });
+  if (existingUsername || pendingUsername) {
+    throw createError("Username already taken.", 409, "USERNAME_TAKEN");
+  }
 
   const passwordHash = await bcrypt.hash(req.body.password, 12);
   const token = generateToken();
