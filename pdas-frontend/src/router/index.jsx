@@ -52,7 +52,7 @@ const AppRouter = () => {
           element={withTransition(
             <RoleRoute allowedRoles={["user"]}>
               <UserDashboard />
-            </RoleRoute>,
+            </RoleRoute>
           )}
         />
 
@@ -68,7 +68,7 @@ const AppRouter = () => {
                   <p className="mt-2 text-slate-400">Coming soon</p>
                 </div>
               </div>
-            </RoleRoute>,
+            </RoleRoute>
           )}
         />
 
@@ -84,7 +84,7 @@ const AppRouter = () => {
                   <p className="mt-2 text-slate-400">Coming soon</p>
                 </div>
               </div>
-            </RoleRoute>,
+            </RoleRoute>
           )}
         />
 

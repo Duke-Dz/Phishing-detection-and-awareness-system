@@ -77,7 +77,7 @@ export default function ResetPasswordPage() {
         confirm_password: values.confirm_password,
       });
       setSuccess(true);
-      toast.success("Password updated successfully.");
+      toast.success("Password updated.");
     } catch (error) {
       setCardError(error.message || "We could not reset your password. Please request a new link.");
     }

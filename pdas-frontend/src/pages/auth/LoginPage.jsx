@@ -43,7 +43,7 @@ export default function LoginPage() {
         password: values.password,
         remember_me: values.remember_me,
       });
-      toast.success("Signed in successfully.");
+      toast.success("Signed in.");
       const destination =
         location.state?.from?.pathname ||
         ROLE_DESTINATIONS[response.data.role] ||
