@@ -13,7 +13,7 @@ const {
   normalizeEmail,
   requireFields,
   validatePassword,
-} = require("../utils/validators");
+} = require("../utils/inputValidation");
 const { generateToken, hashToken } = require("../utils/tokenGenerator");
 const mailService = require("../services/mailService");
 const emailTemplates = require("../templates/emailTemplates");

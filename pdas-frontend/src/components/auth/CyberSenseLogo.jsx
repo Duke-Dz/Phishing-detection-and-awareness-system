@@ -139,9 +139,21 @@ function OrbitRing() {
   );
 }
 
-export default function CyberSenseLogo({ variant = "default", stacked = false }) {
+export default function CyberSenseLogo({
+  variant = "default",
+  stacked = false,
+  showWordmark = true,
+  iconSize,
+}) {
   const isCompact = variant === "compact";
-  const canvasClass = isCompact
+  const sizeClasses = {
+    sm: "h-10 w-10",
+    md: "h-11 w-11",
+    lg: "h-14 w-14",
+  };
+  const canvasClass = iconSize
+    ? `relative flex-shrink-0 ${sizeClasses[iconSize] || sizeClasses.md}`
+    : isCompact
     ? "relative h-[40px] w-[40px] flex-shrink-0 sm:h-[48px] sm:w-[48px]"
     : "relative h-[96px] w-[96px] flex-shrink-0 sm:h-[104px] sm:w-[104px]";
   const wordmarkSize = isCompact
@@ -311,7 +323,7 @@ export default function CyberSenseLogo({ variant = "default", stacked = false })
         </svg>
       </div>
 
-      <div className="flex flex-col justify-center gap-0.5">
+      {showWordmark && <div className="flex flex-col justify-center gap-0.5">
         <div className="auth-logo-wordmark font-extrabold leading-none" style={{ fontSize: wordmarkSize, letterSpacing: 0 }}>
           <span
             style={{
@@ -334,7 +346,7 @@ export default function CyberSenseLogo({ variant = "default", stacked = false })
             Sense
           </span>
         </div>
-      </div>
+      </div>}
     </div>
   );
 }

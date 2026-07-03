@@ -12,7 +12,7 @@ const AuditLog = require("./AuditLog");
 const SystemSetting = require("./SystemSetting");
 const ReportComment = require("./ReportComment");
 const PendingRegistration = require("./PendingRegistration");
-const SecurityEvent = require("./SecurityEvent");
+const SecurityEvent = require("./securityevent");
 
 // ── User → Reports (cascade: delete user = delete their reports) ──
 User.hasMany(Report, { foreignKey: "user_id", as: "reports", onDelete: "CASCADE" });

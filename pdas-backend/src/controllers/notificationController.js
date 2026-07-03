@@ -1,5 +1,5 @@
 const { Notification } = require("../models");
-const { createError } = require("../utils/validators");
+const { createError } = require("../utils/inputValidation");
 const { buildPaginationMeta, getPagination } = require("../utils/pagination");
 
 const listNotifications = async (req, res) => {

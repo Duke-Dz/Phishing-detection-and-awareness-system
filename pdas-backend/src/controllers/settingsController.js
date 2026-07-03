@@ -1,5 +1,5 @@
 const { SystemSetting } = require("../models");
-const { createError } = require("../utils/validators");
+const { createError } = require("../utils/inputValidation");
 const auditService = require("../services/auditService");
 
 /**

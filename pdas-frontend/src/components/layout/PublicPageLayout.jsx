@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { ArrowLeft, ArrowRight, Check, ChevronRight, FileText, Home, ShieldCheck } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import CyberSenseLogo from "../auth/CyberSenseLogo";
 import { PageTransition } from "../common/PageTransition";
 
@@ -55,7 +55,10 @@ export const PublicPageLayout = ({
   documentType = "Legal",
   effectiveDate = "1 July 2026",
 }) => {
+  const navigate = useNavigate();
   const [activeSection, setActiveSection] = useState(tableOfContents[0]?.id || "");
+  const [dark, setDark] = useState(() => window.matchMedia?.("(prefers-color-scheme: dark)").matches);
+  const goBack = () => window.history.length > 1 ? navigate(-1) : navigate("/");
 
   useEffect(() => {
     if (!tableOfContents.length) return undefined;
@@ -77,18 +80,18 @@ export const PublicPageLayout = ({
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-[#f5f7fa] font-sans text-slate-700 selection:bg-cyber-100 selection:text-cyber-900">
-        <header className="sticky top-0 z-50 border-b border-slate-200/90 bg-white/90 backdrop-blur-xl">
+      <div className={dark ? "dark" : ""}>
+      <div className="min-h-screen bg-[#f5f7fa] font-sans text-slate-700 selection:bg-cyber-100 selection:text-cyber-900 dark:bg-slate-950 dark:text-slate-300 print:bg-white">
+        <header className="sticky top-0 z-50 border-b border-slate-200/90 bg-white/90 backdrop-blur-xl dark:border-slate-800 dark:bg-slate-900/90 print:static">
           <div className="mx-auto flex h-[72px] max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
             <div className="flex items-center gap-3">
-              <Link to="/" className="grid h-10 w-10 place-items-center rounded-xl border border-slate-200 text-slate-500 transition hover:border-cyber-200 hover:bg-cyber-50 hover:text-cyber-700" aria-label="Back to home">
-                <Home size={18} />
-              </Link>
+              <button type="button" onClick={goBack} className="grid h-10 w-10 place-items-center rounded-xl border border-slate-200 text-slate-500 transition hover:border-cyber-200 hover:bg-cyber-50 hover:text-cyber-700 dark:border-slate-700" aria-label="Go back"><Home size={18} /></button>
               <div className="hidden h-6 w-px bg-slate-200 sm:block" />
-              <Link to="/" className="hidden sm:block"><CyberSenseLogo variant="compact" /></Link>
+              <Link to="/" className="hidden sm:block"><CyberSenseLogo variant="compact" iconSize="sm" /></Link>
             </div>
             <div className="flex items-center gap-2 sm:gap-3">
-              <Link to="/login" className="rounded-xl px-4 py-2.5 text-sm font-bold text-slate-600 transition hover:bg-slate-100">Sign in</Link>
+              <button type="button" onClick={() => setDark((value) => !value)} className="grid h-10 w-10 place-items-center rounded-xl text-sm font-bold text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800" aria-label="Toggle color theme">{dark ? "☀" : "◐"}</button>
+              <Link to="/login" className="rounded-xl px-4 py-2.5 text-sm font-bold text-slate-600 transition hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">Sign in</Link>
               <Link to="/register" className="flex items-center gap-2 rounded-xl bg-cyber-600 px-4 py-2.5 text-sm font-bold text-white shadow-lg shadow-cyber-700/15 transition hover:bg-cyber-700">
                 Create account <ArrowRight size={15} />
               </Link>
@@ -96,15 +99,15 @@ export const PublicPageLayout = ({
           </div>
         </header>
 
-        <section className="relative overflow-hidden border-b border-slate-200 bg-white">
+        <section className="relative overflow-hidden border-b border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_15%,rgba(13,81,140,0.08),transparent_32%),radial-gradient(circle_at_10%_85%,rgba(16,185,129,0.07),transparent_28%)]" />
           <div className="relative mx-auto max-w-7xl px-4 py-14 sm:px-6 sm:py-20 lg:px-8">
-            <Link to="/" className="mb-8 inline-flex items-center gap-2 text-sm font-semibold text-slate-500 transition hover:text-cyber-700"><ArrowLeft size={16} /> Back to CyberSense</Link>
+            <button type="button" onClick={goBack} className="mb-8 inline-flex items-center gap-2 text-sm font-semibold text-slate-500 transition hover:text-cyber-700"><ArrowLeft size={16} /> Back</button>
             <div className="flex max-w-4xl items-start gap-5">
               <div className="hidden h-14 w-14 shrink-0 place-items-center rounded-2xl border border-cyber-100 bg-cyber-50 text-cyber-700 sm:grid"><Icon size={26} /></div>
               <div>
                 <p className="text-xs font-bold uppercase tracking-[0.2em] text-cyber-600">{documentType}</p>
-                <h1 className="mt-3 text-4xl font-extrabold tracking-tight text-slate-950 sm:text-5xl">{title}</h1>
+                <h1 className="mt-3 text-4xl font-extrabold tracking-tight text-slate-950 dark:text-white sm:text-5xl">{title}</h1>
                 {subtitle && <p className="mt-5 max-w-3xl text-base leading-7 text-slate-600 sm:text-lg">{subtitle}</p>}
                 <div className="mt-6 flex flex-wrap gap-x-6 gap-y-2 text-xs font-semibold text-slate-500">
                   <span>Effective {effectiveDate}</span>
@@ -116,12 +119,16 @@ export const PublicPageLayout = ({
         </section>
 
         <main className="mx-auto grid max-w-7xl gap-8 px-4 py-8 sm:px-6 sm:py-12 lg:grid-cols-[minmax(0,1fr)_280px] lg:px-8">
-          <article className="min-w-0 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-10 lg:p-12">
+          <article className="min-w-0 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:p-10 lg:p-12 print:border-0 print:p-0 print:shadow-none">
             {children}
           </article>
 
           <aside className="order-first lg:order-last">
-            <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm lg:sticky lg:top-24 lg:p-5">
+            <details className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm open:pb-4 dark:border-slate-800 dark:bg-slate-900 lg:hidden">
+              <summary className="cursor-pointer text-xs font-extrabold uppercase tracking-[0.16em] text-slate-500">On this page</summary>
+              <nav className="mt-4 grid gap-1">{tableOfContents.map((item) => <a key={item.id} href={`#${item.id}`} className="rounded-xl px-3 py-2 text-sm font-semibold text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800">{item.label}</a>)}</nav>
+            </details>
+            <div className="hidden rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900 lg:sticky lg:top-24 lg:block lg:p-5">
               <div className="mb-4 flex items-center gap-2 border-b border-slate-100 pb-4">
                 <FileText size={17} className="text-cyber-600" />
                 <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-slate-500">On this page</p>
@@ -145,7 +152,7 @@ export const PublicPageLayout = ({
           </aside>
         </main>
 
-        <footer className="border-t border-slate-200 bg-white">
+        <footer className="border-t border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 print:hidden">
           <div className="mx-auto flex max-w-7xl flex-col gap-5 px-4 py-8 sm:px-6 md:flex-row md:items-center md:justify-between lg:px-8">
             <div className="flex items-center gap-3 text-sm text-slate-500">
               <span className="grid h-9 w-9 place-items-center rounded-xl bg-cyber-50 text-cyber-600"><ShieldCheck size={18} /></span>
@@ -157,7 +164,7 @@ export const PublicPageLayout = ({
             </div>
           </div>
         </footer>
-      </div>
+      </div></div>
     </PageTransition>
   );
 };
