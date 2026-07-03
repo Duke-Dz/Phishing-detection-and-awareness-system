@@ -1,7 +1,7 @@
 const { Op } = require("sequelize");
 const { stringify } = require("csv-stringify/sync");
 const { ScanResult } = require("../models");
-const { createError } = require("../utils/validators");
+const { createError } = require("../utils/inputValidation");
 
 const MAX_EXPORT_RECORDS = 1000;
 const FORMULA_PREFIX = /^[=+\-@]/;
