@@ -1,4 +1,6 @@
-import { Routes, Route } from "react-router-dom";
+import { AnimatePresence } from "framer-motion";
+import { Route, Routes, useLocation } from "react-router-dom";
+import { PageTransition } from "../components/common/PageTransition";
 
 // Auth pages
 import LoginPage from "../pages/auth/LoginPage";
@@ -19,61 +21,84 @@ import { RoleRoute } from "../components/auth/RoleRoute";
 import UserDashboard from "../pages/user/UserDashboard";
 
 const AppRouter = () => {
+  const location = useLocation();
+
+  const withTransition = (element) => (
+    <PageTransition>{element}</PageTransition>
+  );
+
   return (
-    <Routes>
-      {/* Auth routes */}
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/register" element={<RegisterPage />} />
-      <Route path="/verify-email" element={<VerifyEmailPage />} />
-      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-      <Route path="/reset-password" element={<ResetPasswordPage />} />
+    <AnimatePresence mode="wait">
+      <Routes location={location} key={location.pathname}>
+        {/* Auth routes */}
+        <Route path="/login" element={withTransition(<LoginPage />)} />
+        <Route path="/register" element={withTransition(<RegisterPage />)} />
+        <Route
+          path="/verify-email"
+          element={withTransition(<VerifyEmailPage />)}
+        />
+        <Route
+          path="/forgot-password"
+          element={withTransition(<ForgotPasswordPage />)}
+        />
+        <Route
+          path="/reset-password"
+          element={withTransition(<ResetPasswordPage />)}
+        />
 
-      {/* Protected routes */}
-      <Route
-        path="/dashboard"
-        element={
-          <RoleRoute allowedRoles={["user"]}>
-            <UserDashboard />
-          </RoleRoute>
-        }
-      />
-      <Route
-        path="/analyst/*"
-        element={
-          <RoleRoute allowedRoles={["analyst", "admin"]}>
-            <div className="flex min-h-screen items-center justify-center bg-cyber-900">
-              <div className="text-center">
-                <h1 className="text-2xl font-bold text-white">Analyst Dashboard</h1>
-                <p className="mt-2 text-slate-400">Coming soon</p>
+        {/* Protected routes */}
+        <Route
+          path="/dashboard"
+          element={withTransition(
+            <RoleRoute allowedRoles={["user"]}>
+              <UserDashboard />
+            </RoleRoute>,
+          )}
+        />
+
+        <Route
+          path="/analyst/*"
+          element={withTransition(
+            <RoleRoute allowedRoles={["analyst", "admin"]}>
+              <div className="flex min-h-screen items-center justify-center bg-cyber-900">
+                <div className="text-center">
+                  <h1 className="text-2xl font-bold text-white">
+                    Analyst Dashboard
+                  </h1>
+                  <p className="mt-2 text-slate-400">Coming soon</p>
+                </div>
               </div>
-            </div>
-          </RoleRoute>
-        }
-      />
-      <Route
-        path="/admin/*"
-        element={
-          <RoleRoute allowedRoles={["admin"]}>
-            <div className="flex min-h-screen items-center justify-center bg-cyber-900">
-              <div className="text-center">
-                <h1 className="text-2xl font-bold text-white">Admin Dashboard</h1>
-                <p className="mt-2 text-slate-400">Coming soon</p>
+            </RoleRoute>,
+          )}
+        />
+
+        <Route
+          path="/admin/*"
+          element={withTransition(
+            <RoleRoute allowedRoles={["admin"]}>
+              <div className="flex min-h-screen items-center justify-center bg-cyber-900">
+                <div className="text-center">
+                  <h1 className="text-2xl font-bold text-white">
+                    Admin Dashboard
+                  </h1>
+                  <p className="mt-2 text-slate-400">Coming soon</p>
+                </div>
               </div>
-            </div>
-          </RoleRoute>
-        }
-      />
+            </RoleRoute>,
+          )}
+        />
 
-      {/* Public routes */}
-      <Route path="/unsubscribe" element={<Unsubscribe />} />
-      <Route path="/privacy" element={<PrivacyPolicy />} />
-      <Route path="/terms" element={<TermsOfService />} />
-      <Route path="/maintenance" element={<Maintenance />} />
+        {/* Public routes */}
+        <Route path="/unsubscribe" element={withTransition(<Unsubscribe />)} />
+        <Route path="/privacy" element={withTransition(<PrivacyPolicy />)} />
+        <Route path="/terms" element={withTransition(<TermsOfService />)} />
+        <Route path="/maintenance" element={withTransition(<Maintenance />)} />
 
-      {/* Default & 404 */}
-      <Route path="/" element={<LoginPage />} />
-      <Route path="*" element={<NotFound />} />
-    </Routes>
+        {/* Default & 404 */}
+        <Route path="/" element={withTransition(<LoginPage />)} />
+        <Route path="*" element={withTransition(<NotFound />)} />
+      </Routes>
+    </AnimatePresence>
   );
 };
 
