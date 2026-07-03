@@ -22,6 +22,16 @@ import UserDashboard from "../pages/user/UserDashboard";
 
 const AppRouter = () => {
   const location = useLocation();
+  const userDashboardPaths = [
+    "/dashboard",
+    "/dashboard/profile",
+    "/dashboard/settings",
+    "/dashboard/notifications",
+    "/dashboard/scans",
+    "/dashboard/activity",
+    "/dashboard/reports",
+    "/dashboard/training",
+  ];
 
   const withTransition = (element) => (
     <PageTransition>{element}</PageTransition>
@@ -47,14 +57,17 @@ const AppRouter = () => {
         />
 
         {/* Protected routes */}
-        <Route
-          path="/dashboard"
-          element={withTransition(
-            <RoleRoute allowedRoles={["user"]}>
-              <UserDashboard />
-            </RoleRoute>
-          )}
-        />
+        {userDashboardPaths.map((path) => (
+          <Route
+            key={path}
+            path={path}
+            element={withTransition(
+              <RoleRoute allowedRoles={["user"]}>
+                <UserDashboard />
+              </RoleRoute>
+            )}
+          />
+        ))}
 
         <Route
           path="/analyst/*"

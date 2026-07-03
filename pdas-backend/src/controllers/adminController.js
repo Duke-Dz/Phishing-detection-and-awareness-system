@@ -9,7 +9,7 @@ const {
   ThreatIntelligence,
   User,
 } = require("../models");
-const { createError, requireFields } = require("../utils/validators");
+const { createError, requireFields } = require("../utils/inputValidation");
 const { buildPaginationMeta, getPagination } = require("../utils/pagination");
 const { getApiStatus } = require("../services/externalThreatService");
 const { clearUserCache } = require("../middleware/authMiddleware");

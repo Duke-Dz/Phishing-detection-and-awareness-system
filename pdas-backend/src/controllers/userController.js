@@ -2,7 +2,7 @@ const fs = require("fs");
 const path = require("path");
 const { Op } = require("sequelize");
 const { User } = require("../models");
-const { createError } = require("../utils/validators");
+const { createError } = require("../utils/inputValidation");
 const auditService = require("../services/auditService");
 const { verifyUnsubscribeToken } = require("../utils/unsubscribeTokens");
 

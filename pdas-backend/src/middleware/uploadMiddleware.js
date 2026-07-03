@@ -2,7 +2,7 @@ const multer = require("multer");
 const path = require("path");
 const crypto = require("crypto");
 const fs = require("fs");
-const { createError } = require("../utils/validators");
+const { createError } = require("../utils/inputValidation");
 
 // Ensure upload directories exist
 const uploadDirs = ["uploads/avatars", "uploads/reports"];

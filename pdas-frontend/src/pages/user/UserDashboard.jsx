@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import {
   AlertTriangle,
   Bell,
@@ -24,12 +25,25 @@ import { toast } from "sonner";
 
 import DashboardSidebar, { DASHBOARD_NAV_ITEMS } from "../../components/dashboard/DashboardSidebar";
 import DashboardSkeleton from "../../components/dashboard/DashboardSkeleton";
+=======
+import { useCallback, useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { toast } from "sonner";
+import AwarenessTraining from "../../components/awareness/AwarenessTraining";
+import DashboardLayout from "../../components/dashboard/layout/DashboardLayout";
+import OverviewPanel from "../../components/dashboard/overview/OverviewPanel";
+import UserReports from "../../components/reports/UserReports";
+import RecentScans from "../../components/scan/RecentScans";
+import ScanCenter from "../../components/scan/ScanCenter";
+>>>>>>> eab6364e4f5e4817a57c01e0b794d420436675f8
 import { useAuth } from "../../hooks/useAuth";
 import { awarenessService } from "../../services/awarenessService";
 import { dashboardService } from "../../services/dashboardService";
-import { emailService } from "../../services/emailService";
 import { reportService } from "../../services/reportService";
 import { scanService } from "../../services/scanService";
+import NotificationsPage from "./NotificationsPage";
+import ProfilePage from "./ProfilePage";
+import SettingsPage from "./SettingsPage";
 
 const EMPTY_STATS = {
   totalScans: 0,
@@ -41,6 +55,7 @@ const EMPTY_STATS = {
   unreadNotifications: 0,
 };
 
+<<<<<<< HEAD
 const ACTIONS = [
   { type: "url", title: "Scan URL", helper: "Check a web address", Icon: Globe2, tone: "blue" },
   { type: "email", title: "Analyze Email", helper: "Inspect suspicious content", Icon: Mail, tone: "violet" },
@@ -184,8 +199,11 @@ function ActionModal({ action, onClose, onComplete }) {
   );
 }
 
+=======
+>>>>>>> eab6364e4f5e4817a57c01e0b794d420436675f8
 export default function UserDashboard() {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
+  const location = useLocation();
   const navigate = useNavigate();
   const [stats, setStats] = useState(EMPTY_STATS);
   const [scans, setScans] = useState([]);
@@ -193,6 +211,7 @@ export default function UserDashboard() {
   const [lessons, setLessons] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+<<<<<<< HEAD
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(() => localStorage.getItem("cybersense-sidebar-collapsed") === "true");
   const [isDesktop, setIsDesktop] = useState(() => window.matchMedia("(min-width: 1024px)").matches);
@@ -202,30 +221,33 @@ export default function UserDashboard() {
   const [selectedLesson, setSelectedLesson] = useState(null);
   const [showAllScans, setShowAllScans] = useState(false);
   const [showAllReports, setShowAllReports] = useState(false);
+=======
+>>>>>>> eab6364e4f5e4817a57c01e0b794d420436675f8
 
-  const loadDashboard = useCallback(async (quiet = false) => {
+  const load = useCallback(async (quiet = false) => {
     quiet ? setRefreshing(true) : setLoading(true);
     try {
       const [statsResponse, scansResponse, reportsResponse, lessonsResponse] = await Promise.all([
         dashboardService.getStats(),
-        scanService.list({ page: 1, page_size: 10 }),
-        reportService.list({ page: 1, page_size: 8 }),
-        awarenessService.list({ page: 1, page_size: 8 }),
+        scanService.list({ page: 1, page_size: 20 }),
+        reportService.list({ page: 1, page_size: 20 }),
+        awarenessService.list({ page: 1, page_size: 50 }),
       ]);
       setStats({ ...EMPTY_STATS, ...(statsResponse.data || {}) });
       setScans(scansResponse.data || []);
       setReports(reportsResponse.data || []);
       setLessons(lessonsResponse.data || []);
     } catch (error) {
-      toast.error(error?.message || "Dashboard data could not be loaded.");
+      toast.error(error?.message || "Could not load dashboard.");
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
   }, []);
 
-  useEffect(() => { loadDashboard(); }, [loadDashboard]);
+  useEffect(() => { load(); }, [load]);
 
+<<<<<<< HEAD
   useEffect(() => {
     localStorage.setItem("cybersense-sidebar-collapsed", String(collapsed));
   }, [collapsed]);
@@ -374,5 +396,27 @@ export default function UserDashboard() {
       {activeAction && <ActionModal action={activeAction} onClose={() => setActiveAction(null)} onComplete={() => { setActiveAction(null); loadDashboard(true); }} />}
       {selectedLesson && <div className="fixed inset-0 z-[70] grid place-items-center bg-slate-950/55 p-4 backdrop-blur-sm" onMouseDown={() => setSelectedLesson(null)}><article className="max-h-[85vh] w-full max-w-2xl overflow-y-auto rounded-3xl bg-white p-7 shadow-2xl dark:bg-slate-900" onMouseDown={(event) => event.stopPropagation()}><div className="flex items-start justify-between gap-4"><div><p className="text-xs font-bold uppercase tracking-wider text-violet-600">{selectedLesson.category} · {selectedLesson.duration_minutes || 5} min</p><h2 className="mt-2 text-2xl font-extrabold dark:text-white">{selectedLesson.title}</h2></div><button onClick={() => setSelectedLesson(null)} className="rounded-xl p-2 hover:bg-slate-100 dark:hover:bg-slate-800"><X /></button></div><p className="mt-5 leading-7 text-slate-600 dark:text-slate-300">{selectedLesson.body || selectedLesson.description}</p></article></div>}
     </div>
+=======
+  const path = location.pathname;
+  let content;
+  if (path === "/dashboard/scans") content = <ScanCenter onComplete={() => load(true)} />;
+  else if (path === "/dashboard/activity") content = <RecentScans scans={scans} loading={loading} onScan={() => navigate("/dashboard/scans")} />;
+  else if (path === "/dashboard/reports") content = <UserReports reports={reports} loading={loading} />;
+  else if (path === "/dashboard/training") content = <AwarenessTraining lessons={lessons} loading={loading} />;
+  else if (path === "/dashboard/notifications") content = <NotificationsPage />;
+  else if (path === "/dashboard/profile") content = <ProfilePage />;
+  else if (path === "/dashboard/settings") content = <SettingsPage />;
+  else content = <OverviewPanel user={user} stats={stats} scans={scans} reports={reports} lessons={lessons} loading={loading} />;
+
+  return (
+    <DashboardLayout
+      unread={stats.unreadNotifications}
+      refreshing={refreshing}
+      onRefresh={() => load(true)}
+      onUnreadChange={(delta) => setStats((current) => ({ ...current, unreadNotifications: Math.max(0, current.unreadNotifications + delta) }))}
+    >
+      {content}
+    </DashboardLayout>
+>>>>>>> eab6364e4f5e4817a57c01e0b794d420436675f8
   );
 }
