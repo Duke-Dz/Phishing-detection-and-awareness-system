@@ -46,7 +46,7 @@ export default function ForgotPasswordPage() {
       await authService.forgotPassword(email);
       setSubmittedEmail(email);
       setSent(true);
-      toast.success("Reset link sent to your email.");
+      toast.success("Reset link sent.");
       setCardError(null);
       return true;
     } catch (error) {

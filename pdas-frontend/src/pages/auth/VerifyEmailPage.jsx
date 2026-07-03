@@ -41,7 +41,7 @@ export default function VerifyEmailPage() {
       await authService.verifyEmail({ token: verificationToken });
       clearVerificationCooldown(email);
       setSuccess(true);
-      toast.success("Email verified. You can sign in.");
+      toast.success("Email verified.");
       // Auto redirect to login after 3 seconds
       setTimeout(() => navigate("/login", { replace: true }), 3000);
     } catch (error) {

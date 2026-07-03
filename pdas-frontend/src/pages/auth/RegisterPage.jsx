@@ -22,6 +22,13 @@ import { PASSWORD_RULES } from "../../utils/constants";
 import { evaluatePassword } from "../../utils/passwordPolicy";
 import { setVerificationCooldown } from "../../utils/verificationCooldown";
 
+const REGISTER_ERROR_MESSAGES = {
+  USERNAME_TAKEN: "Username already taken.",
+  EMAIL_IN_USE: "Email already in use.",
+  EMAIL_PENDING_VERIFICATION: "Email already pending verification.",
+  NETWORK_ERROR: "Check your internet connection.",
+};
+
 const registerSchema = z
   .object({
     first_name: z
@@ -140,7 +147,7 @@ export default function RegisterPage() {
       });
       const normalizedEmail = values.email.trim().toLowerCase();
       setVerificationCooldown(normalizedEmail, response.resend_available_in || 120);
-      toast.success("Account created successfully.", {
+      toast.success("Account created. Check your email.", {
         position: "top-center",
       });
       navigate(
@@ -148,15 +155,11 @@ export default function RegisterPage() {
         { replace: true },
       );
     } catch (error) {
-      if (error.code === "NETWORK_ERROR") {
-        setCardError(error.message);
-      } else if (error.message?.toLowerCase().includes("username")) {
-        setCardError("That username is already taken.");
-      } else if (error.message?.toLowerCase().includes("email") || error.message?.toLowerCase().includes("exist")) {
-        setCardError("Email already in use.");
-      } else {
-        setCardError(error.message);
-      }
+      setCardError(
+        REGISTER_ERROR_MESSAGES[error.code] ||
+          error.message ||
+          "We could not create your account. Try again.",
+      );
     }
   };
 
