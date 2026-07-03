@@ -1,10 +1,9 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { KeyRound, Loader2 } from "lucide-react";
-import { useState } from "react";
+import { CheckCircle2, KeyRound, Loader2 } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { z } from "zod";
-import { toast } from "sonner";
 import { AuthPasswordField } from "../../components/auth/AuthPasswordField";
 import { AuthShell } from "../../components/auth/AuthShell";
 import { useAuth } from "../../hooks/useAuth";
@@ -21,6 +20,15 @@ export default function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const [cardError, setCardError] = useState(null);
+  const [loginDestination, setLoginDestination] = useState("");
+
+  useEffect(() => {
+    if (!loginDestination) return undefined;
+    const timer = window.setTimeout(() => {
+      navigate(loginDestination, { replace: true });
+    }, 1000);
+    return () => window.clearTimeout(timer);
+  }, [loginDestination, navigate]);
 
   // DO NOT CHANGE: empty fields validate on submit only
   const {
@@ -43,12 +51,11 @@ export default function LoginPage() {
         password: values.password,
         remember_me: values.remember_me,
       });
-      toast.success("Signed in.");
       const destination =
         location.state?.from?.pathname ||
         ROLE_DESTINATIONS[response.data.role] ||
         "/dashboard";
-      navigate(destination, { replace: true });
+      setLoginDestination(destination);
     } catch (error) {
       setCardError(error.message || "We could not sign you in. Please try again.");
     }
@@ -56,14 +63,14 @@ export default function LoginPage() {
 
   return (
     <AuthShell
-      heading="Welcome back"
-      description="Sign in to access your dashboard"
+      heading={loginDestination ? "Signed in." : "Welcome back"}
+      description={loginDestination ? "Preparing your secure dashboard" : "Sign in to access your dashboard"}
       layout="single"
       showHeaderBrand
       mobileCardMode="full"
       cardError={cardError}
       onClearCardError={() => setCardError(null)}
-      footer={
+      footer={!loginDestination ? (
         <>
           <p className="text-sm text-black">New to CyberSense?</p>
           <button
@@ -75,8 +82,15 @@ export default function LoginPage() {
             Create an account -&gt;
           </button>
         </>
-      }
+      ) : null}
     >
+      {loginDestination ? (
+        <div className="flex min-h-48 flex-col items-center justify-center text-center" role="status" aria-live="polite">
+          <span className="grid h-14 w-14 place-items-center rounded-full bg-emerald-50 text-emerald-600"><CheckCircle2 size={30} strokeWidth={2.25} /></span>
+          <p className="mt-4 text-sm font-semibold text-slate-700">Authentication complete</p>
+          <div className="mt-5 flex items-center gap-2 text-sm text-slate-500"><Loader2 className="animate-spin text-[#0D518C]" size={17} /><span>Loading protected workspace…</span></div>
+        </div>
+      ) : (
       <form onSubmit={handleSubmit(onSubmit)} className="w-full flex flex-col gap-4 sm:gap-5">
         <div>
           <label className="auth-label" htmlFor="login-email">
@@ -160,6 +174,7 @@ export default function LoginPage() {
           {isSubmitting ? "Signing in..." : "Sign in"}
         </button>
       </form>
+      )}
     </AuthShell>
   );
 }

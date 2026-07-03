@@ -1,15 +1,10 @@
 import {
   AlertTriangle,
-  BarChart3,
   Bell,
-  BookOpen,
   CheckCircle2,
   ChevronRight,
   CircleUserRound,
-  FileWarning,
   Globe2,
-  LayoutDashboard,
-  LogOut,
   Mail,
   Menu,
   MessageSquareText,
@@ -27,7 +22,8 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
-import CyberSenseLogo from "../../components/auth/CyberSenseLogo";
+import DashboardSidebar, { DASHBOARD_NAV_ITEMS } from "../../components/dashboard/DashboardSidebar";
+import DashboardSkeleton from "../../components/dashboard/DashboardSkeleton";
 import { useAuth } from "../../hooks/useAuth";
 import { awarenessService } from "../../services/awarenessService";
 import { dashboardService } from "../../services/dashboardService";
@@ -44,14 +40,6 @@ const EMPTY_STATS = {
   totalReports: 0,
   unreadNotifications: 0,
 };
-
-const NAV_ITEMS = [
-  { id: "overview", label: "Overview", helper: "Security snapshot", Icon: LayoutDashboard },
-  { id: "quick-actions", label: "Quick actions", helper: "Scan and report", Icon: ScanLine },
-  { id: "recent-scans", label: "Scan activity", helper: "Latest results", Icon: BarChart3 },
-  { id: "reports", label: "My reports", helper: "Track submissions", Icon: FileWarning },
-  { id: "training", label: "Training", helper: "Build awareness", Icon: BookOpen },
-];
 
 const ACTIONS = [
   { type: "url", title: "Scan URL", helper: "Check a web address", Icon: Globe2, tone: "blue" },
@@ -206,7 +194,9 @@ export default function UserDashboard() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(() => localStorage.getItem("cybersense-sidebar-collapsed") === "true");
+  const [isDesktop, setIsDesktop] = useState(() => window.matchMedia("(min-width: 1024px)").matches);
+  const [activeSection, setActiveSection] = useState("overview");
   const [dark, setDark] = useState(false);
   const [activeAction, setActiveAction] = useState(null);
   const [selectedLesson, setSelectedLesson] = useState(null);
@@ -236,6 +226,52 @@ export default function UserDashboard() {
 
   useEffect(() => { loadDashboard(); }, [loadDashboard]);
 
+  useEffect(() => {
+    localStorage.setItem("cybersense-sidebar-collapsed", String(collapsed));
+  }, [collapsed]);
+
+  useEffect(() => {
+    const media = window.matchMedia("(min-width: 1024px)");
+    const handleChange = (event) => {
+      setIsDesktop(event.matches);
+      if (event.matches) setSidebarOpen(false);
+    };
+    media.addEventListener("change", handleChange);
+    return () => media.removeEventListener("change", handleChange);
+  }, []);
+
+  useEffect(() => {
+    if (!sidebarOpen) return undefined;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = previousOverflow; };
+  }, [sidebarOpen]);
+
+  useEffect(() => {
+    let frame = null;
+    const updateActiveSection = () => {
+      const offset = 120;
+      let current = DASHBOARD_NAV_ITEMS[0].id;
+      DASHBOARD_NAV_ITEMS.forEach(({ id }) => {
+        const section = document.getElementById(id);
+        if (section && section.getBoundingClientRect().top <= offset) current = id;
+      });
+      setActiveSection((value) => value === current ? value : current);
+    };
+    const schedule = () => {
+      if (frame !== null) return;
+      frame = window.requestAnimationFrame(() => { frame = null; updateActiveSection(); });
+    };
+    updateActiveSection();
+    window.addEventListener("scroll", schedule, { passive: true });
+    window.addEventListener("resize", schedule);
+    return () => {
+      if (frame !== null) window.cancelAnimationFrame(frame);
+      window.removeEventListener("scroll", schedule);
+      window.removeEventListener("resize", schedule);
+    };
+  }, []);
+
   const statCards = useMemo(() => [
     { label: "Total Scans", value: stats.totalScans, detail: `+${stats.recentScans} this week`, color: "blue", Icon: ScanLine },
     { label: "Safe", value: stats.safeScans, detail: percent(stats.safeScans, stats.totalScans), color: "emerald", Icon: CheckCircle2 },
@@ -248,6 +284,7 @@ export default function UserDashboard() {
   const displayUsername = user?.username || user?.full_name?.split(/\s+/)[0] || "there";
 
   const scrollTo = (id) => {
+    setActiveSection(id);
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
     setSidebarOpen(false);
   };
@@ -263,36 +300,14 @@ export default function UserDashboard() {
     amber: { line: "bg-amber-500", icon: "bg-amber-50 text-amber-600 dark:bg-amber-500/10 dark:text-amber-300", detail: "text-amber-600 dark:text-amber-300" },
     rose: { line: "bg-rose-500", icon: "bg-rose-50 text-rose-600 dark:bg-rose-500/10 dark:text-rose-300", detail: "text-rose-600 dark:text-rose-300" },
   };
+  const effectiveCollapsed = collapsed && isDesktop;
 
   return (
     <div className={dark ? "dark" : ""}>
       <div className="min-h-screen bg-[#f5f8fc] text-slate-900 transition-colors dark:bg-slate-950 dark:text-slate-100">
-        {sidebarOpen && <button className="fixed inset-0 z-40 bg-slate-950/45 backdrop-blur-sm lg:hidden" onClick={() => setSidebarOpen(false)} aria-label="Close navigation" />}
-        <aside className={`fixed inset-y-0 left-0 z-50 flex flex-col border-r border-slate-200/80 bg-white/95 shadow-xl shadow-slate-900/5 backdrop-blur-xl transition-all duration-300 dark:border-slate-800 dark:bg-slate-900/95 ${collapsed ? "lg:w-[88px]" : "lg:w-[252px]"} ${sidebarOpen ? "translate-x-0 w-[270px]" : "-translate-x-full lg:translate-x-0"}`}>
-          <div className="flex h-20 items-center justify-between border-b border-slate-100 px-5 dark:border-slate-800">
-            <div className={collapsed ? "lg:hidden" : ""}><CyberSenseLogo variant="compact" /></div>
-            <button className="rounded-xl p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 lg:hidden" onClick={() => setSidebarOpen(false)}><X size={20} /></button>
-          </div>
-          <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-6">
-            {!collapsed && <p className="mb-3 px-3 text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400">Workspace</p>}
-            {NAV_ITEMS.map(({ id, label, helper, Icon }, index) => (
-              <button key={id} onClick={() => scrollTo(id)} className={`group flex w-full items-center rounded-2xl px-3 py-3 text-left transition ${index === 0 ? "bg-cyber-50 text-cyber-700 dark:bg-cyber-500/10 dark:text-cyber-200" : "text-slate-600 hover:bg-slate-50 hover:text-slate-950 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white"}`}>
-                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white shadow-sm dark:bg-slate-800"><Icon size={18} /></span>
-                <span className={`ml-3 min-w-0 ${collapsed ? "lg:hidden" : ""}`}><span className="block text-sm font-semibold">{label}</span><span className="block truncate text-xs opacity-60">{helper}</span></span>
-              </button>
-            ))}
-          </nav>
-          <div className="border-t border-slate-100 p-3 dark:border-slate-800">
-            <div className={`mb-2 flex items-center gap-3 rounded-2xl bg-slate-50 p-3 dark:bg-slate-800/70 ${collapsed ? "lg:justify-center" : ""}`}>
-              <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-gradient-to-br from-cyber-600 to-cyber-800 text-sm font-bold text-white">{getInitials(user?.full_name)}</div>
-              <div className={`min-w-0 ${collapsed ? "lg:hidden" : ""}`}><p className="truncate text-sm font-bold">@{displayUsername}</p><p className="truncate text-xs text-slate-500">{user?.full_name || user?.email}</p></div>
-            </div>
-            <button onClick={handleLogout} className={`flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-500 hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-500/10 ${collapsed ? "lg:justify-center" : ""}`}><LogOut size={18} /><span className={collapsed ? "lg:hidden" : ""}>Sign out</span></button>
-            <button onClick={() => setCollapsed((value) => !value)} className="mt-1 hidden w-full items-center justify-center rounded-xl py-2 text-xs font-semibold text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 lg:flex">{collapsed ? "Expand" : "Collapse sidebar"}</button>
-          </div>
-        </aside>
+        <DashboardSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} collapsed={effectiveCollapsed} onToggleCollapse={() => setCollapsed((value) => !value)} activeSection={activeSection} onSectionChange={scrollTo} onSignOut={handleLogout} />
 
-        <div className={`transition-[padding] duration-300 ${collapsed ? "lg:pl-[88px]" : "lg:pl-[252px]"}`}>
+        <div className={`transition-[padding] duration-[420ms] ease-[cubic-bezier(0.22,1,0.36,1)] ${effectiveCollapsed ? "lg:pl-[84px]" : "lg:pl-64"}`}>
           <header className="sticky top-0 z-30 flex h-20 items-center justify-between border-b border-slate-200/80 bg-white/85 px-4 backdrop-blur-xl dark:border-slate-800 dark:bg-slate-900/85 sm:px-7">
             <div className="flex items-center gap-3">
               <button onClick={() => setSidebarOpen(true)} className="rounded-xl p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 lg:hidden" aria-label="Open navigation"><Menu size={22} /></button>
@@ -307,6 +322,8 @@ export default function UserDashboard() {
           </header>
 
           <main className="mx-auto max-w-[1500px] space-y-10 px-4 py-7 sm:px-7 lg:px-9">
+            {loading ? <DashboardSkeleton /> : (
+            <>
             <section id="overview" className="scroll-mt-28 overflow-hidden rounded-[28px] bg-gradient-to-br from-slate-950 via-cyber-900 to-cyber-700 p-6 text-white shadow-2xl shadow-cyber-950/15 sm:p-8">
               <div className="flex flex-col justify-between gap-7 md:flex-row md:items-center">
                 <div><p className="mb-2 text-sm font-semibold text-cyan-200">Welcome back</p><h1 className="text-3xl font-extrabold tracking-tight sm:text-4xl">Good {new Date().getHours() < 12 ? "morning" : new Date().getHours() < 18 ? "afternoon" : "evening"}, @{displayUsername}.</h1><p className="mt-3 max-w-2xl text-sm leading-6 text-slate-300 sm:text-base">Monitor your digital safety, inspect suspicious content, and stay ahead of emerging threats.</p></div>
@@ -349,6 +366,8 @@ export default function UserDashboard() {
                 {lessons.length ? lessons.slice(0, 4).map((lesson) => <div key={lesson.content_id} className="flex flex-col gap-4 border-b border-slate-100 px-6 py-5 last:border-0 dark:border-slate-800 sm:flex-row sm:items-center"><span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-violet-50 text-violet-600 dark:bg-violet-500/10 dark:text-violet-300"><BookOpen size={20} /></span><div className="min-w-0 flex-1"><p className="font-bold text-slate-900 dark:text-white">{lesson.title}</p><p className="mt-1 flex flex-wrap gap-x-3 text-xs font-semibold capitalize text-slate-500"><span>{lesson.category}</span><span>{lesson.difficulty}</span><span>{lesson.duration_minutes || 5} min</span></p></div><button onClick={() => setSelectedLesson(lesson)} className="flex items-center justify-center gap-1.5 rounded-xl bg-violet-600 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-violet-700"><Play size={14} /> Start</button></div>) : <div className="px-6 py-14 text-center text-sm text-slate-500">Training content will appear here when published.</div>}
               </div>
             </section>
+            </>
+            )}
           </main>
         </div>
       </div>
