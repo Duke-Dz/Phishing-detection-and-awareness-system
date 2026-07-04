@@ -1,4 +1,5 @@
 const express = require("express");
+const crypto = require("crypto");
 const compression = require("compression");
 const cors = require("cors");
 const helmet = require("helmet");
@@ -60,18 +61,50 @@ app.use(cors({
 }));
 app.use(maintenanceMiddleware);
 
-const limiter = (windowMs, limit, message) => rateLimit({
+const limiter = (windowMs, limit, message, overrides = {}) => rateLimit({
   windowMs,
   limit,
   standardHeaders: true,
   legacyHeaders: false,
-  message: { success: false, message },
+  message: { success: false, code: "RATE_LIMITED", message },
+  handler: (req, res, _next, options) => {
+    const resetTime = req.rateLimit?.resetTime;
+    const retryAfterSeconds = resetTime
+      ? Math.max(1, Math.ceil((resetTime.getTime() - Date.now()) / 1000))
+      : Math.ceil(windowMs / 1000);
+    res.status(options.statusCode).json({
+      ...options.message,
+      retry_after_seconds: retryAfterSeconds,
+    });
+  },
+  ...overrides,
 });
+
+const passwordResetEmailKey = (req) => {
+  const email = String(req.body?.email || "").trim().toLowerCase();
+  return `password-reset:${crypto.createHash("sha256").update(email).digest("hex")}`;
+};
 
 app.use(limiter(15 * 60 * 1000, 100, "Too many requests, please slow down."));
 app.use("/api/auth/login", limiter(15 * 60 * 1000, 10, "Too many login attempts, try again later."));
 app.use("/api/auth/register", limiter(60 * 60 * 1000, 5, "Too many accounts created from this IP."));
-app.use("/api/auth/forgot-password", limiter(60 * 60 * 1000, 3, "Too many password reset requests, try again later."));
+app.use("/api/auth/forgot-password", limiter(
+  60 * 60 * 1000,
+  10,
+  "Too many password reset requests from this network, try again later.",
+));
+app.use("/api/auth/forgot-password", limiter(
+  60 * 60 * 1000,
+  3,
+  "Too many password reset requests for this account, try again later.",
+  { keyGenerator: passwordResetEmailKey },
+));
+app.use("/api/auth/forgot-password", limiter(
+  60 * 1000,
+  1,
+  "Please wait before requesting another password reset link.",
+  { keyGenerator: passwordResetEmailKey },
+));
 app.use("/api/scan", limiter(60 * 1000, 20, "Too many scan requests, slow down."));
 app.use("/api/reports", limiter(60 * 1000, 20, "Too many report requests, slow down."));
 

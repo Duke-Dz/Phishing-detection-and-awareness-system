@@ -7,19 +7,29 @@ const formatDate = (value = new Date()) => new Date(value).toLocaleString("en-KE
   timeZone: "Africa/Nairobi",
 });
 
-const result = ({ subject, title = subject, preheader, body, text, tone }) => ({
-  subject,
-  html: layout({ title, preheader, body, tone }),
-  text: [
-    ...text.filter(Boolean),
-    "",
-    "CyberSense Security",
-    `Support: ${config.mail.support}`,
-    "Privacy policy: {{PRIVACY_URL}}",
-    "Unsubscribe from non-essential emails: {{UNSUBSCRIBE_URL}}",
-    "Account and critical security messages may still be sent when necessary.",
-  ].join("\n"),
-});
+const result = ({ subject, title = subject, preheader, body, text, tone, essential = false }) => {
+  const renderedHtml = layout({ title, preheader, body, tone });
+  const html = essential
+    ? renderedHtml.replace(
+        /<span[^>]*>[^<]*<\/span><a href="\{\{UNSUBSCRIBE_URL\}\}"[^>]*>Unsubscribe from non-essential emails<\/a>/,
+        "",
+      )
+    : renderedHtml;
+  return {
+    subject,
+    html,
+    text: [
+      ...text.filter(Boolean),
+      "",
+      "CyberSense Security",
+      `Support: ${config.mail.support}`,
+      "Privacy policy: {{PRIVACY_URL}}",
+      !essential && "Unsubscribe from non-essential emails: {{UNSUBSCRIBE_URL}}",
+      "Account and critical security messages may still be sent when necessary.",
+    ].filter(Boolean).join("\n"),
+    essential,
+  };
+};
 
 module.exports = {
   phishingAlert({
@@ -82,15 +92,21 @@ module.exports = {
         safeUrl(verificationUrl),
         "If you did not create this account, no action is required.",
       ],
+      essential: true,
     });
   },
 
-  passwordReset({ resetUrl, userName, expiryMinutes = config.passwordResetTokenExpiryMinutes }) {
-    const subject = "CyberSense password reset request";
+  passwordReset({
+    resetUrl,
+    userName,
+    expiryMinutes = config.passwordResetTokenExpiryMinutes,
+  }) {
+    const subject = "Reset your CyberSense password";
     const body = greeting(userName) +
       paragraph("We received a request to reset the password for your CyberSense account. Use the secure link below to choose a new password.") +
       button(resetUrl, "Reset my password") +
-      alert(`This link expires in ${expiryMinutes} minutes and can be used only once. If you did not request a password reset, you can safely ignore this message.`, "warning");
+      paragraph(`This secure link expires in ${expiryMinutes} minutes and can be used only once. Never share it with anyone.`) +
+      paragraph("If you did not request this reset, you can safely ignore this email. Your password has not been changed.");
     return result({
       subject,
       preheader: `Your secure password-reset link expires in ${expiryMinutes} minutes.`,
@@ -100,8 +116,10 @@ module.exports = {
         `Hello ${userName},`,
         `Use this secure link to reset your password. It expires in ${expiryMinutes} minutes:`,
         safeUrl(resetUrl),
-        "If you did not request this, no action is required.",
+        "Never share this reset link with anyone.",
+        "If you did not request this, you can ignore this email. Your password has not been changed.",
       ],
+      essential: true,
     });
   },
 
@@ -120,6 +138,7 @@ module.exports = {
         "Your CyberSense password was changed successfully.",
         "If you do not recognize this activity, reset your password and contact support immediately.",
       ],
+      essential: true,
     });
   },
 
@@ -214,6 +233,7 @@ module.exports = {
         "If this was not you, secure your account:",
         safeUrl(resetUrl),
       ],
+      essential: true,
     });
   },
 
@@ -238,6 +258,7 @@ module.exports = {
         "If this was not you, secure your account:",
         safeUrl(resetUrl),
       ],
+      essential: true,
     });
   },
 };

@@ -75,7 +75,7 @@ const verifyConnection = async () => {
   }
 };
 
-const sendMail = async ({ to, subject, html, text }) => {
+const sendMail = async ({ to, subject, html, text, essential = false }) => {
   const transport = createTransporter();
   if (!transport) {
     logger.debug("mail.send.skipped", { reason: "not_configured", recipient_domain: recipientDomain(to) });
@@ -84,12 +84,16 @@ const sendMail = async ({ to, subject, html, text }) => {
 
   state = { ...state, status: "sending", last_attempt_at: new Date().toISOString() };
   try {
-    const unsubscribeToken = generateUnsubscribeToken(to);
     const frontendUrl = config.frontendUrl.replace(/\/$/, "");
-    const unsubscribeUrl = `${frontendUrl}/unsubscribe?email=${encodeURIComponent(to)}&token=${encodeURIComponent(unsubscribeToken)}`;
+    const unsubscribeUrl = essential
+      ? null
+      : `${frontendUrl}/unsubscribe?email=${encodeURIComponent(to)}&token=${encodeURIComponent(generateUnsubscribeToken(to))}`;
     const replacements = (value) => value
-      ?.replace(/\{\{UNSUBSCRIBE_URL\}\}/g, unsubscribeUrl)
+      ?.replace(/\{\{UNSUBSCRIBE_URL\}\}/g, unsubscribeUrl || "")
       .replace(/\{\{PRIVACY_URL\}\}/g, `${frontendUrl}/privacy`);
+    const headers = essential
+      ? {}
+      : { "List-Unsubscribe": `<${unsubscribeUrl}>` };
     const info = await withDeadline(transport.sendMail({
       from: config.mail.from,
       to,
@@ -97,12 +101,10 @@ const sendMail = async ({ to, subject, html, text }) => {
       html: replacements(html),
       text: replacements(text),
       attachments: [brandLogo],
-      headers: {
-        "List-Unsubscribe": `<${unsubscribeUrl}>`,
-      },
+      headers,
     }), 20000, "SMTP send timed out");
     state = { ...state, status: "available", last_success_at: new Date().toISOString(), last_error: null };
-    logger.debug("mail.send.succeeded", { message_id: info.messageId, recipient_domain: recipientDomain(to) });
+    logger.info("mail.send.succeeded", { message_id: info.messageId, recipient_domain: recipientDomain(to) });
     return info;
   } catch (error) {
     resetTransporter();

@@ -43,7 +43,7 @@ const list = (items = []) => items.length
   ? `<ul style="margin:18px 0;padding-left:22px;color:${brand.text};font-size:14px;line-height:1.7">${items.map((item) => `<li style="margin-bottom:7px">${escapeHtml(item)}</li>`).join("")}</ul>`
   : "";
 
-const brandHeader = () => `<tr><td style="padding:24px 32px;text-align:left;background:#fff;border-bottom:1px solid ${brand.border}"><img src="cid:${brand.logoCid}" width="210" alt="${brand.name}" style="display:block;width:210px;max-width:100%;height:auto;border:0"><div style="margin-top:8px;font-size:11px;line-height:16px;letter-spacing:.08em;text-transform:uppercase;color:${brand.muted}">Phishing detection and security awareness</div></td></tr>`;
+const brandHeader = () => `<tr><td style="padding:22px 32px;text-align:center;background:#fff;border-bottom:1px solid ${brand.border}"><img src="cid:${brand.logoCid}" width="190" alt="${brand.name}" style="display:block;width:190px;max-width:100%;height:auto;margin:0 auto;border:0"></td></tr>`;
 
 const layout = ({ title, preheader, body }) => {
   const hiddenPreview = `${escapeHtml(preheader || title)}${"&nbsp;&zwnj;".repeat(30)}`;

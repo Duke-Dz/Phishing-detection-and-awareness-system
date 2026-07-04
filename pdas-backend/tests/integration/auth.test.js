@@ -81,6 +81,26 @@ test("Auth Endpoints", async (t) => {
     }
   });
 
+  await t.test("POST /api/auth/forgot-password enforces the server resend cooldown", async () => {
+    const first = await agent.post("/api/auth/forgot-password", {
+      body: { email: testUser.email }
+    });
+
+    assert.equal(first.status, 200);
+    assert.equal(first.body.success, true);
+    assert.equal(first.body.resend_available_in, 60);
+    assert.match(first.body.message, /if that email is registered/i);
+
+    const repeated = await agent.post("/api/auth/forgot-password", {
+      body: { email: testUser.email }
+    });
+
+    assert.equal(repeated.status, 429);
+    assert.equal(repeated.body.code, "RATE_LIMITED");
+    assert.ok(repeated.body.retry_after_seconds > 0);
+    assert.ok(repeated.body.retry_after_seconds <= 60);
+  });
+
   await t.test("POST /api/auth/resend-verification enforces a two-minute cooldown", async () => {
     mockDb.PendingRegistration.records = [{
       email: "cooldown@example.com",

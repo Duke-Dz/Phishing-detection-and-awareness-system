@@ -18,6 +18,7 @@
     "dev:worker": "nodemon worker.js",
     "db:migrate": "sequelize-cli db:migrate",
     "db:repair-security-events": "node scripts/repair-security-events.js",
+    "mail:test": "node scripts/test-mail.js",
     "db:seed": "sequelize-cli db:seed:all",
     "db:undo": "sequelize-cli db:migrate:undo"
   },

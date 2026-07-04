@@ -67,7 +67,7 @@ const register = async (req, res) => {
 
   if (existingPendingEmail) {
     throw createError(
-      "Email already pending verification.",
+      "Registration pending. Check your email to verify your account.",
       409,
       "EMAIL_PENDING_VERIFICATION",
     );
@@ -247,6 +247,7 @@ const logout = async (req, res) => {
 };
 
 const forgotPassword = async (req, res) => {
+  const requestStartedAt = Date.now();
   const email = normalizeEmail(req.body.email);
   const user = await User.findOne({ where: { email } });
 
@@ -275,12 +276,24 @@ const forgotPassword = async (req, res) => {
 
     logSecurityEvent(user.user_id, 'PASSWORD_RESET_REQUESTED', req);
 
-    mailService.sendMail({ to: user.email, ...template }).catch(() => {});
+    mailService.sendMail({ to: user.email, ...template }).catch((error) => {
+      logger.warn("password_reset.delivery_failed", {
+        user_id: user.user_id,
+        recipient_domain: user.email.split("@")[1] || "invalid",
+        error,
+      });
+    });
+  }
+
+  const remainingDelay = config.passwordResetResponseDelayMs - (Date.now() - requestStartedAt);
+  if (remainingDelay > 0) {
+    await new Promise((resolve) => setTimeout(resolve, remainingDelay));
   }
 
   res.json({
     success: true,
     message: "If that email is registered, a password reset link has been sent.",
+    resend_available_in: 60,
   });
 };
 
