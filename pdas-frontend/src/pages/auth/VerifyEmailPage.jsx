@@ -12,6 +12,14 @@ import {
   setVerificationCooldown,
 } from "../../utils/verificationCooldown";
 
+const maskEmail = (value) => {
+  const [localPart, domain] = value.split("@");
+  if (!localPart || !domain) return value;
+  const visibleLength =
+    localPart.length <= 2 ? 1 : Math.min(4, localPart.length - 1);
+  return `${localPart.slice(0, visibleLength)}****@${domain}`;
+};
+
 export default function VerifyEmailPage() {
   const [searchParams] = useSearchParams();
   const email = searchParams.get("email") || "";
@@ -69,7 +77,7 @@ export default function VerifyEmailPage() {
       const seconds = response.resend_available_in || 120;
       setVerificationCooldown(email, seconds);
       setResendCooldown(seconds);
-      toast.success("A new verification link has been sent.", { position: "top-center" });
+      toast.success("A new verification link has been sent.");
     } catch (error) {
       if (error.code === "VERIFICATION_RESEND_COOLDOWN" && error.retryAfter > 0) {
         setVerificationCooldown(email, error.retryAfter);
@@ -171,57 +179,57 @@ export default function VerifyEmailPage() {
   return (
     <AuthShell
       heading="Check your email"
-      description={`We sent a secure verification link to ${email}.`}
+      description={`We sent a verification link to ${maskEmail(email)}.`}
       layout="single"
       showHeaderBrand
       cardError={cardError}
       onClearCardError={() => setCardError(null)}
       footer={
         <>
-          <p className="text-sm text-black">Wrong email?</p>
+          <p className="text-sm text-black">Not your email?</p>
           <Link to="/register" className="auth-bottom-link">
-            Start over -&gt;
+            Use a different address -&gt;
           </Link>
         </>
       }
     >
-      <div className="space-y-4">
-        <div className="flex justify-center pt-2">
-          <div className="w-16 h-16 rounded-full bg-cyber-50 flex items-center justify-center border-2 border-cyber-100 shadow-inner">
-            <Mail className="w-8 h-8 text-cyber-600" />
+      <div className="space-y-3.5">
+        <div className="flex justify-center">
+          <div className="flex h-14 w-14 items-center justify-center rounded-full border border-cyber-100 bg-cyber-50">
+            <Mail className="h-7 w-7 text-cyber-600" />
           </div>
         </div>
         
-        <p className="text-[14px] text-gray-600 text-center leading-relaxed">
-          Click the link in the email to activate your account. If you don't see it, check your spam folder.
+        <p className="mx-auto max-w-sm text-center text-sm leading-6 text-slate-600">
+          Open the verification link to activate your account. If it does not arrive, check your spam folder.
         </p>
 
-
-
-        <div className="pt-2">
+        <div className="flex min-h-11 items-center justify-center pt-1">
+          {resendCooldown > 0 && !resending ? (
+            <p className="text-center text-sm font-semibold text-slate-500" aria-live="polite">
+              Resend available in{" "}
+              <span className="tabular-nums text-cyber-700">
+                {formatCooldown(resendCooldown)}
+              </span>
+            </p>
+          ) : (
           <button
             type="button"
             onClick={handleResend}
-            disabled={resending || resendCooldown > 0}
-            className="auth-btn-secondary"
+            disabled={resending}
+            className="auth-btn-secondary min-h-11"
           >
             {resending ? (
               <span className="flex items-center justify-center gap-2">
                 <RotateCw size={16} className="animate-spin" />
                 Sending...
               </span>
-            ) : resendCooldown > 0 ? (
-              `Resend available in ${formatCooldown(resendCooldown)}`
             ) : (
-              "Resend verification link"
+              "Resend verification email"
             )}
           </button>
+          )}
         </div>
-        {resendCooldown > 0 && (
-          <p className="text-center text-xs font-medium text-slate-500">
-            For account security, another link can be requested after the timer ends.
-          </p>
-        )}
       </div>
     </AuthShell>
   );

@@ -1,4 +1,4 @@
-import { AlertCircle, X } from "lucide-react";
+import { AlertCircle } from "lucide-react";
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { createPortal } from "react-dom";
@@ -23,25 +23,16 @@ export const CardErrorToast = ({ message, onClose }) => {
   const toastContent = (
     <AnimatePresence>
       {message && (
-        <div className="fixed top-4 left-1/2 -translate-x-1/2 w-full max-w-xs px-4 z-[9999] pointer-events-none">
+        <div className="fixed left-1/2 top-4 z-[9999] w-max max-w-[calc(100vw-2rem)] -translate-x-1/2 pointer-events-none">
           <motion.div
             initial={{ y: -20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: -20, opacity: 0 }}
             transition={{ duration: 0.3, ease: "easeOut" }}
-            className="flex items-center gap-3 bg-white border border-red-100 shadow-xl rounded-xl px-4 py-3 text-sm text-gray-800 pointer-events-auto"
+            className="flex max-w-full items-center gap-2.5 rounded-xl border-[1.5px] border-red-300 bg-white px-3.5 py-2.5 text-sm text-gray-900 shadow-[0_10px_30px_rgba(15,23,42,0.14)] pointer-events-auto"
           >
-            <div className="w-8 h-8 rounded-full bg-red-500 flex items-center justify-center shrink-0">
-              <AlertCircle className="w-4 h-4 text-white" />
-            </div>
-            <span className="flex-1 leading-snug">{message}</span>
-            <button
-              onClick={onClose}
-              className="shrink-0 transition-colors"
-              aria-label="Dismiss error"
-            >
-              <X className="w-4 h-4 text-gray-400 hover:text-gray-600" />
-            </button>
+            <AlertCircle className="h-[18px] w-[18px] shrink-0 text-red-500" strokeWidth={2.25} />
+            <span className="min-w-0 leading-snug">{message}</span>
           </motion.div>
         </div>
       )}

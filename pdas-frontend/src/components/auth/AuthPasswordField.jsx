@@ -52,7 +52,7 @@ export const AuthPasswordField = ({
       <div className="auth-field-wrap">
         <span
           className="auth-field-icon"
-          style={{ color: visible ? "#0D518C" : undefined, transition: "color 0.2s ease" }}
+          style={{ color: visible ? "#000000" : undefined, transition: "color 0.2s ease" }}
         >
           <LockIcon size={15} unlocked={visible} />
         </span>

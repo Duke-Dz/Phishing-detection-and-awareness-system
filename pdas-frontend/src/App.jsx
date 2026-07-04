@@ -10,14 +10,15 @@ function App() {
         <AppRouter />
       </AuthProvider>
       <Toaster 
-        position="bottom-center" 
+        position="top-center"
+        offset="1rem"
+        mobileOffset="1rem"
         richColors 
-        closeButton 
         theme="light"
         toastOptions={{
           style: {
             fontFamily: "Inter, sans-serif",
-            fontSize: "0.95rem"
+            fontSize: "0.875rem"
           },
           className: "cyber-toast"
         }}

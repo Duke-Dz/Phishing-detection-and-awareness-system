@@ -25,7 +25,8 @@ import { setVerificationCooldown } from "../../utils/verificationCooldown";
 const REGISTER_ERROR_MESSAGES = {
   USERNAME_TAKEN: "Username already taken.",
   EMAIL_IN_USE: "Email already in use.",
-  EMAIL_PENDING_VERIFICATION: "Email already pending verification.",
+  EMAIL_PENDING_VERIFICATION:
+    "Registration pending. Check your email to verify your account.",
   NETWORK_ERROR: "Check your internet connection.",
 };
 
@@ -147,9 +148,7 @@ export default function RegisterPage() {
       });
       const normalizedEmail = values.email.trim().toLowerCase();
       setVerificationCooldown(normalizedEmail, response.resend_available_in || 120);
-      toast.success("Account created. Check your email.", {
-        position: "top-center",
-      });
+      toast.success("Account created. Check your email.");
       navigate(
         `/verify-email?email=${encodeURIComponent(normalizedEmail)}`,
         { replace: true },
