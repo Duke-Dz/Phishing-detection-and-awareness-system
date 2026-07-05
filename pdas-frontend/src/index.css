@@ -1280,10 +1280,9 @@ input[type="password"].auth-field {
   }
 
   .auth-single-panel--mobile-full.auth-glass-card {
-    min-height: clamp(34rem, 82svh, 43rem);
+    min-height: min(44rem, calc(100svh - 2rem));
     justify-content: center !important;
-    padding: clamp(1.45rem, 3.2svh, 1.85rem) 0.95rem
-      clamp(1.55rem, 3.5svh, 2rem) !important;
+    padding: clamp(1.5rem, 3.2svh, 2rem) 0.95rem clamp(1.6rem, 3.5svh, 2.15rem) !important;
   }
 
   .auth-single-panel--mobile-full .auth-heading,
@@ -1491,9 +1490,9 @@ input[type="password"].auth-field {
   }
 
   .auth-single-panel--mobile-full.auth-glass-card {
-    min-height: clamp(36rem, 68svh, 44rem);
+    min-height: min(44rem, calc(100svh - 4rem));
     justify-content: center !important;
-    padding: 1.8rem 1.35rem 2rem !important;
+    padding: 2rem 1.35rem 2.15rem !important;
   }
 }
 @media (max-width: 380px) {
