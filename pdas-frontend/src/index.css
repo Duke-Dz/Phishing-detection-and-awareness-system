@@ -1285,8 +1285,8 @@ input[type="password"].auth-field {
     padding: clamp(1.5rem, 3.2svh, 2rem) 0.95rem clamp(1.6rem, 3.5svh, 2.15rem) !important;
   }
   .auth-login-panel.auth-single-panel--mobile-full.auth-glass-card {
-    justify-content: space-evenly !important;
-    row-gap: clamp(0.65rem, 1.8svh, 1.15rem);
+    justify-content: center !important;
+    row-gap: clamp(1.35rem, 3svh, 1.9rem);
   }
 
   .auth-login-panel .auth-logo-header,
@@ -1297,8 +1297,12 @@ input[type="password"].auth-field {
   }
 
   .auth-login-panel .auth-logo-header {
-    margin-bottom: 0 !important;
+    margin-bottom: -0.35rem !important;
     padding-top: 0 !important;
+  }
+
+  .auth-login-panel > header {
+    margin-top: -0.25rem !important;
   }
 
   .auth-login-panel > .auth-shell-body {
@@ -1526,7 +1530,8 @@ input[type="password"].auth-field {
   }
 
   .auth-login-panel.auth-single-panel--mobile-full.auth-glass-card {
-    justify-content: space-evenly !important;
+    justify-content: center !important;
+    row-gap: clamp(1.45rem, 2.4svh, 2rem);
   }
 }
 @media (max-width: 380px) {
