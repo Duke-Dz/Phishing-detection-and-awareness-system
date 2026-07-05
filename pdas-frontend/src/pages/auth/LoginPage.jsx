@@ -11,7 +11,11 @@ import { useAuth } from "../../hooks/useAuth";
 import { ROLE_DESTINATIONS } from "../../utils/constants";
 
 const loginSchema = z.object({
-  email: z.string().trim().min(1, "Enter your email").email("Enter a valid email address"),
+  email: z
+    .string()
+    .trim()
+    .min(1, "Enter your email")
+    .email("Enter a valid email address"),
   password: z.string().min(1, "Enter your password"),
   remember_me: z.boolean().optional(),
 });
@@ -47,14 +51,16 @@ export default function LoginPage() {
         location.state?.from?.pathname ||
         ROLE_DESTINATIONS[response.data.role] ||
         "/dashboard";
-      toast.success("Signed in successfully.", {
+      toast.success("Signed in.", {
         icon: <CheckCircle2 size={18} strokeWidth={2.25} />,
         duration: 1500,
       });
       await new Promise((resolve) => window.setTimeout(resolve, 900));
       navigate(destination, { replace: true });
     } catch (error) {
-      setCardError(error.message || "We could not sign you in. Please try again.");
+      setCardError(
+        error.message || "We could not sign you in. Please try again.",
+      );
     }
   };
 
@@ -81,7 +87,10 @@ export default function LoginPage() {
         </>
       }
     >
-      <form onSubmit={handleSubmit(onSubmit)} className="w-full flex flex-col gap-4 sm:gap-5">
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        className="w-full flex flex-col gap-4 sm:gap-5"
+      >
         <div>
           <label className="auth-label" htmlFor="login-email">
             Email address
