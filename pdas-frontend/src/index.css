@@ -1280,7 +1280,7 @@ input[type="password"].auth-field {
   }
 
   .auth-single-panel--mobile-full.auth-glass-card {
-    padding: 0.95rem 0.95rem 1rem !important;
+    padding: 1.2rem 0.95rem 1.25rem !important;
   }
 
   .auth-single-panel--mobile-full .auth-heading,
