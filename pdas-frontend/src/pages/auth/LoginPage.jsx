@@ -71,6 +71,7 @@ export default function LoginPage() {
       layout="single"
       showHeaderBrand
       mobileCardMode="full"
+      panelClassName="auth-login-panel"
       cardError={cardError}
       onClearCardError={() => setCardError(null)}
       footer={

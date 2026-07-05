@@ -48,12 +48,12 @@ export const AuthShell = ({
         )}
       </header>
 
-      {/* FIX 1: removed flex-1, flex, flex-col, justify-center — was stretching this
-               div to fill all remaining card height, creating fake whitespace */}
-      <div className="mt-3.5 w-full min-w-0 sm:mt-4">{children}</div>
+      <div className="auth-shell-body mt-3.5 w-full min-w-0 sm:mt-4">
+        {children}
+      </div>
 
       {footer && (
-        <div className="w-full border-t border-slate-200/60 pt-3 mt-4">
+        <div className="auth-shell-footer w-full border-t border-slate-200/60 pt-3 mt-4">
           <div className="auth-footer-pill w-full flex items-center justify-center text-sm">
             {footer}
           </div>
@@ -76,7 +76,10 @@ export const AuthShell = ({
                 className="auth-form-enter auth-glass-card relative w-full max-w-[24rem] px-5 py-5 sm:max-w-[26rem] sm:px-7 sm:py-7"
                 style={{ borderRadius: "var(--auth-card-radius)" }}
               >
-                <CardErrorToast message={cardError} onClose={onClearCardError} />
+                <CardErrorToast
+                  message={cardError}
+                  onClose={onClearCardError}
+                />
                 {showHeaderBrand && (
                   <div className="mb-4 flex w-full justify-center lg:hidden">
                     <CyberSenseLogo variant="compact" className="h-10 w-auto" />

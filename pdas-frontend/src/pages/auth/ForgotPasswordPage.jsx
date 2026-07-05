@@ -28,13 +28,11 @@ export default function ForgotPasswordPage() {
   const location = useLocation();
   const defaultEmail = location.state?.email || "";
 
-
   const [sent, setSent] = useState(false);
   const [submittedEmail, setSubmittedEmail] = useState(defaultEmail);
   const [resendCountdown, setResendCountdown] = useState(0);
   const [cardError, setCardError] = useState(null);
 
-  // DO NOT CHANGE: empty fields validate on submit only
   const {
     register,
     handleSubmit,
@@ -59,7 +57,9 @@ export default function ForgotPasswordPage() {
       setCardError(null);
       return true;
     } catch (error) {
-      setCardError(error.message || "We could not process the password-reset request.");
+      setCardError(
+        error.message || "We could not process the password-reset request.",
+      );
       return false;
     }
   };
@@ -89,7 +89,7 @@ export default function ForgotPasswordPage() {
       }
       layout="single"
       showHeaderBrand
-      mobileCardMode="full"
+      mobileCardMode="standard"
       cardError={cardError}
       onClearCardError={() => setCardError(null)}
       footer={
@@ -129,44 +129,46 @@ export default function ForgotPasswordPage() {
           </button>
         </div>
       ) : (
-
-          <form onSubmit={handleSubmit(onSubmit)} className="w-full flex flex-col gap-4 sm:gap-5">
-            <div>
-              <label className="auth-label" htmlFor="forgot-email">
-                Email address
-              </label>
-              <div className="auth-field-wrap">
-                <span className="auth-field-icon">
-                  <AtSign size={15} aria-hidden="true" />
-                </span>
-                <input
-                  id="forgot-email"
-                  {...register("email")}
-                  type="email"
-                  autoComplete="email"
-                  autoCapitalize="none"
-                  spellCheck={false}
-                  placeholder="you@example.com"
-                  required
-                  className="auth-field auth-field-has-icon"
-                />
-              </div>
+        <form
+          onSubmit={handleSubmit(onSubmit)}
+          className="w-full flex flex-col gap-4 sm:gap-5"
+        >
+          <div>
+            <label className="auth-label" htmlFor="forgot-email">
+              Email address
+            </label>
+            <div className="auth-field-wrap">
+              <span className="auth-field-icon">
+                <AtSign size={15} aria-hidden="true" />
+              </span>
+              <input
+                id="forgot-email"
+                {...register("email")}
+                type="email"
+                autoComplete="email"
+                autoCapitalize="none"
+                spellCheck={false}
+                placeholder="you@example.com"
+                required
+                className="auth-field auth-field-has-icon"
+              />
             </div>
+          </div>
 
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="auth-btn-primary"
-            >
-              {isSubmitting ? (
-                <Loader2 className="animate-spin" size={16} />
-              ) : (
-                <Send size={16} />
-              )}
-              {isSubmitting ? "Sending link..." : "Send reset link"}
-              {!isSubmitting && <ArrowRight size={16} />}
-            </button>
-          </form>
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="auth-btn-primary"
+          >
+            {isSubmitting ? (
+              <Loader2 className="animate-spin" size={16} />
+            ) : (
+              <Send size={16} />
+            )}
+            {isSubmitting ? "Sending link..." : "Send reset link"}
+            {!isSubmitting && <ArrowRight size={16} />}
+          </button>
+        </form>
       )}
     </AuthShell>
   );
