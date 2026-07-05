@@ -51,7 +51,7 @@ export default function LoginPage() {
         location.state?.from?.pathname ||
         ROLE_DESTINATIONS[response.data.role] ||
         "/dashboard";
-      toast.success("Signed in.", {
+      toast.success("Sign in successful.", {
         icon: <CheckCircle2 size={18} strokeWidth={2.25} />,
         duration: 1500,
       });
