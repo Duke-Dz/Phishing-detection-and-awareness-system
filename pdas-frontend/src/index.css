@@ -1403,12 +1403,12 @@ input[type="password"].auth-field {
     gap: 0.5rem !important;
   }
 
-  .auth-logo-compact > div:first-of-type {
-    width: 5 !important;
+  .auth-login-panel .auth-logo-compact > div:first-of-type {
+    width: 5.75rem !important;
     height: 5.75rem !important;
   }
 
-  .auth-logo-wordmark {
+  .auth-login-panel .auth-logo-wordmark {
     font-size: clamp(1.5rem, 6.5vw, 1.75rem) !important;
     letter-spacing: -0.04em !important;
   }
@@ -1636,12 +1636,12 @@ input[type="password"].auth-field {
 }
 
 @media (max-width: 380px) {
-  .auth-logo-compact > div:first-of-type {
+  .auth-login-panel .auth-logo-compact > div:first-of-type {
     width: 5rem !important;
     height: 5rem !important;
   }
 
-  .auth-logo-wordmark {
+  .auth-login-panel .auth-logo-wordmark {
     font-size: 1.38rem !important;
   }
 
