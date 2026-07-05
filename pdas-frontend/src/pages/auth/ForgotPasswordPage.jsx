@@ -90,6 +90,7 @@ export default function ForgotPasswordPage() {
       layout="single"
       showHeaderBrand
       mobileCardMode="standard"
+      panelClassName="auth-forgot-panel"
       cardError={cardError}
       onClearCardError={() => setCardError(null)}
       footer={

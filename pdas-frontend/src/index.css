@@ -1661,7 +1661,7 @@ input[type="password"].auth-field {
 }
 /* Premium mobile login layout */
 @media (max-width: 640px) {
-  .auth-single-shell {
+  .auth-single-shell:has(.auth-login-panel) {
     align-content: start !important;
     padding-top: 1.5rem !important;
     padding-bottom: calc(1rem + env(safe-area-inset-bottom)) !important;
@@ -1744,7 +1744,81 @@ input[type="password"].auth-field {
     font-size: 1.48rem !important;
   }
 }
+/* Premium mobile sizing for forgot password and register */
+@media (max-width: 640px) {
+  .auth-forgot-panel .auth-logo-header,
+  .auth-register-panel .auth-logo-header {
+    margin-bottom: 0.65rem !important;
+    padding-top: 0 !important;
+  }
 
+  .auth-forgot-panel .auth-logo-container,
+  .auth-forgot-panel .auth-logo-compact,
+  .auth-register-panel .auth-logo-container,
+  .auth-register-panel .auth-logo-compact {
+    gap: 0.45rem !important;
+  }
+
+  .auth-forgot-panel .auth-logo-container > div:first-of-type,
+  .auth-forgot-panel .auth-logo-compact > div:first-of-type,
+  .auth-register-panel .auth-logo-container > div:first-of-type,
+  .auth-register-panel .auth-logo-compact > div:first-of-type {
+    width: 5.15rem !important;
+    height: 5.15rem !important;
+  }
+
+  .auth-forgot-panel .auth-logo-wordmark,
+  .auth-register-panel .auth-logo-wordmark {
+    font-size: clamp(1.42rem, 6vw, 1.62rem) !important;
+    letter-spacing: -0.035em !important;
+  }
+
+  .auth-forgot-panel .auth-heading,
+  .auth-forgot-panel h1.auth-heading,
+  .auth-register-panel .auth-heading,
+  .auth-register-panel h1.auth-heading {
+    font-size: clamp(1.62rem, 6.1vw, 1.86rem) !important;
+    font-weight: 800 !important;
+    line-height: 1.08 !important;
+    letter-spacing: -0.04em !important;
+  }
+
+  .auth-forgot-panel .auth-description {
+    font-size: 0.98rem !important;
+    line-height: 1.48 !important;
+    max-width: 21.5rem !important;
+  }
+
+  .auth-register-panel > .auth-shell-body {
+    margin-top: 1.25rem !important;
+  }
+
+  .auth-forgot-panel > .auth-shell-body {
+    margin-top: 1.45rem !important;
+  }
+}
+
+@media (max-width: 380px) {
+  .auth-forgot-panel .auth-logo-container > div:first-of-type,
+  .auth-forgot-panel .auth-logo-compact > div:first-of-type,
+  .auth-register-panel .auth-logo-container > div:first-of-type,
+  .auth-register-panel .auth-logo-compact > div:first-of-type {
+    width: 4.65rem !important;
+    height: 4.65rem !important;
+  }
+
+  .auth-forgot-panel .auth-logo-wordmark,
+  .auth-register-panel .auth-logo-wordmark {
+    font-size: 1.32rem !important;
+  }
+
+  .auth-forgot-panel .auth-heading,
+  .auth-forgot-panel h1.auth-heading,
+  .auth-register-panel .auth-heading,
+  .auth-register-panel h1.auth-heading {
+    font-size: 1.48rem !important;
+  }
+}
 @media (min-width: 641px) {
   .auth-single-shell {
     display: grid !important;
