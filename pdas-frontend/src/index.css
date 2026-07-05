@@ -1280,7 +1280,10 @@ input[type="password"].auth-field {
   }
 
   .auth-single-panel--mobile-full.auth-glass-card {
-    padding: 1.65rem 0.95rem 1.75rem !important;
+    min-height: clamp(34rem, 82svh, 43rem);
+    justify-content: center !important;
+    padding: clamp(1.45rem, 3.2svh, 1.85rem) 0.95rem
+      clamp(1.55rem, 3.5svh, 2rem) !important;
   }
 
   .auth-single-panel--mobile-full .auth-heading,
@@ -1438,7 +1441,7 @@ input[type="password"].auth-field {
   .auth-btn-secondary {
     min-height: 3rem !important;
     height: auto !important;
-    font-size: 0.95rem !important;
+    font-size: 1rem !important;
     transform: none !important;
   }
 
@@ -1475,7 +1478,24 @@ input[type="password"].auth-field {
     font-size: 0.9rem;
   }
 }
+@media (min-width: 641px) and (max-width: 1024px) {
+  .auth-single-shell {
+    display: grid !important;
+    min-height: 100svh !important;
+    place-items: center !important;
+    padding: 2rem !important;
+  }
 
+  .auth-single-panel {
+    width: min(100%, 25rem) !important;
+  }
+
+  .auth-single-panel--mobile-full.auth-glass-card {
+    min-height: clamp(36rem, 68svh, 44rem);
+    justify-content: center !important;
+    padding: 1.8rem 1.35rem 2rem !important;
+  }
+}
 @media (max-width: 380px) {
   .auth-single-shell {
     padding: 0.75rem max(0.625rem, env(safe-area-inset-right))
