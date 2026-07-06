@@ -9,6 +9,12 @@ const registerValidator = [
     .withMessage("Username must be between 3 and 50 characters")
     .matches(/^[a-zA-Z0-9_]+$/)
     .withMessage("Username can only contain letters, numbers, and underscores")
+    .custom((value) => {
+      if (String(value).includes("@")) {
+        throw new Error("Username cannot be an email address");
+      }
+      return true;
+    })
     .toLowerCase(),
 
   body("full_name")
@@ -17,8 +23,8 @@ const registerValidator = [
     .withMessage("Full name is required")
     .isLength({ min: 2, max: 100 })
     .withMessage("Full name must be between 2 and 100 characters")
-    .matches(/^[a-zA-Z\s'\-]+$/)
-    .withMessage("Full name can only contain letters, spaces, hyphens, and apostrophes"),
+    .matches(/^[a-zA-Z\s]+$/)
+    .withMessage("Full name can only contain letters and spaces"),
 
   body("email")
     .trim()
@@ -60,8 +66,7 @@ const loginValidator = [
 
 const refreshValidator = [
   body("refreshToken")
-    .notEmpty()
-    .withMessage("Refresh token is required")
+    .optional()
     .isString()
     .withMessage("Refresh token must be a string"),
 ];

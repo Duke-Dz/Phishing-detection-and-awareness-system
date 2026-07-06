@@ -4,7 +4,7 @@ const { Op } = require("sequelize");
 const { User } = require("../models");
 const { createError } = require("../utils/inputValidation");
 const auditService = require("../services/auditService");
-const { verifyUnsubscribeToken } = require("../utils/unsubscribeTokens");
+const { decodeUnsubscribeToken, verifyUnsubscribeToken } = require("../utils/unsubscribeTokens");
 
 const updateProfile = async (req, res) => {
   const { full_name } = req.body;
@@ -92,15 +92,18 @@ const getAvatar = async (req, res) => {
 const unsubscribe = async (req, res) => {
   const { email, token } = req.body;
 
-  if (!email || !token) {
-    throw createError("Email and token are required", 400);
+  if (!token) {
+    throw createError("Unsubscribe token is required", 400);
   }
 
-  if (!verifyUnsubscribeToken(email, token)) {
+  const decoded = decodeUnsubscribeToken(token);
+  const targetEmail = decoded?.email || String(email || "").trim().toLowerCase();
+
+  if (!targetEmail || !verifyUnsubscribeToken(targetEmail, token)) {
     throw createError("Invalid or expired unsubscribe link", 403);
   }
 
-  const user = await User.findOne({ where: { email: email.toLowerCase() } });
+  const user = await User.findOne({ where: { email: targetEmail } });
   
   if (!user) {
     // If user doesn't exist, just return success to prevent email enumeration

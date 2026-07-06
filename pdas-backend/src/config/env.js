@@ -38,6 +38,13 @@ const buildConfig = () => ({
     expiresIn: process.env.JWT_EXPIRES_IN || "15m",
     refreshTokenExpiresDays: integer("REFRESH_TOKEN_EXPIRES_DAYS", 30),
   },
+  auth: {
+    normalSessionIdleMinutes: integer("NORMAL_SESSION_IDLE_MINUTES", 30),
+    normalSessionAbsoluteHours: integer("NORMAL_SESSION_ABSOLUTE_HOURS", 8),
+    rememberMeIdleDays: integer("REMEMBER_ME_IDLE_DAYS", 7),
+    cookieName: process.env.AUTH_COOKIE_NAME || "refresh_token",
+    cookieSameSite: process.env.AUTH_COOKIE_SAME_SITE || "lax",
+  },
   https: {
     enabled: boolean("HTTPS_ENABLED"),
     force: boolean("FORCE_HTTPS"),
@@ -60,7 +67,8 @@ const buildConfig = () => ({
   frontendUrl: process.env.FRONTEND_URL || "http://localhost:3000",
   passwordResetTokenExpiryMinutes: integer("PASSWORD_RESET_TOKEN_EXPIRY_MINUTES", 60),
   passwordResetResponseDelayMs: integer("PASSWORD_RESET_RESPONSE_DELAY_MS", 300),
-  emailVerificationTokenExpiryHours: integer("EMAIL_VERIFICATION_TOKEN_EXPIRY_HOURS", 24),
+  emailVerificationTokenExpiryHours: integer("EMAIL_VERIFICATION_TOKEN_EXPIRY_HOURS", 2),
+  pendingRegistrationExpiryHours: integer("PENDING_REGISTRATION_EXPIRY_HOURS", 2),
   apis: {
     googleSafeBrowsingKey: process.env.GOOGLE_SAFE_BROWSING_API_KEY || "",
     virusTotalApiKey: process.env.VIRUSTOTAL_API_KEY || "",

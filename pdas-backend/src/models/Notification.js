@@ -50,6 +50,7 @@ const Notification = sequelize.define(
       { fields: ["user_id"] },
       { fields: ["is_read"] },
       { fields: ["created_at"] },
+      { fields: ["user_id", "is_read", "created_at"] },
     ],
   },
 );

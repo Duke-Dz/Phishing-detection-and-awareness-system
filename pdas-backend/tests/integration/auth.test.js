@@ -5,6 +5,12 @@ const { createAgent, mockDb } = require("./helpers/setup");
 const crypto = require("crypto");
 const { hashToken } = require("../../src/utils/tokenGenerator");
 
+const getRefreshCookie = (res) => {
+  const setCookie = res.headers.get("set-cookie") || "";
+  const match = setCookie.match(/refresh_token=([^;]+)/);
+  return match ? decodeURIComponent(match[1]) : "";
+};
+
 test("Auth Endpoints", async (t) => {
   let agent;
   let testUser;
@@ -58,7 +64,8 @@ test("Auth Endpoints", async (t) => {
     assert.equal(res.status, 200);
     assert.equal(res.body.success, true);
     assert.ok(res.body.token);
-    assert.ok(res.body.refreshToken);
+    assert.equal(res.body.refreshToken, undefined);
+    assert.ok(getRefreshCookie(res));
     assert.equal(res.body.data.username, "testuser");
     assert.equal(res.body.data.mfa_enabled, undefined);
     assert.equal(res.body.data.mfa_secret, undefined);
@@ -191,8 +198,10 @@ test("Auth Endpoints", async (t) => {
     const loginRes = await agent.post("/api/auth/login", {
       body: { identifier: "test@example.com", password: testPassword }
     });
+    const refreshToken = getRefreshCookie(loginRes);
+    assert.ok(refreshToken);
     const storedRefreshToken = mockDb.RefreshToken.records.find(
-      (record) => record.token_hash === hashToken(loginRes.body.refreshToken)
+      (record) => record.token_hash === hashToken(refreshToken)
     );
     storedRefreshToken.revoked_at = null;
     storedRefreshToken.replaced_by_hash = null;
@@ -200,12 +209,14 @@ test("Auth Endpoints", async (t) => {
     storedRefreshToken.user = testUser;
 
     const res = await agent.post("/api/auth/refresh", {
-      body: { refreshToken: loginRes.body.refreshToken }
+      headers: { Cookie: `refresh_token=${encodeURIComponent(refreshToken)}` },
+      body: {}
     });
 
     assert.equal(res.status, 200);
     assert.ok(res.body.token);
-    assert.ok(res.body.refreshToken);
+    assert.equal(res.body.refreshToken, undefined);
+    assert.ok(getRefreshCookie(res));
   });
 
   await t.test("GET /api/auth/me", async () => {
@@ -228,12 +239,17 @@ test("Auth Endpoints", async (t) => {
       body: { identifier: "test@example.com", password: testPassword }
     });
     const token = loginRes.body.token;
+    const refreshToken = getRefreshCookie(loginRes);
 
     const res = await agent.post("/api/auth/logout", {
-      headers: { Authorization: `Bearer ${token}` },
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Cookie: `refresh_token=${encodeURIComponent(refreshToken)}`,
+      },
       body: {}
     });
     assert.equal(res.status, 200);
     assert.equal(res.body.success, true);
+    assert.match(res.headers.get("set-cookie") || "", /refresh_token=;/);
   });
 });

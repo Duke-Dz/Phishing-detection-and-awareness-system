@@ -1,14 +1,33 @@
 const crypto = require("crypto");
 const jwt = require("jsonwebtoken");
-const { Op } = require("sequelize");
+const { sequelize } = require("../config/sequelize");
+const config = require("../config/env");
 const { RefreshToken, User } = require("../models");
 
 const hashToken = (token) => crypto.createHash("sha256").update(token).digest("hex");
 
-const getRefreshExpiry = (rememberMe = false) => {
-  const days = rememberMe ? Number(process.env.REFRESH_TOKEN_EXPIRES_DAYS || 30) : 1;
-  return new Date(Date.now() + days * 24 * 60 * 60 * 1000);
+const sessionPolicies = {
+  normal: {
+    idleMs: config.auth.normalSessionIdleMinutes * 60 * 1000,
+    absoluteMs: config.auth.normalSessionAbsoluteHours * 60 * 60 * 1000,
+  },
+  remember: {
+    idleMs: config.auth.rememberMeIdleDays * 24 * 60 * 60 * 1000,
+    absoluteMs: config.jwt.refreshTokenExpiresDays * 24 * 60 * 60 * 1000,
+  },
 };
+
+const getSessionPolicy = (rememberMe = false) =>
+  rememberMe ? sessionPolicies.remember : sessionPolicies.normal;
+
+const getRefreshExpiry = (rememberMe = false, now = new Date()) =>
+  new Date(now.getTime() + getSessionPolicy(rememberMe).absoluteMs);
+
+const getRequestMetadata = (req, now = new Date()) => ({
+  ip_address: req?.ip || req?.connection?.remoteAddress || null,
+  user_agent: req?.headers?.["user-agent"] || null,
+  last_used_at: now,
+});
 
 const signAccessToken = (user) =>
   jwt.sign(
@@ -21,35 +40,37 @@ const signAccessToken = (user) =>
   );
 
 const issueRefreshToken = async (user, rememberMe = false, req = null) => {
+  const now = new Date();
   const refreshToken = crypto.randomBytes(64).toString("hex");
-
-  const metadata = {};
-  if (req) {
-    metadata.ip_address = req.ip || req.connection?.remoteAddress || null;
-    metadata.user_agent = req.headers['user-agent'] || null;
-    metadata.last_used_at = new Date();
-  }
-
-  await RefreshToken.create({
+  const record = await RefreshToken.create({
     user_id: user.user_id,
     token_hash: hashToken(refreshToken),
-    expires_at: getRefreshExpiry(rememberMe),
-    ...metadata
+    expires_at: getRefreshExpiry(rememberMe, now),
+    remember_me: rememberMe,
+    ...getRequestMetadata(req, now),
   });
 
-  return refreshToken;
+  return { refreshToken, refreshTokenRecord: record };
 };
 
-const issueTokenPair = async (user, rememberMe = false, req = null) => ({
-  token: signAccessToken(user),
-  refreshToken: await issueRefreshToken(user, rememberMe, req),
-});
+const issueTokenPair = async (user, rememberMe = false, req = null) => {
+  const refresh = await issueRefreshToken(user, rememberMe, req);
+  return {
+    token: signAccessToken(user),
+    ...refresh,
+  };
+};
 
-const { sequelize } = require("../config/sequelize");
+const isIdleExpired = (tokenRecord, now = new Date()) => {
+  const rememberMe = tokenRecord.remember_me === true;
+  const policy = getSessionPolicy(rememberMe);
+  const lastUsedAt = tokenRecord.last_used_at || tokenRecord.created_at;
+  if (!lastUsedAt) return false;
+  return now.getTime() - new Date(lastUsedAt).getTime() > policy.idleMs;
+};
 
 const rotateRefreshToken = async (refreshToken, req = null) => {
   const tokenHash = hashToken(refreshToken);
-  
   const existingToken = await RefreshToken.findOne({
     where: { token_hash: tokenHash },
     include: [{ model: User, as: "user" }],
@@ -59,50 +80,49 @@ const rotateRefreshToken = async (refreshToken, req = null) => {
     return null;
   }
 
-  // Replay detection
   if (existingToken.revoked_at !== null || existingToken.replaced_by_hash !== null) {
     await revokeUserRefreshTokens(existingToken.user_id);
     const { logSecurityEvent } = require("./securityLogger");
-    logSecurityEvent(existingToken.user_id, 'TOKEN_REPLAY_DETECTED', req, { tokenHash });
-    return { error: 'ReplayDetected' };
+    logSecurityEvent(existingToken.user_id, "TOKEN_REPLAY_DETECTED", req, { tokenHash });
+    return { error: "ReplayDetected" };
   }
 
-  if (existingToken.expires_at <= new Date() || !existingToken.user || !existingToken.user.is_active) {
+  const now = new Date();
+  if (
+    existingToken.expires_at <= now ||
+    isIdleExpired(existingToken, now) ||
+    !existingToken.user ||
+    !existingToken.user.is_active
+  ) {
+    existingToken.revoked_at = now;
+    existingToken.last_used_at = now;
+    await existingToken.save();
     return null;
   }
 
-  // Inherit remember_me: calculate duration between created_at and expires_at
-  const originalDurationMs = existingToken.expires_at.getTime() - existingToken.created_at.getTime();
-  const originalDays = Math.round(originalDurationMs / (24 * 60 * 60 * 1000));
-  const isRememberMe = originalDays > 1;
-
-  return await sequelize.transaction(async (t) => {
+  return sequelize.transaction(async (transaction) => {
     const newRefreshToken = crypto.randomBytes(64).toString("hex");
-    
-    // Update last_used_at on the old token (to signify it was successfully used for rotation right now)
-    existingToken.last_used_at = new Date();
-    existingToken.revoked_at = new Date();
-    existingToken.replaced_by_hash = hashToken(newRefreshToken);
-    await existingToken.save({ transaction: t });
+    const newHash = hashToken(newRefreshToken);
+    const rememberMe = existingToken.remember_me === true;
 
-    const metadata = {};
-    if (req) {
-      metadata.ip_address = req.ip || req.connection?.remoteAddress || null;
-      metadata.user_agent = req.headers['user-agent'] || null;
-      metadata.last_used_at = new Date();
-    }
+    existingToken.last_used_at = now;
+    existingToken.revoked_at = now;
+    existingToken.replaced_by_hash = newHash;
+    await existingToken.save({ transaction });
 
-    await RefreshToken.create({
+    const refreshTokenRecord = await RefreshToken.create({
       user_id: existingToken.user_id,
-      token_hash: existingToken.replaced_by_hash,
-      expires_at: getRefreshExpiry(isRememberMe),
-      ...metadata
-    }, { transaction: t });
+      token_hash: newHash,
+      expires_at: existingToken.expires_at,
+      remember_me: rememberMe,
+      ...getRequestMetadata(req, now),
+    }, { transaction });
 
     return {
       user: existingToken.user,
       token: signAccessToken(existingToken.user),
       refreshToken: newRefreshToken,
+      refreshTokenRecord,
     };
   });
 };
@@ -140,6 +160,8 @@ const revokeUserRefreshTokens = async (userId) => {
 };
 
 module.exports = {
+  getSessionPolicy,
+  issueRefreshToken,
   issueTokenPair,
   revokeRefreshToken,
   revokeUserRefreshTokens,

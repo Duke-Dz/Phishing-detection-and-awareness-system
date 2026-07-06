@@ -1,6 +1,8 @@
 const config = require("../config/env");
 const { alert, button, details, greeting, layout, list, paragraph, safeUrl } = require("./components");
 
+const verificationExpiryHours = () => config.pendingRegistrationExpiryHours || 2;
+
 const formatDate = (value = new Date()) => new Date(value).toLocaleString("en-KE", {
   dateStyle: "medium",
   timeStyle: "short",
@@ -54,7 +56,7 @@ module.exports = {
         ];
     const body = greeting(userName) +
       paragraph(`CyberSense has completed the security analysis of your ${scanType.toUpperCase()} submission.`) +
-      alert(`Assessment: ${classification.toUpperCase()} — risk score ${score}/100`, tone) +
+      alert(`Assessment: ${classification.toUpperCase()} - risk score ${score}/100`, tone) +
       details([["Target", target], ["Scan ID", scanId], ["Scanned", formatDate(scannedAt)]]) +
       list(detectedSignals) +
       list(actions) +
@@ -81,7 +83,7 @@ module.exports = {
     const body = greeting(userName) +
       paragraph("Thank you for creating a CyberSense account. Please confirm that this email address belongs to you to activate your account.") +
       button(verificationUrl, "Verify email address") +
-      alert("For your security, this verification link expires automatically. If you did not create this account, no action is required.", "info");
+      alert(`For your security, this verification link expires in ${verificationExpiryHours()} hours. If you did not create this account, no action is required.`, "info");
     return result({
       subject,
       preheader: "Confirm your email address to activate your CyberSense account.",
@@ -90,6 +92,7 @@ module.exports = {
         `Hello ${userName},`,
         "Confirm your email address to activate your CyberSense account:",
         safeUrl(verificationUrl),
+        `This link expires in ${verificationExpiryHours()} hours.`,
         "If you did not create this account, no action is required.",
       ],
       essential: true,
@@ -191,7 +194,7 @@ module.exports = {
     const subject = `Review required: new ${reportType} security report`;
     const body = greeting(adminName) +
       paragraph("A new user-submitted security report requires analyst review.") +
-      alert(`Initial assessment: ${classification} — risk score ${riskScore}/100.`, "warning") +
+      alert(`Initial assessment: ${classification} - risk score ${riskScore}/100.`, "warning") +
       details([
         ["Report ID", reportId],
         ["Reporter", reporterEmail],

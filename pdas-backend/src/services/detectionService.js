@@ -203,6 +203,43 @@ const topSignalReasons = (signals, limit = 5) =>
     .map((signal) => signal.evidence || signal.name)
     .filter(Boolean);
 
+const scoreBand = (score) => {
+  if (score >= 80) return "critical";
+  if (score >= 61) return "high";
+  if (score >= 31) return "medium";
+  return "low";
+};
+
+const buildScoringMetadata = ({
+  layerScores,
+  effectiveWeights,
+  signals,
+  riskScore,
+  classification,
+  reason = "weighted_average",
+}) => ({
+  method: "explainable_weighted_evidence",
+  reason,
+  final_score: riskScore,
+  final_band: scoreBand(riskScore),
+  classification,
+  layer_scores: Object.fromEntries(
+    Object.entries(layerScores).map(([layer, score]) => [
+      layer,
+      { score, band: scoreBand(score), weight: effectiveWeights[layer] || 0 },
+    ]),
+  ),
+  top_evidence: signals
+    .slice()
+    .sort((a, b) => (b.points || 0) - (a.points || 0))
+    .slice(0, 5)
+    .map((signal) => ({
+      name: signal.name,
+      points: signal.points || 0,
+      evidence: signal.evidence || signal.name,
+    })),
+});
+
 const buildUserFeedback = ({ classification, riskScore, signals, scanType }) => {
   const reasons = topSignalReasons(signals);
   const confidence = riskScore >= 80
@@ -856,6 +893,16 @@ const analyzeUrl = async (url) => {
     signals: allSignals,
     scanType: "url",
   });
+  const scoring = buildScoringMetadata({
+    layerScores,
+    effectiveWeights,
+    signals: allSignals,
+    riskScore,
+    classification,
+    reason: hasConfirmedThreatIntel(layer2.threatIntel) || layer2.score >= 80
+      ? "blacklist_confirmed"
+      : "weighted_average",
+  });
 
   return {
     target: url,
@@ -874,6 +921,7 @@ const analyzeUrl = async (url) => {
       threat_intelligence: layer2.threatIntel,
       external_api_usage: layer2.externalApiUsage || [],
       user_feedback: userFeedback,
+      scoring,
       expanded_url: layer4.expandedUrl,
       final_score: riskScore,
       layer_weights: effectiveWeights,
@@ -949,6 +997,20 @@ const analyzeMessage = async (content, scanType = "email", options = {}) => {
     signals: [...layer1.signals, ...layer2.signals],
     scanType,
   });
+  const messageSignals = [...layer1.signals, ...layer2.signals];
+  const scoring = buildScoringMetadata({
+    layerScores: {
+      rules: layer1.score,
+      blacklist: layer2.score,
+      ml: layer3.score,
+      content: 0,
+    },
+    effectiveWeights,
+    signals: messageSignals,
+    riskScore,
+    classification,
+    reason: scoringReason,
+  });
 
   // ── Summary message ──
   let summary;
@@ -975,6 +1037,7 @@ const analyzeMessage = async (content, scanType = "email", options = {}) => {
       threat_intelligence: layer2.threatIntel,
       external_api_usage: layer2.externalApiUsage || [],
       user_feedback: userFeedback,
+      scoring,
       embedded_urls: embeddedUrlAnalyses,
       summary,
       final_score: riskScore,

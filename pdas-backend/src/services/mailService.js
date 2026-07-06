@@ -87,7 +87,7 @@ const sendMail = async ({ to, subject, html, text, essential = false }) => {
     const frontendUrl = config.frontendUrl.replace(/\/$/, "");
     const unsubscribeUrl = essential
       ? null
-      : `${frontendUrl}/unsubscribe?email=${encodeURIComponent(to)}&token=${encodeURIComponent(generateUnsubscribeToken(to))}`;
+      : `${frontendUrl}/unsubscribe#token=${encodeURIComponent(generateUnsubscribeToken(to))}`;
     const replacements = (value) => value
       ?.replace(/\{\{UNSUBSCRIBE_URL\}\}/g, unsubscribeUrl || "")
       .replace(/\{\{PRIVACY_URL\}\}/g, `${frontendUrl}/privacy`);

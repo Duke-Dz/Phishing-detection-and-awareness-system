@@ -3,6 +3,7 @@ const { sendMail } = require("./mailService");
 const emailTemplates = require("../templates/emailTemplates");
 const config = require("../config/env");
 const sseService = require("./sseService");
+const cacheService = require("./cacheService");
 
 const createNotification = async ({ user_id, title, message, type = "info", related_report_id }) => {
   const notification = await Notification.create({
@@ -12,6 +13,8 @@ const createNotification = async ({ user_id, title, message, type = "info", rela
     type,
     related_report_id,
   });
+  cacheService.del(cacheService.keys.dashboardStats(user_id));
+  cacheService.delByPrefix(`notifications:${user_id}:`);
 
   // Push real-time notification via SSE (fire-and-forget)
   sseService.sendToUser(user_id, "notification", {

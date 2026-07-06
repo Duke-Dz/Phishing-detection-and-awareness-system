@@ -35,7 +35,9 @@ const app = express();
 app.set("trust proxy", 1);
 app.disable("x-powered-by");
 app.use(requestContext);
-app.use(helmet());
+app.use(helmet({
+  referrerPolicy: { policy: "no-referrer" },
+}));
 app.use(compression());
 app.use(metricsMiddleware);
 app.use((req, res, next) => {
@@ -47,6 +49,30 @@ app.use((req, res, next) => {
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 app.use(express.text({ type: "text/plain", limit: "5mb" }));
+const decodeCookiePart = (value) => {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return value;
+  }
+};
+app.use((req, _res, next) => {
+  req.cookies = Object.fromEntries(
+    String(req.headers.cookie || "")
+      .split(";")
+      .map((part) => part.trim())
+      .filter(Boolean)
+      .map((part) => {
+        const index = part.indexOf("=");
+        if (index === -1) return [part, ""];
+        return [
+          decodeCookiePart(part.slice(0, index)),
+          decodeCookiePart(part.slice(index + 1)),
+        ];
+      }),
+  );
+  next();
+});
 app.use(cors({
   origin: (origin, callback) => {
     const allowed = String(config.frontendUrl).split(",").map((value) => value.trim()).filter(Boolean);
@@ -58,6 +84,7 @@ app.use(cors({
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
   allowedHeaders: ["Content-Type", "Authorization", "X-Request-Id"],
   exposedHeaders: ["X-Request-Id"],
+  credentials: true,
 }));
 app.use(maintenanceMiddleware);
 
@@ -85,9 +112,20 @@ const passwordResetEmailKey = (req) => {
   return `password-reset:${crypto.createHash("sha256").update(email).digest("hex")}`;
 };
 
+const verificationEmailKey = (req) => {
+  const email = String(req.body?.email || "").trim().toLowerCase();
+  return `verification-email:${crypto.createHash("sha256").update(email).digest("hex")}`;
+};
+
 app.use(limiter(15 * 60 * 1000, 100, "Too many requests, please slow down."));
 app.use("/api/auth/login", limiter(15 * 60 * 1000, 10, "Too many login attempts, try again later."));
 app.use("/api/auth/register", limiter(60 * 60 * 1000, 5, "Too many accounts created from this IP."));
+app.use("/api/auth/resend-verification", limiter(
+  60 * 60 * 1000,
+  3,
+  "Too many verification email requests. Please wait before requesting another link.",
+  { keyGenerator: verificationEmailKey },
+));
 app.use("/api/auth/forgot-password", limiter(
   60 * 60 * 1000,
   10,
@@ -128,9 +166,27 @@ const health = (_req, res) => res.json({
 const ready = async (_req, res) => {
   try {
     await sequelize.authenticate();
-    res.json({ success: true, message: "API and database are ready", timestamp: new Date().toISOString() });
-  } catch {
-    res.status(503).json({ success: false, message: "API is not ready" });
+    const checks = await Promise.all([
+      sequelize.query("SELECT 1"),
+      sequelize.query("SELECT 1 FROM users LIMIT 1"),
+      sequelize.query("SELECT 1 FROM scan_results LIMIT 1"),
+      sequelize.query("SELECT 1 FROM pending_registrations LIMIT 1"),
+    ]);
+    res.json({
+      success: true,
+      message: "API and database are ready",
+      checks: {
+        database: "ok",
+        required_tables: checks.length - 1,
+      },
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    res.status(503).json({
+      success: false,
+      message: "API is not ready",
+      reason: error.name || "READINESS_CHECK_FAILED",
+    });
   }
 };
 

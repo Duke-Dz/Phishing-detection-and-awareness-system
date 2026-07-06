@@ -1,12 +1,23 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const { generateUnsubscribeToken, verifyUnsubscribeToken } = require("../../src/utils/unsubscribeTokens");
+const {
+  decodeUnsubscribeToken,
+  generateUnsubscribeToken,
+  verifyUnsubscribeToken,
+} = require("../../src/utils/unsubscribeTokens");
 
 test("generateUnsubscribeToken creates a token for an email", () => {
   const email = "test@example.com";
   const token = generateUnsubscribeToken(email);
   assert.equal(typeof token, "string");
   assert.ok(token.length > 0);
+  assert.doesNotMatch(token, /test@example\.com/i);
+});
+
+test("decodeUnsubscribeToken returns the embedded email for a valid token", () => {
+  const email = "user@domain.com";
+  const token = generateUnsubscribeToken(email);
+  assert.deepEqual(decodeUnsubscribeToken(token), { email });
 });
 
 test("verifyUnsubscribeToken returns true for a valid token", () => {

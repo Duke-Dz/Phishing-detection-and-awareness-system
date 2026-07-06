@@ -1,4 +1,5 @@
 const { AwarenessContent } = require("../models");
+const cacheService = require("../services/cacheService");
 const { createError, requireFields } = require("../utils/inputValidation");
 const { buildPaginationMeta, getPagination } = require("../utils/pagination");
 
@@ -8,22 +9,33 @@ const listAwarenessContent = async (req, res) => {
     ? {}
     : { is_published: true };
 
-  const { count, rows: lessons } = await AwarenessContent.findAndCountAll({
-    where,
-    order: [
-      ["category", "ASC"],
-      ["difficulty", "ASC"],
-      ["created_at", "DESC"],
-    ],
-    limit: pagination.limit,
-    offset: pagination.offset,
-  });
+  const cacheRole = ["admin", "analyst"].includes(req.user?.role) ? req.user.role : "public";
+  const payload = await cacheService.getOrSet(
+    cacheService.keys.awarenessList(cacheRole, req.query),
+    async () => {
+      const { count, rows: lessons } = await AwarenessContent.findAndCountAll({
+        where,
+        order: [
+          ["category", "ASC"],
+          ["difficulty", "ASC"],
+          ["created_at", "DESC"],
+        ],
+        limit: pagination.limit,
+        offset: pagination.offset,
+      });
+
+      return {
+        count: lessons.length,
+        pagination: buildPaginationMeta({ count, ...pagination }),
+        data: lessons,
+      };
+    },
+    cacheService.TTL.AWARENESS_LIST,
+  );
 
   res.json({
     success: true,
-    count: lessons.length,
-    pagination: buildPaginationMeta({ count, ...pagination }),
-    data: lessons,
+    ...payload,
   });
 };
 
@@ -61,6 +73,7 @@ const createAwarenessContent = async (req, res) => {
     success: true,
     data: lesson,
   });
+  cacheService.delByPrefix("awareness:list:");
 };
 
 const updateAwarenessContent = async (req, res) => {
@@ -84,6 +97,7 @@ const updateAwarenessContent = async (req, res) => {
     success: true,
     data: lesson,
   });
+  cacheService.delByPrefix("awareness:list:");
 };
 
 const deleteAwarenessContent = async (req, res) => {
@@ -98,6 +112,7 @@ const deleteAwarenessContent = async (req, res) => {
     success: true,
     message: "Awareness content deleted",
   });
+  cacheService.delByPrefix("awareness:list:");
 };
 
 module.exports = {

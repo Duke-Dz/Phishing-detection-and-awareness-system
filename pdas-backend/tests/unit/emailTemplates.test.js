@@ -49,7 +49,7 @@ for (const [name, input] of Object.entries(fixtures)) {
 test("password reset is concise and avoids unreliable request metadata", () => {
   const output = templates.passwordReset({
     userName: "User",
-    resetUrl: "https://app.example.com/reset?token=test",
+    resetUrl: "https://app.example.com/reset-password#token=test",
   });
   assert.doesNotMatch(output.html, /copy and paste/i);
   assert.doesNotMatch(output.html, />IP address<|>Device</i);
@@ -57,6 +57,18 @@ test("password reset is concise and avoids unreliable request metadata", () => {
   assert.match(output.html, /expires in 60 minutes/i);
   assert.match(output.html, /password has not been changed/i);
   assert.match(output.text, /Never share this reset link/i);
+  assert.doesNotMatch(output.html, /reset-password\?token=/i);
+});
+
+test("email verification mentions expiry and supports fragment token links", () => {
+  const output = templates.emailVerification({
+    userName: "User",
+    verificationUrl: "https://app.example.com/verify-email#token=test",
+  });
+
+  assert.match(output.html, /expires in 2 hours/i);
+  assert.match(output.html, /verify-email#token=test/i);
+  assert.doesNotMatch(output.html, /verify-email\?token=/i);
 });
 
 test("unsafe action URLs are not rendered", () => {

@@ -69,6 +69,8 @@ const ScanResult = sequelize.define(
       { fields: ["classification"] },
       { fields: ["scan_type"] },
       { fields: ["analyzed_at"] },
+      { fields: ["user_id", "analyzed_at"] },
+      { fields: ["user_id", "scan_type", "analyzed_at"] },
     ],
   },
 );

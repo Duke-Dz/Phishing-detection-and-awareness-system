@@ -82,12 +82,8 @@ const sessionLimiter = rateLimit({
  *                   type: boolean
  *                 message:
  *                   type: string
- *                 token:
- *                   type: string
- *                 refreshToken:
- *                   type: string
- *                 data:
- *                   type: object
+ *                 resend_available_in:
+ *                   type: integer
  *       400:
  *         description: Validation error
  *       409:
@@ -131,8 +127,6 @@ router.post("/register", registerValidator, validate, asyncHandler(register));
  *                   type: string
  *                 token:
  *                   type: string
- *                 refreshToken:
- *                   type: string
  *                 data:
  *                   type: object
  *       401:
@@ -148,17 +142,17 @@ router.post("/login", loginValidator, validate, asyncHandler(login));
  *   post:
  *     tags: [Auth]
  *     summary: Refresh access token
- *     description: Exchange a valid refresh token for a new access token and refresh token pair (token rotation).
+ *     description: Rotate the HttpOnly refresh-token cookie and return a new access token.
  *     requestBody:
- *       required: true
+ *       required: false
  *       content:
  *         application/json:
  *           schema:
  *             type: object
- *             required: [refreshToken]
  *             properties:
  *               refreshToken:
  *                 type: string
+ *                 description: Deprecated fallback. Prefer the refresh_token HttpOnly cookie.
  *     responses:
  *       200:
  *         description: Token refreshed successfully
@@ -170,8 +164,6 @@ router.post("/login", loginValidator, validate, asyncHandler(login));
  *                 success:
  *                   type: boolean
  *                 token:
- *                   type: string
- *                 refreshToken:
  *                   type: string
  *                 data:
  *                   type: object
@@ -186,7 +178,7 @@ router.post("/refresh", refreshValidator, validate, asyncHandler(refresh));
  *   post:
  *     tags: [Auth]
  *     summary: Logout
- *     description: Logout the current session. Optionally revoke a specific refresh token or all tokens across devices.
+ *     description: Logout the current session using the refresh_token cookie. Optionally revoke all tokens across devices.
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -195,9 +187,6 @@ router.post("/refresh", refreshValidator, validate, asyncHandler(refresh));
  *           schema:
  *             type: object
  *             properties:
- *               refreshToken:
- *                 type: string
- *                 description: Specific refresh token to revoke
  *               all_devices:
  *                 type: boolean
  *                 description: Set to true to revoke all refresh tokens

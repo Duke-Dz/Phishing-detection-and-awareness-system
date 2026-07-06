@@ -21,6 +21,9 @@ const persistScan = async ({ user_id, report_id = null, analysis }) => {
     });
 
   cacheService.del(cacheService.keys.dashboardStats(user_id));
+  cacheService.delByPrefix(`scan:list:${user_id}:`);
+  cacheService.delByPrefix("scan:list:all:");
+  cacheService.set(cacheService.keys.scanDetail(scanResult.scan_id), scanResult, cacheService.TTL.SCAN_RESULT);
 
   return scanResult;
 };
@@ -81,7 +84,11 @@ const scanSms = async (req, res) => {
 };
 
 const getScan = async (req, res) => {
-  const scanResult = await ScanResult.findByPk(req.params.scanId);
+  const scanResult = await cacheService.getOrSet(
+    cacheService.keys.scanDetail(req.params.scanId),
+    () => ScanResult.findByPk(req.params.scanId),
+    cacheService.TTL.SCAN_RESULT,
+  );
   if (!scanResult) {
     throw createError("Scan result not found", 404);
   }
@@ -124,6 +131,7 @@ const listScans = async (req, res) => {
   const where = ["admin", "analyst"].includes(req.user.role)
     ? {}
     : { user_id: req.user.user_id };
+  const cacheUser = ["admin", "analyst"].includes(req.user.role) ? "all" : req.user.user_id;
 
   // Optional filters
   if (req.query.scan_type) {
@@ -142,19 +150,29 @@ const listScans = async (req, res) => {
     }
   }
 
-  const { count, rows: scans } = await ScanResult.findAndCountAll({
-    where,
-    order: [["analyzed_at", "DESC"]],
-    limit: pagination.limit,
-    offset: pagination.offset,
-    attributes: ["scan_id", "target", "scan_type", "risk_score", "classification", "engine_version", "analyzed_at"],
-  });
+  const payload = await cacheService.getOrSet(
+    cacheService.keys.scanList(cacheUser, req.query),
+    async () => {
+      const { count, rows: scans } = await ScanResult.findAndCountAll({
+        where,
+        order: [["analyzed_at", "DESC"]],
+        limit: pagination.limit,
+        offset: pagination.offset,
+        attributes: ["scan_id", "target", "scan_type", "risk_score", "classification", "engine_version", "analyzed_at"],
+      });
+
+      return {
+        count: scans.length,
+        pagination: buildPaginationMeta({ count, ...pagination }),
+        data: scans,
+      };
+    },
+    cacheService.TTL.LIST_PAGE,
+  );
 
   res.json({
     success: true,
-    count: scans.length,
-    pagination: buildPaginationMeta({ count, ...pagination }),
-    data: scans,
+    ...payload,
   });
 };
 

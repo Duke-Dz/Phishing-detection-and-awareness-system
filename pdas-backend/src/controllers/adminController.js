@@ -13,33 +13,35 @@ const { createError, requireFields } = require("../utils/inputValidation");
 const { buildPaginationMeta, getPagination } = require("../utils/pagination");
 const { getApiStatus } = require("../services/externalThreatService");
 const { clearUserCache } = require("../middleware/authMiddleware");
+const cacheService = require("../services/cacheService");
 
 const getDashboardStats = async (_req, res) => {
-  const [
-    totalUsers,
-    totalReports,
-    queuedScanJobs,
-    failedScanJobs,
-    phishingScans,
-    suspiciousScans,
-    safeScans,
-    unreadNotifications,
-    publishedLessons,
-  ] = await Promise.all([
-    User.count(),
-    Report.count(),
-    ScanJob.count({ where: { status: "queued" } }),
-    ScanJob.count({ where: { status: "failed" } }),
-    ScanResult.count({ where: { classification: "phishing" } }),
-    ScanResult.count({ where: { classification: "suspicious" } }),
-    ScanResult.count({ where: { classification: "safe" } }),
-    Notification.count({ where: { is_read: false } }),
-    AwarenessContent.count({ where: { is_published: true } }),
-  ]);
+  const data = await cacheService.getOrSet(
+    cacheService.keys.systemStats(),
+    async () => {
+      const [
+        totalUsers,
+        totalReports,
+        queuedScanJobs,
+        failedScanJobs,
+        phishingScans,
+        suspiciousScans,
+        safeScans,
+        unreadNotifications,
+        publishedLessons,
+      ] = await Promise.all([
+        User.count(),
+        Report.count(),
+        ScanJob.count({ where: { status: "queued" } }),
+        ScanJob.count({ where: { status: "failed" } }),
+        ScanResult.count({ where: { classification: "phishing" } }),
+        ScanResult.count({ where: { classification: "suspicious" } }),
+        ScanResult.count({ where: { classification: "safe" } }),
+        Notification.count({ where: { is_read: false } }),
+        AwarenessContent.count({ where: { is_published: true } }),
+      ]);
 
-  res.json({
-    success: true,
-    data: {
+      return {
       totalUsers,
       totalReports,
       queuedScanJobs,
@@ -49,7 +51,14 @@ const getDashboardStats = async (_req, res) => {
       safeScans,
       unreadNotifications,
       publishedLessons,
+      };
     },
+    cacheService.TTL.SYSTEM_STATS,
+  );
+
+  res.json({
+    success: true,
+    data,
   });
 };
 
@@ -101,6 +110,7 @@ const updateUser = async (req, res) => {
 
   await user.update(updates);
   clearUserCache(user.user_id);
+  cacheService.del(cacheService.keys.systemStats());
 
   res.json({
     success: true,
@@ -139,6 +149,7 @@ const createThreatIntel = async (req, res) => {
     success: true,
     data: threat,
   });
+  cacheService.del(cacheService.keys.systemStats());
 };
 
 const updateThreatIntel = async (req, res) => {
@@ -158,6 +169,7 @@ const updateThreatIntel = async (req, res) => {
   }
 
   await threat.update(updates);
+  cacheService.del(cacheService.keys.systemStats());
 
   res.json({
     success: true,
@@ -172,6 +184,7 @@ const deleteThreatIntel = async (req, res) => {
   }
 
   await threat.destroy();
+  cacheService.del(cacheService.keys.systemStats());
 
   res.json({
     success: true,

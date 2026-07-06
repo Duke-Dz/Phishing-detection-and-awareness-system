@@ -19,7 +19,41 @@ const mailService = require("../services/mailService");
 const emailTemplates = require("../templates/emailTemplates");
 const config = require("../config/env");
 const logger = require("../utils/logger");
+const { cleanupExpiredPendingRegistrations } = require("../services/pendingRegistrationService");
 const VERIFICATION_RESEND_COOLDOWN_SECONDS = 120;
+
+const getVerificationExpiryMs = () =>
+  (config.pendingRegistrationExpiryHours || 2) * 60 * 60 * 1000;
+
+const buildFrontendFragmentUrl = (path, token) =>
+  `${config.frontendUrl.replace(/\/$/, "")}${path}#token=${encodeURIComponent(token)}`;
+
+const getRefreshTokenFromRequest = (req) =>
+  req.cookies?.[config.auth.cookieName] || req.body?.refreshToken || null;
+
+const getRefreshCookieOptions = (refreshTokenRecord = null) => {
+  const options = {
+    httpOnly: true,
+    secure: config.nodeEnv === "production",
+    sameSite: config.auth.cookieSameSite,
+    path: "/api/auth",
+  };
+
+  if (refreshTokenRecord?.remember_me) {
+    const remainingMs = new Date(refreshTokenRecord.expires_at).getTime() - Date.now();
+    options.maxAge = Math.max(0, remainingMs);
+  }
+
+  return options;
+};
+
+const setRefreshCookie = (res, refreshToken, refreshTokenRecord) => {
+  res.cookie(config.auth.cookieName, refreshToken, getRefreshCookieOptions(refreshTokenRecord));
+};
+
+const clearRefreshCookie = (res) => {
+  res.clearCookie(config.auth.cookieName, getRefreshCookieOptions());
+};
 
 const sanitizeUser = (user) => {
   const data = user.toJSON();
@@ -49,6 +83,7 @@ const notifyOnNewSignIn = async (user, req, historyPromise) => {
 
 const register = async (req, res) => {
   requireFields(req.body, ["username", "full_name", "email", "password"]);
+  await cleanupExpiredPendingRegistrations();
 
   const email = normalizeEmail(req.body.email);
   const username = String(req.body.username).trim().toLowerCase();
@@ -67,7 +102,7 @@ const register = async (req, res) => {
 
   if (existingPendingEmail) {
     throw createError(
-      "Registration pending. Check your email to verify your account.",
+      "Registration pending. Verify your email to continue.",
       409,
       "EMAIL_PENDING_VERIFICATION",
     );
@@ -79,7 +114,6 @@ const register = async (req, res) => {
 
   const passwordHash = await bcrypt.hash(req.body.password, 12);
   const token = generateToken();
-  const expiryHours = config.emailVerificationTokenExpiryHours || 24;
 
   await PendingRegistration.create({
     email,
@@ -87,10 +121,10 @@ const register = async (req, res) => {
     full_name: String(req.body.full_name).trim(),
     password_hash: passwordHash,
     verification_token_hash: hashToken(token),
-    expires_at: new Date(Date.now() + expiryHours * 60 * 60 * 1000),
+    expires_at: new Date(Date.now() + getVerificationExpiryMs()),
   });
 
-  const verificationUrl = `${config.frontendUrl.replace(/\/$/, "")}/verify-email?token=${encodeURIComponent(token)}`;
+  const verificationUrl = buildFrontendFragmentUrl("/verify-email", token);
   const template = emailTemplates.emailVerification({
     verificationUrl,
     userName: req.body.full_name,
@@ -157,7 +191,7 @@ const login = async (req, res) => {
         expires_at: new Date(Date.now() + 60 * 60 * 1000),
       });
 
-      const resetUrl = `${config.frontendUrl.replace(/\/$/, "")}/reset-password?token=${encodeURIComponent(resetToken)}`;
+      const resetUrl = buildFrontendFragmentUrl("/reset-password", resetToken);
       const template = emailTemplates.accountLocked({
         userName: user.full_name,
         lockoutMinutes,
@@ -193,33 +227,39 @@ const login = async (req, res) => {
   logSecurityEvent(user.user_id, 'LOGIN_SUCCESS', req, { method: 'password' });
 
   const tokens = await issueTokenPair(user, req.body.remember_me === true, req);
+  setRefreshCookie(res, tokens.refreshToken, tokens.refreshTokenRecord);
 
   res.json({
     success: true,
     message: "Login successful",
-    ...tokens,
+    token: tokens.token,
     data: sanitizeUser(user),
   });
 };
 
 const refresh = async (req, res) => {
-  requireFields(req.body, ["refreshToken"]);
+  const refreshToken = getRefreshTokenFromRequest(req);
+  if (!refreshToken) {
+    throw createError("Refresh token is required", 401);
+  }
 
-  const tokenPair = await rotateRefreshToken(req.body.refreshToken, req);
+  const tokenPair = await rotateRefreshToken(refreshToken, req);
   
   if (tokenPair && tokenPair.error === 'ReplayDetected') {
+    clearRefreshCookie(res);
     throw createError("Token replay detected. All sessions revoked for security.", 401);
   }
 
   if (!tokenPair) {
+    clearRefreshCookie(res);
     throw createError("Invalid or expired refresh token", 401);
   }
+  setRefreshCookie(res, tokenPair.refreshToken, tokenPair.refreshTokenRecord);
 
   res.json({
     success: true,
     message: "Token refreshed successfully",
     token: tokenPair.token,
-    refreshToken: tokenPair.refreshToken,
     data: sanitizeUser(tokenPair.user),
   });
 };
@@ -232,11 +272,13 @@ const getMe = async (req, res) => {
 };
 
 const logout = async (req, res) => {
+  const refreshToken = getRefreshTokenFromRequest(req);
   if (req.body && req.body.all_devices) {
     await revokeUserRefreshTokens(req.user.user_id);
-  } else if (req.body && req.body.refreshToken) {
-    await revokeRefreshToken(req.body.refreshToken);
+  } else if (refreshToken) {
+    await revokeRefreshToken(refreshToken);
   }
+  clearRefreshCookie(res);
 
   logSecurityEvent(req.user.user_id, 'LOGOUT', req);
 
@@ -267,7 +309,7 @@ const forgotPassword = async (req, res) => {
       expires_at: new Date(Date.now() + expiryMinutes * 60 * 1000),
     });
 
-    const resetUrl = `${config.frontendUrl.replace(/\/$/, "")}/reset-password?token=${encodeURIComponent(resetToken)}`;
+    const resetUrl = buildFrontendFragmentUrl("/reset-password", resetToken);
     const template = emailTemplates.passwordReset({
       resetUrl,
       userName: user.full_name,
@@ -370,6 +412,7 @@ const changePassword = async (req, res) => {
 };
 
 const verifyEmail = async (req, res) => {
+  await cleanupExpiredPendingRegistrations();
   const { token } = req.body;
 
   if (!token) {
@@ -417,6 +460,7 @@ const verifyEmail = async (req, res) => {
 };
 
 const resendVerification = async (req, res) => {
+  await cleanupExpiredPendingRegistrations();
   const email = normalizeEmail(req.body.email);
   const pendingReg = await PendingRegistration.findOne({ where: { email } });
 
@@ -447,9 +491,8 @@ const resendVerification = async (req, res) => {
   }
 
   const token = generateToken();
-  const expiryHours = config.emailVerificationTokenExpiryHours || 24;
 
-  const verificationUrl = `${config.frontendUrl.replace(/\/$/, "")}/verify-email?token=${encodeURIComponent(token)}`;
+  const verificationUrl = buildFrontendFragmentUrl("/verify-email", token);
   const template = emailTemplates.emailVerification({
     verificationUrl,
     userName: pendingReg.full_name,
@@ -476,7 +519,7 @@ const resendVerification = async (req, res) => {
   }
 
   pendingReg.verification_token_hash = hashToken(token);
-  pendingReg.expires_at = new Date(Date.now() + expiryHours * 60 * 60 * 1000);
+  pendingReg.expires_at = new Date(Date.now() + getVerificationExpiryMs());
   await pendingReg.save();
 
   res.json({

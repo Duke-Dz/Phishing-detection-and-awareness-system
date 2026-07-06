@@ -25,6 +25,11 @@ module.exports = {
         type: Sequelize.DATE,
         allowNull: false,
       },
+      remember_me: {
+        type: Sequelize.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
+      },
       revoked_at: {
         type: Sequelize.DATE,
         allowNull: true,
