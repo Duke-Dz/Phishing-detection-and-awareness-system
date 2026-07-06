@@ -29,7 +29,9 @@ export default function VerifyEmailPage() {
   const [hasError, setHasError] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [resending, setResending] = useState(false);
-  const [resendCooldown, setResendCooldown] = useState(() => getVerificationCooldown(email));
+  const [resendCooldown, setResendCooldown] = useState(() =>
+    getVerificationCooldown(email),
+  );
   const [success, setSuccess] = useState(false);
   const [cardError, setCardError] = useState(null);
 
@@ -41,26 +43,32 @@ export default function VerifyEmailPage() {
     return () => window.clearInterval(timer);
   }, [email, resendCooldown]);
 
-  const handleVerify = useCallback(async (verificationToken) => {
-    setHasError(false);
-    setCardError(null);
-    setSubmitting(true);
-    try {
-      await authService.verifyEmail({ token: verificationToken });
-      clearVerificationCooldown(email);
-      setSuccess(true);
-      toast.success("Email verified.");
-      // Auto redirect to login after 3 seconds
-      setTimeout(() => navigate("/login", { replace: true }), 3000);
-    } catch (error) {
-      setCardError(error.code === "NETWORK_ERROR"
-        ? error.message
-        : error.message || "This verification link is invalid or has expired.");
-      setHasError(true);
-    } finally {
-      setSubmitting(false);
-    }
-  }, [email, navigate]);
+  const handleVerify = useCallback(
+    async (verificationToken) => {
+      setHasError(false);
+      setCardError(null);
+      setSubmitting(true);
+      try {
+        await authService.verifyEmail({ token: verificationToken });
+        clearVerificationCooldown(email);
+        setSuccess(true);
+        toast.success("Email verified.");
+        // Auto redirect to login after 3 seconds
+        setTimeout(() => navigate("/login", { replace: true }), 3000);
+      } catch (error) {
+        setCardError(
+          error.code === "NETWORK_ERROR"
+            ? error.message
+            : error.message ||
+                "This verification link is invalid or has expired.",
+        );
+        setHasError(true);
+      } finally {
+        setSubmitting(false);
+      }
+    },
+    [email, navigate],
+  );
 
   useEffect(() => {
     if (token && !submitting && !success && !hasError) {
@@ -79,7 +87,10 @@ export default function VerifyEmailPage() {
       setResendCooldown(seconds);
       toast.success("A new verification link has been sent.");
     } catch (error) {
-      if (error.code === "VERIFICATION_RESEND_COOLDOWN" && error.retryAfter > 0) {
+      if (
+        error.code === "VERIFICATION_RESEND_COOLDOWN" &&
+        error.retryAfter > 0
+      ) {
         setVerificationCooldown(email, error.retryAfter);
         setResendCooldown(error.retryAfter);
       }
@@ -96,16 +107,21 @@ export default function VerifyEmailPage() {
         description="We need an email address or a verification token to proceed."
         layout="single"
         showHeaderBrand
+        panelclassName="auth-verify-panel"
         cardError={cardError}
         onClearCardError={() => setCardError(null)}
         footer={
-          <Link to="/register" className="text-sm font-semibold text-black no-underline hover:text-cyber-700">
+          <Link
+            to="/register"
+            className="text-sm font-semibold text-black no-underline hover:text-cyber-700"
+          >
             Back to registration
           </Link>
         }
       >
         <div className="auth-alert auth-alert-warning">
-          No email address or token provided. Please register first or check your link.
+          No email address or token provided. Please register first or check
+          your link.
         </div>
       </AuthShell>
     );
@@ -115,17 +131,24 @@ export default function VerifyEmailPage() {
   if (token) {
     return (
       <AuthShell
-        heading={success ? "Email verified!" : hasError ? "Verification failed" : "Verifying email..."}
+        heading={
+          success
+            ? "Email verified!"
+            : hasError
+              ? "Verification failed"
+              : "Verifying email..."
+        }
         description={
           success
             ? "Your account is now active. Redirecting you to sign in..."
             : hasError
-            ? "The link may be invalid or expired."
-            : "Please wait while we verify your secure link."
+              ? "The link may be invalid or expired."
+              : "Please wait while we verify your secure link."
         }
         layout="single"
         showHeaderBrand
         cardError={cardError}
+        panelclassName="auth-verify-panel"
         onClearCardError={() => setCardError(null)}
       >
         <AnimatePresence mode="wait">
@@ -155,8 +178,13 @@ export default function VerifyEmailPage() {
               transition={{ duration: 0.2 }}
               className="space-y-4"
             >
-              <div className="auth-alert auth-alert-error">The link may be invalid or expired.</div>
-              <Link to="/register" className="auth-btn-secondary no-underline text-center flex justify-center">
+              <div className="auth-alert auth-alert-error">
+                The link may be invalid or expired.
+              </div>
+              <Link
+                to="/register"
+                className="auth-btn-secondary no-underline text-center flex justify-center"
+              >
                 Register again
               </Link>
             </Motion.div>
@@ -182,6 +210,7 @@ export default function VerifyEmailPage() {
       description={`We sent a verification link to ${maskEmail(email)}.`}
       layout="single"
       showHeaderBrand
+      panelclassName="auth-verify-panel"
       cardError={cardError}
       onClearCardError={() => setCardError(null)}
       footer={
@@ -199,35 +228,39 @@ export default function VerifyEmailPage() {
             <Mail className="h-7 w-7 text-cyber-600" />
           </div>
         </div>
-        
+
         <p className="mx-auto max-w-sm text-center text-sm leading-6 text-slate-600">
-          Open the verification link to activate your account. If it does not arrive, check your spam folder.
+          Open the verification link to activate your account. If it does not
+          arrive, check your spam folder.
         </p>
 
         <div className="flex min-h-11 items-center justify-center pt-1">
           {resendCooldown > 0 && !resending ? (
-            <p className="text-center text-sm font-semibold text-slate-500" aria-live="polite">
+            <p
+              className="text-center text-sm font-semibold text-slate-500"
+              aria-live="polite"
+            >
               Resend available in{" "}
               <span className="tabular-nums text-cyber-700">
                 {formatCooldown(resendCooldown)}
               </span>
             </p>
           ) : (
-          <button
-            type="button"
-            onClick={handleResend}
-            disabled={resending}
-            className="auth-btn-secondary min-h-11"
-          >
-            {resending ? (
-              <span className="flex items-center justify-center gap-2">
-                <RotateCw size={16} className="animate-spin" />
-                Sending...
-              </span>
-            ) : (
-              "Resend verification email"
-            )}
-          </button>
+            <button
+              type="button"
+              onClick={handleResend}
+              disabled={resending}
+              className="auth-btn-secondary min-h-11"
+            >
+              {resending ? (
+                <span className="flex items-center justify-center gap-2">
+                  <RotateCw size={16} className="animate-spin" />
+                  Sending...
+                </span>
+              ) : (
+                "Resend verification email"
+              )}
+            </button>
           )}
         </div>
       </div>
