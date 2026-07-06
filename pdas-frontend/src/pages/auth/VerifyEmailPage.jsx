@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { useSearchParams, Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { AnimatePresence, motion as Motion } from "framer-motion";
 import { CheckCircle2, RotateCw, Mail } from "lucide-react";
 import { AuthShell } from "../../components/auth/AuthShell";
@@ -11,6 +11,12 @@ import {
   getVerificationCooldown,
   setVerificationCooldown,
 } from "../../utils/verificationCooldown";
+import {
+  clearPendingVerificationEmail,
+  getPendingVerificationEmail,
+  readFragmentParamOnce,
+  setNoReferrerPolicy,
+} from "../../utils/sensitiveUrl";
 
 const maskEmail = (value) => {
   const [localPart, domain] = value.split("@");
@@ -20,11 +26,17 @@ const maskEmail = (value) => {
   return `${localPart.slice(0, visibleLength)}****@${domain}`;
 };
 
+const formatRetryMessage = (error) => {
+  if (error.code !== "RATE_LIMITED" || !error.retryAfter) {
+    return error.message;
+  }
+  return `Too many verification email requests. Try again in ${formatCooldown(error.retryAfter)}.`;
+};
+
 export default function VerifyEmailPage() {
-  const [searchParams] = useSearchParams();
-  const email = searchParams.get("email") || "";
-  const token = searchParams.get("token") || "";
   const navigate = useNavigate();
+  const [email, setEmail] = useState(() => getPendingVerificationEmail());
+  const [token] = useState(() => readFragmentParamOnce("token"));
 
   const [hasError, setHasError] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -34,6 +46,14 @@ export default function VerifyEmailPage() {
   );
   const [success, setSuccess] = useState(false);
   const [cardError, setCardError] = useState(null);
+
+  useEffect(() => setNoReferrerPolicy(), []);
+
+  useEffect(() => {
+    if (!email) {
+      setEmail(getPendingVerificationEmail());
+    }
+  }, [email]);
 
   useEffect(() => {
     if (!email || resendCooldown <= 0) return undefined;
@@ -51,6 +71,7 @@ export default function VerifyEmailPage() {
       try {
         await authService.verifyEmail({ token: verificationToken });
         clearVerificationCooldown(email);
+        clearPendingVerificationEmail();
         setSuccess(true);
         toast.success("Email verified.");
         // Auto redirect to login after 3 seconds
@@ -94,7 +115,7 @@ export default function VerifyEmailPage() {
         setVerificationCooldown(email, error.retryAfter);
         setResendCooldown(error.retryAfter);
       }
-      setCardError(error.message);
+      setCardError(formatRetryMessage(error));
     } finally {
       setResending(false);
     }
@@ -113,6 +134,7 @@ export default function VerifyEmailPage() {
         footer={
           <Link
             to="/register"
+            onClick={clearPendingVerificationEmail}
             className="text-sm font-semibold text-black no-underline hover:text-cyber-700"
           >
             Back to registration
@@ -216,7 +238,11 @@ export default function VerifyEmailPage() {
       footer={
         <>
           <p className="text-sm text-black">Not your email?</p>
-          <Link to="/register" className="auth-bottom-link">
+          <Link
+            to="/register"
+            onClick={clearPendingVerificationEmail}
+            className="auth-bottom-link"
+          >
             Use a different address -&gt;
           </Link>
         </>

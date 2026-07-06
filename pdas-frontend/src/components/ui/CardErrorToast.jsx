@@ -29,10 +29,10 @@ export const CardErrorToast = ({ message, onClose }) => {
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: -20, opacity: 0 }}
             transition={{ duration: 0.3, ease: "easeOut" }}
-            className="flex max-w-full items-center gap-2.5 rounded-xl border-[1.5px] border-red-300 bg-white px-3.5 py-2.5 text-sm text-gray-900 shadow-[0_10px_30px_rgba(15,23,42,0.14)] pointer-events-auto"
-          >
-            <AlertCircle className="h-[18px] w-[18px] shrink-0 text-red-500" strokeWidth={2.25} />
-            <span className="min-w-0 leading-snug">{message}</span>
+          className="flex max-w-[min(20rem,calc(100vw-2rem))] items-center gap-2 rounded-[10px] border-[1.5px] border-rose-400 bg-white px-3 py-2 text-[13px] leading-snug text-gray-900 shadow-[0_8px_22px_rgba(15,23,42,0.13)] pointer-events-auto"
+        >
+            <AlertCircle className="h-[18px] w-[18px] shrink-0 text-rose-600" strokeWidth={2.25} />
+            <span className="min-w-0 break-words">{message}</span>
           </motion.div>
         </div>
       )}

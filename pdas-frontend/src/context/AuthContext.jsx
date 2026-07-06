@@ -14,16 +14,16 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const hydrate = async () => {
       const token = localStorage.getItem("access_token");
-      if (!token) {
-        setLoading(false);
-        return;
-      }
       try {
-        const response = await authService.getMe();
+        const response = token
+          ? await authService.getMe()
+          : await authService.refreshToken();
+        if (!token && response.token) {
+          localStorage.setItem("access_token", response.token);
+        }
         setUser(response.data);
       } catch {
         localStorage.removeItem("access_token");
-        localStorage.removeItem("refresh_token");
         setUser(null);
       } finally {
         setLoading(false);
@@ -35,7 +35,6 @@ export const AuthProvider = ({ children }) => {
   const login = useCallback(async (credentials) => {
     const response = await authService.login(credentials);
     localStorage.setItem("access_token", response.token);
-    localStorage.setItem("refresh_token", response.refreshToken);
     setUser(response.data);
     return response;
   }, []);
@@ -46,32 +45,24 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const logout = useCallback(async () => {
-    const refreshToken = localStorage.getItem("refresh_token");
     try {
-      if (refreshToken) {
-        await authService.logout({ refreshToken });
-      }
+      await authService.logout();
     } catch {
       // Ignore logout API errors
     } finally {
       localStorage.removeItem("access_token");
-      localStorage.removeItem("refresh_token");
       setUser(null);
     }
   }, []);
 
   const refreshSession = useCallback(async () => {
-    const refreshToken = localStorage.getItem("refresh_token");
-    if (!refreshToken) return null;
     try {
-      const response = await authService.refreshToken(refreshToken);
+      const response = await authService.refreshToken();
       localStorage.setItem("access_token", response.token);
-      localStorage.setItem("refresh_token", response.refreshToken);
       setUser(response.data);
       return response;
     } catch {
       localStorage.removeItem("access_token");
-      localStorage.removeItem("refresh_token");
       setUser(null);
       return null;
     }

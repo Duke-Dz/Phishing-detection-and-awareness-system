@@ -34,6 +34,7 @@ export const getErrorMessage = (error, fallback = "We could not complete your re
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api',
+  withCredentials: true,
   headers: {
     'Content-Type': 'application/json'
   }
@@ -95,20 +96,13 @@ api.interceptors.response.use(
       originalRequest._retry = true;
       isRefreshing = true;
 
-      const refreshToken = localStorage.getItem('refresh_token');
-      if (!refreshToken) {
-        isRefreshing = false;
-        return Promise.reject(toApiError(error));
-      }
-
       return new Promise((resolve, reject) => {
         // Use a clean axios instance to avoid circular interceptor loops
-        axios.post(`${api.defaults.baseURL}/auth/refresh`, { refreshToken })
+        axios.post(`${api.defaults.baseURL}/auth/refresh`, {}, { withCredentials: true })
           .then(({ data }) => {
             const newAuthData = data;
             
             localStorage.setItem('access_token', newAuthData.token);
-            localStorage.setItem('refresh_token', newAuthData.refreshToken);
             
             api.defaults.headers.common['Authorization'] = 'Bearer ' + newAuthData.token;
             originalRequest.headers['Authorization'] = 'Bearer ' + newAuthData.token;
@@ -119,7 +113,6 @@ api.interceptors.response.use(
           .catch((err) => {
             processQueue(err, null);
             localStorage.removeItem('access_token');
-            localStorage.removeItem('refresh_token');
             reject(toApiError(err));
           })
           .finally(() => {

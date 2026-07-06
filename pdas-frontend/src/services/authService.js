@@ -40,8 +40,8 @@ export const authService = {
     return data;
   },
 
-  async refreshToken(refreshToken) {
-    const { data } = await api.post("/auth/refresh", { refreshToken });
+  async refreshToken() {
+    const { data } = await api.post("/auth/refresh", {});
     return data;
   },
 
@@ -50,9 +50,8 @@ export const authService = {
     return data;
   },
 
-  async logout({ refreshToken, allDevices = false }) {
+  async logout({ allDevices = false } = {}) {
     const { data } = await api.post("/auth/logout", {
-      refreshToken,
       all_devices: allDevices,
     });
     return data;

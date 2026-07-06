@@ -1,8 +1,8 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { CheckCircle2, KeyRound, Loader2 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { z } from "zod";
 import { AnimatePresence, motion as Motion } from "framer-motion";
@@ -12,6 +12,7 @@ import { PasswordChecklist } from "../../components/auth/PasswordChecklist";
 import { authService } from "../../services/authService";
 import { PASSWORD_RULES } from "../../utils/constants";
 import { evaluatePassword } from "../../utils/passwordPolicy";
+import { readFragmentParamOnce, setNoReferrerPolicy } from "../../utils/sensitiveUrl";
 
 const resetPasswordSchema = z
   .object({
@@ -43,11 +44,12 @@ const resetPasswordSchema = z
   });
 
 export default function ResetPasswordPage() {
-  const [searchParams] = useSearchParams();
-  const token = searchParams.get("token") || "";
+  const [token] = useState(() => readFragmentParamOnce("token"));
 
   const [success, setSuccess] = useState(false);
   const [cardError, setCardError] = useState(null);
+
+  useEffect(() => setNoReferrerPolicy(), []);
 
   const {
     register,

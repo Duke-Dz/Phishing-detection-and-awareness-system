@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { z } from "zod";
 import { AuthShell } from "../../components/auth/AuthShell";
 import { authService } from "../../services/authService";
+import { formatCooldown } from "../../utils/verificationCooldown";
 
 const forgotPasswordSchema = z.object({
   email: z
@@ -22,6 +23,13 @@ const maskEmail = (email) => {
   const visibleLength =
     localPart.length <= 2 ? 1 : Math.min(4, localPart.length - 1);
   return `${localPart.slice(0, visibleLength)}****@${domain}`;
+};
+
+const formatResetError = (error) => {
+  if (error.code === "RATE_LIMITED" && error.retryAfter > 0) {
+    return `Too many reset email requests. Try again in ${formatCooldown(error.retryAfter)}.`;
+  }
+  return error.message || "We could not send the reset email right now. Please try again shortly.";
 };
 
 export default function ForgotPasswordPage() {
@@ -57,9 +65,7 @@ export default function ForgotPasswordPage() {
       setCardError(null);
       return true;
     } catch (error) {
-      setCardError(
-        error.message || "We could not process the password-reset request.",
-      );
+      setCardError(formatResetError(error));
       return false;
     }
   };

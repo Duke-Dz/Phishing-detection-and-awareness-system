@@ -1,29 +1,31 @@
 import { useState, useEffect } from "react";
-import { useSearchParams, Link } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { CheckCircle2, RotateCw } from "lucide-react";
 import { AnimatePresence, motion as Motion } from "framer-motion";
 import api from "../services/api";
 import { AuthShell } from "../components/auth/AuthShell";
+import { readFragmentParamOnce, setNoReferrerPolicy } from "../utils/sensitiveUrl";
 
 export default function Unsubscribe() {
-  const [searchParams] = useSearchParams();
-  const email = searchParams.get("email");
-  const token = searchParams.get("token");
+  const [token] = useState(() => readFragmentParamOnce("token"));
 
   const [status, setStatus] = useState("loading"); // loading, success, error
   const [message, setMessage] = useState("");
 
   useEffect(() => {
-    if (!email || !token) {
+    return setNoReferrerPolicy();
+  }, []);
+
+  useEffect(() => {
+    if (!token) {
       setStatus("error");
-      setMessage("Invalid or missing unsubscribe link parameters.");
+      setMessage("Invalid or missing unsubscribe link.");
       return;
     }
 
     const unsubscribeUser = async () => {
       try {
         const { data } = await api.post("/users/unsubscribe", {
-          email,
           token,
         });
         
@@ -41,7 +43,7 @@ export default function Unsubscribe() {
     };
 
     unsubscribeUser();
-  }, [email, token]);
+  }, [token]);
 
   return (
     <AuthShell

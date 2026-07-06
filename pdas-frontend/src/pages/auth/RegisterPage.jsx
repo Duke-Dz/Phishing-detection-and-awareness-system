@@ -21,12 +21,13 @@ import { useAuth } from "../../hooks/useAuth";
 import { PASSWORD_RULES } from "../../utils/constants";
 import { evaluatePassword } from "../../utils/passwordPolicy";
 import { setVerificationCooldown } from "../../utils/verificationCooldown";
+import { storePendingVerificationEmail } from "../../utils/sensitiveUrl";
 
 const REGISTER_ERROR_MESSAGES = {
   USERNAME_TAKEN: "Username already taken.",
   EMAIL_IN_USE: "Email already in use.",
   EMAIL_PENDING_VERIFICATION:
-    "Registration pending. Check your email to verify your account.",
+    "Registration pending. Verify your email to continue.",
   NETWORK_ERROR: "Check your internet connection.",
 };
 
@@ -36,24 +37,24 @@ const registerSchema = z
       .string()
       .trim()
       .min(1, "Enter your first name")
-      .regex(
-        /^[a-zA-Z\s'-]+$/,
-        "Use letters, spaces, hyphens, or apostrophes.",
-      ),
+      .regex(/^[a-zA-Z\s]+$/, "Use letters and spaces only."),
     last_name: z
       .string()
       .trim()
       .min(1, "Enter your last name")
-      .regex(
-        /^[a-zA-Z\s'-]+$/,
-        "Use letters, spaces, hyphens, or apostrophes.",
-      ),
+      .regex(/^[a-zA-Z\s]+$/, "Use letters and spaces only."),
     username: z
       .string()
       .trim()
       .min(3, "Choose a username with at least 3 characters")
-      .max(50, "Username is too long")
-      .regex(/^[a-zA-Z0-9_]+$/, "Use only letters, numbers, and underscores"),
+      .max(10, "Username is too long")
+      .regex(/^[a-zA-Z0-9_]+$/, "Use only letters, numbers, and underscores")
+      .refine((value) => !value.includes("@"), {
+        message: "Use a username, not an email address.",
+      })
+      .refine((value) => !z.string().email().safeParse(value).success, {
+        message: "Use a username, not an email address.",
+      }),
     email: z
       .string()
       .trim()
@@ -151,10 +152,9 @@ export default function RegisterPage() {
         normalizedEmail,
         response.resend_available_in || 120,
       );
+      storePendingVerificationEmail(normalizedEmail);
       toast.success("Account created. Check your email.");
-      navigate(`/verify-email?email=${encodeURIComponent(normalizedEmail)}`, {
-        replace: true,
-      });
+      navigate("/verify-email", { replace: true });
     } catch (error) {
       setCardError(
         REGISTER_ERROR_MESSAGES[error.code] ||
@@ -218,6 +218,8 @@ export default function RegisterPage() {
                 autoFocus
                 autoComplete="given-name"
                 placeholder="John"
+                pattern="[A-Za-z ]+"
+                title="Use letters and spaces only."
                 required
                 className="auth-field auth-field-has-icon"
               />
@@ -250,6 +252,8 @@ export default function RegisterPage() {
                 {...register("last_name")}
                 autoComplete="family-name"
                 placeholder="Doe"
+                pattern="[A-Za-z ]+"
+                title="Use letters and spaces only."
                 required
                 className="auth-field auth-field-has-icon"
               />
@@ -273,7 +277,9 @@ export default function RegisterPage() {
               spellCheck={false}
               placeholder="johndoe"
               minLength={3}
-              maxLength={50}
+              maxLength={10}
+              pattern="[A-Za-z0-9_]{3,10}"
+              title="Use 3 to 10 letters, numbers, or underscores. Do not use an email address."
               required
               className="auth-field auth-field-has-icon"
             />
