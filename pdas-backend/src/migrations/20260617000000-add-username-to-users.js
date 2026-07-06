@@ -2,32 +2,45 @@
 
 module.exports = {
   up: async (queryInterface, Sequelize) => {
-    // 1. Add column allowing null first
-    await queryInterface.addColumn("users", "username", {
-      type: Sequelize.STRING(50),
-      allowNull: true,
-    });
+    const table = await queryInterface.describeTable("users");
 
-    // 2. We can't easily set unique usernames for existing rows without knowing them,
-    // so we set them to the email prefix or a UUID as a fallback to avoid unique constraint violations
+    // 1. Add username column only if it does not already exist.
+    if (!table.username) {
+      await queryInterface.addColumn("users", "username", {
+        type: Sequelize.STRING(50),
+        allowNull: true,
+      });
+    }
+
+    // 2. Fill missing usernames.
+    // Cast UUID to text before MD5 because PostgreSQL md5() expects text.
     await queryInterface.sequelize.query(`
-      UPDATE users SET username = CONCAT('user_', SUBSTRING(MD5(user_id), 1, 8)) WHERE username IS NULL;
+      UPDATE users
+      SET username = CONCAT('user_', SUBSTRING(MD5(user_id::text), 1, 8))
+      WHERE username IS NULL;
     `);
 
-    // 3. Now change column to not null and add unique constraint
+    // 3. Make username required.
     await queryInterface.changeColumn("users", "username", {
       type: Sequelize.STRING(50),
       allowNull: false,
     });
 
-    await queryInterface.addIndex("users", ["username"], {
-      unique: true,
-      name: "users_username_unique",
-    });
+    // 4. Add unique index only if it does not already exist.
+    await queryInterface.sequelize.query(`
+      CREATE UNIQUE INDEX IF NOT EXISTS users_username_unique
+      ON users (username);
+    `);
   },
 
-  down: async (queryInterface, Sequelize) => {
-    await queryInterface.removeIndex("users", "users_username_unique");
-    await queryInterface.removeColumn("users", "username");
+  down: async (queryInterface) => {
+    await queryInterface.sequelize.query(`
+      DROP INDEX IF EXISTS users_username_unique;
+    `);
+
+    const table = await queryInterface.describeTable("users");
+    if (table.username) {
+      await queryInterface.removeColumn("users", "username");
+    }
   },
 };
