@@ -22,6 +22,7 @@ export const AuthShell = ({
   const headingId = useId();
   const isImmersive = layout === "immersive";
   const isCompactMobileCard = mobileCardMode === "full";
+  const hasHeaderContent = Boolean(heading || description);
 
   useEffect(() => {
     if (typeof document !== "undefined") {
@@ -34,19 +35,24 @@ export const AuthShell = ({
 
   const innerContent = (
     <>
-      <header className="flex flex-col items-center text-center">
-        <h1
-          id={headingId}
-          className="auth-heading font-bold tracking-tight text-slate-900 text-xl sm:text-2xl"
-        >
-          {heading}
-        </h1>
-        {description && (
-          <p className="auth-description mt-2 leading-relaxed text-slate-600 text-xs sm:text-sm">
-            {description}
-          </p>
-        )}
-      </header>
+      {hasHeaderContent && (
+        <header className="flex flex-col items-center text-center">
+          {heading && (
+            <h1
+              id={headingId}
+              className="auth-heading font-bold tracking-tight text-slate-900 text-xl sm:text-2xl"
+            >
+              {heading}
+            </h1>
+          )}
+
+          {description && (
+            <p className="auth-description mt-2 leading-relaxed text-slate-600 text-xs sm:text-sm">
+              {description}
+            </p>
+          )}
+        </header>
+      )}
 
       <div className="auth-shell-body mt-3.5 w-full min-w-0 sm:mt-4">
         {children}
@@ -70,9 +76,10 @@ export const AuthShell = ({
             <div className="auth-brand-enter hidden min-h-[520px] lg:block">
               <AuthBrandPanel title={brandTitle} subtitle={brandSubtitle} />
             </div>
+
             <div className="flex w-full justify-center lg:justify-start">
               <main
-                aria-labelledby={headingId}
+                aria-labelledby={heading ? headingId : undefined}
                 className="auth-form-enter auth-glass-card relative w-full max-w-[24rem] px-5 py-5 sm:max-w-[26rem] sm:px-7 sm:py-7"
                 style={{ borderRadius: "var(--auth-card-radius)" }}
               >
@@ -80,11 +87,13 @@ export const AuthShell = ({
                   message={cardError}
                   onClose={onClearCardError}
                 />
+
                 {showHeaderBrand && (
                   <div className="mb-4 flex w-full justify-center lg:hidden">
                     <CyberSenseLogo variant="compact" className="h-10 w-auto" />
                   </div>
                 )}
+
                 {innerContent}
               </main>
             </div>
@@ -93,15 +102,20 @@ export const AuthShell = ({
       </div>
     );
   }
+
   return (
     <div className="auth-single-shell auth-immersive-bg">
       <main
-        aria-labelledby={headingId}
-        className={`auth-form-enter auth-single-panel auth-glass-card relative flex w-full flex-col justify-start overflow-visible p-6 sm:p-8 ${isCompactMobileCard ? "auth-single-panel--mobile-full" : ""} ${panelClassName}`}
+        aria-labelledby={heading ? headingId : undefined}
+        className={`auth-form-enter auth-single-panel auth-glass-card relative flex w-full flex-col justify-start overflow-visible p-6 sm:p-8 ${
+          isCompactMobileCard ? "auth-single-panel--mobile-full" : ""
+        } ${panelClassName}`}
         style={{ borderRadius: "var(--auth-card-radius)" }}
       >
         <CardErrorToast message={cardError} onClose={onClearCardError} />
+
         {showHeaderBrand && <AuthLogoHeader />}
+
         {innerContent}
       </main>
     </div>

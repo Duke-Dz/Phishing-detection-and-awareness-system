@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowRight, AtSign, CheckCircle2, Loader2, Send } from "lucide-react";
+import { ArrowRight, AtSign, Loader2, Mail, Send } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Link, useLocation } from "react-router-dom";
@@ -29,7 +29,10 @@ const formatResetError = (error) => {
   if (error.code === "RATE_LIMITED" && error.retryAfter > 0) {
     return `Too many reset email requests. Try again in ${formatCooldown(error.retryAfter)}.`;
   }
-  return error.message || "We could not send the reset email right now. Please try again shortly.";
+  return (
+    error.message ||
+    "We could not send the reset email right now. Please try again shortly."
+  );
 };
 
 export default function ForgotPasswordPage() {
@@ -87,7 +90,8 @@ export default function ForgotPasswordPage() {
 
   return (
     <AuthShell
-      heading={sent ? "Check your inbox" : "Reset password"}
+      heading={sent ? undefined : "Reset password"}
+      pageTitle={sent ? "Check your inbox" : "Reset password"}
       description={
         sent
           ? undefined
@@ -109,14 +113,21 @@ export default function ForgotPasswordPage() {
       }
     >
       {sent ? (
-        <div className="space-y-4 text-center" role="status" aria-live="polite">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-emerald-50 ring-1 ring-inset ring-emerald-200">
-            <CheckCircle2
-              size={24}
-              className="text-emerald-600"
-              aria-hidden="true"
-            />
+        <div
+          className="space-y-3.5 text-center"
+          role="status"
+          aria-live="polite"
+        >
+          <div className="flex justify-center">
+            <div className="flex h-14 w-14 items-center justify-center rounded-full border border-cyber-100 bg-cyber-50">
+              <Mail className="h-7 w-7 text-cyber-600" aria-hidden="true" />
+            </div>
           </div>
+
+          <h1 className="auth-heading font-bold tracking-tight text-slate-900 text-xl sm:text-2xl">
+            Check your inbox
+          </h1>
+
           <p className="mx-auto max-w-sm text-sm leading-6 text-slate-600">
             If an account exists for{" "}
             <span className="font-semibold text-slate-900">
@@ -124,16 +135,19 @@ export default function ForgotPasswordPage() {
             </span>
             , we&apos;ve sent a reset link. It expires in 60 minutes.
           </p>
-          <button
-            type="button"
-            onClick={handleResend}
-            disabled={resendCountdown > 0}
-            className="inline-flex min-h-9 items-center justify-center rounded-lg px-3 text-[13px] font-semibold text-[#0D518C] transition hover:bg-cyber-50 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {resendCountdown > 0
-              ? `Resend in ${resendCountdown}s`
-              : "Resend link"}
-          </button>
+
+          <div className="flex min-h-11 items-center justify-center pt-1">
+            <button
+              type="button"
+              onClick={handleResend}
+              disabled={resendCountdown > 0}
+              className="auth-btn-secondary min-h-11"
+            >
+              {resendCountdown > 0
+                ? `Resend in ${resendCountdown}s`
+                : "Resend the verification link"}
+            </button>
+          </div>
         </div>
       ) : (
         <form
