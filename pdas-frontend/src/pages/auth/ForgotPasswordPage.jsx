@@ -27,7 +27,7 @@ const maskEmail = (email) => {
 
 const formatResetError = (error) => {
   if (error.code === "RATE_LIMITED" && error.retryAfter > 0) {
-    return `Too many reset email requests. Try again in ${formatCooldown(error.retryAfter)}.`;
+    return `Too many reset email requests. Try again in ${formatCooldown(error.retryAfter)} or at a later time.`;
   }
   return (
     error.message ||
@@ -64,7 +64,7 @@ export default function ForgotPasswordPage() {
       setSubmittedEmail(email);
       setSent(true);
       setResendCountdown(response.resend_available_in || 60);
-      toast.success("Check your email for a reset link.");
+      toast.success("Check your email for the new reset link.");
       setCardError(null);
       return true;
     } catch (error) {
@@ -133,8 +133,8 @@ export default function ForgotPasswordPage() {
             <span className="font-semibold text-slate-900">
               {maskEmail(submittedEmail)}
             </span>
-            , we&apos;ve sent a reset link. It expires in 60 minutes. Check
-            your spam folder if it does not arrive.
+            , we&apos;ve sent a reset link. It expires in 60 minutes. Check your
+            spam folder if it does not arrive.
           </p>
 
           <div className="flex min-h-11 items-center justify-center pt-1">

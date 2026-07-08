@@ -59,7 +59,7 @@ export default function LoginPage() {
       navigate(destination, { replace: true });
     } catch (error) {
       setCardError(
-        error.message || "We could not sign you in. Please try again.",
+        error.message || "We could not sign you in. Please try again later.",
       );
     }
   };
