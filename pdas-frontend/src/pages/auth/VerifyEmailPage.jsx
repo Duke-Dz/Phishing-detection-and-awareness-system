@@ -74,7 +74,7 @@ export default function VerifyEmailPage() {
         clearPendingVerificationEmail();
         setSuccess(true);
         toast.success("Email verified.");
-        // Auto redirect to login after 3 seconds
+        // Auto redirects to login after 3 seconds
         setTimeout(() => navigate("/login", { replace: true }), 3000);
       } catch (error) {
         setCardError(
@@ -106,7 +106,7 @@ export default function VerifyEmailPage() {
       const seconds = response.resend_available_in || 120;
       setVerificationCooldown(email, seconds);
       setResendCooldown(seconds);
-      toast.success("A new verification link has been sent.");
+      toast.success("A new verification link has been sent to your  registered email address.");
     } catch (error) {
       if (
         error.code === "VERIFICATION_RESEND_COOLDOWN" &&
@@ -162,7 +162,7 @@ export default function VerifyEmailPage() {
         }
         description={
           success
-            ? "Your account is now active. Redirecting you to sign in..."
+            ? "Your account is now active. Redirecting you to sign in page..."
             : hasError
               ? "The link may be invalid or expired."
               : "Please wait while we verify your secure link."

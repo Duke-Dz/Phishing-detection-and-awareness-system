@@ -27,7 +27,7 @@ const REGISTER_ERROR_MESSAGES = {
   USERNAME_TAKEN: "Username already taken.",
   EMAIL_IN_USE: "Email already in use.",
   EMAIL_PENDING_VERIFICATION:
-    "Registration pending. Verify your email to continue.",
+    "Registration pending. Check and verify your email to continue.",
   NETWORK_ERROR: "Check your internet connection.",
 };
 
@@ -37,23 +37,29 @@ const registerSchema = z
       .string()
       .trim()
       .min(1, "Enter your first name")
-      .regex(/^[a-zA-Z\s]+$/, "Use letters and spaces only."),
+      .regex(
+        /^[a-zA-Z\s]+$/,
+        "Use letters and spaces only.No special characters are  allowed.",
+      ),
     last_name: z
       .string()
       .trim()
       .min(1, "Enter your last name")
-      .regex(/^[a-zA-Z\s]+$/, "Use letters and spaces only."),
+      .regex(
+        /^[a-zA-Z\s]+$/,
+        "Use letters and spaces only.No special characters are  allowed.",
+      ),
     username: z
       .string()
       .trim()
-      .min(3, "Choose a username with at least 3 characters")
-      .max(10, "Username is too long")
+      .min(5, "Choose a username with at least 5 characters")
+      .max(13, "Username is too long")
       .regex(/^[a-zA-Z0-9_]+$/, "Use only letters, numbers, and underscores")
       .refine((value) => !value.includes("@"), {
-        message: "Use a username, not an email address.",
+        message: "Username cannot be same as the  email address.",
       })
       .refine((value) => !z.string().email().safeParse(value).success, {
-        message: "Use a username, not an email address.",
+        message: "Username cannot be same as the  email address.",
       }),
     email: z
       .string()
@@ -153,13 +159,15 @@ export default function RegisterPage() {
         response.resend_available_in || 120,
       );
       storePendingVerificationEmail(normalizedEmail);
-      toast.success("Account created. Check your email.");
+      toast.success(
+        "Account created. Check your email for the verification link.",
+      );
       navigate("/verify-email", { replace: true });
     } catch (error) {
       setCardError(
         REGISTER_ERROR_MESSAGES[error.code] ||
           error.message ||
-          "We could not create your account. Try again.",
+          "We could not create your account. Try again later.",
       );
     }
   };
@@ -219,7 +227,7 @@ export default function RegisterPage() {
                 autoComplete="given-name"
                 placeholder="John"
                 pattern="[A-Za-z ]+"
-                title="Use letters and spaces only."
+                title="Use letters and spaces only.No special characters are allowed."
                 required
                 className="auth-field auth-field-has-icon"
               />
@@ -253,7 +261,7 @@ export default function RegisterPage() {
                 autoComplete="family-name"
                 placeholder="Doe"
                 pattern="[A-Za-z ]+"
-                title="Use letters and spaces only."
+                title="Use letters and spaces only.No special characters are  allowed."
                 required
                 className="auth-field auth-field-has-icon"
               />
@@ -279,7 +287,7 @@ export default function RegisterPage() {
               minLength={3}
               maxLength={10}
               pattern="[A-Za-z0-9_]{3,10}"
-              title="Use 3 to 10 letters, numbers, or underscores. Do not use an email address."
+              title="Use atleast 3 to 10 letters, numbers, or underscores.Email address are not allowed."
               required
               className="auth-field auth-field-has-icon"
             />
