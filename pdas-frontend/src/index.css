@@ -1846,12 +1846,22 @@ input[type="password"].auth-field {
     margin-bottom: 0.25rem !important;
   }
 
+  .auth-verify-panel:has(.auth-verify-check) .auth-logo-header {
+    margin-bottom: 0.25rem !important;
+  }
+
   .auth-forgot-panel > .auth-shell-body:has(.auth-forgot-success) {
     margin-top: 0.35rem !important;
   }
 
+  .auth-verify-panel > .auth-shell-body:has(.auth-verify-check) {
+    margin-top: 0.35rem !important;
+  }
+
   .auth-forgot-success .auth-heading,
-  .auth-forgot-success h1.auth-heading {
+  .auth-forgot-success h1.auth-heading,
+  .auth-verify-check .auth-heading,
+  .auth-verify-check h1.auth-heading {
     font-size: clamp(1.5rem, 5.7vw, 1.72rem) !important;
   }
 }

@@ -128,7 +128,7 @@ export default function VerifyEmailPage() {
         description="We need an email address or a verification token to proceed."
         layout="single"
         showHeaderBrand
-        panelclassName="auth-verify-panel"
+        panelClassName="auth-verify-panel"
         cardError={cardError}
         onClearCardError={() => setCardError(null)}
         footer={
@@ -170,7 +170,7 @@ export default function VerifyEmailPage() {
         layout="single"
         showHeaderBrand
         cardError={cardError}
-        panelclassName="auth-verify-panel"
+        panelClassName="auth-verify-panel"
         onClearCardError={() => setCardError(null)}
       >
         <AnimatePresence mode="wait">
@@ -228,11 +228,10 @@ export default function VerifyEmailPage() {
   // State 2: Check your email (arrived from registration)
   return (
     <AuthShell
-      heading="Check your email"
-      description={`We sent a verification link to ${maskEmail(email)}.`}
+      pageTitle="Check your email"
       layout="single"
       showHeaderBrand
-      panelclassName="auth-verify-panel"
+      panelClassName="auth-verify-panel"
       cardError={cardError}
       onClearCardError={() => setCardError(null)}
       footer={
@@ -248,16 +247,28 @@ export default function VerifyEmailPage() {
         </>
       }
     >
-      <div className="space-y-3.5">
+      <div
+        className="auth-verify-check space-y-3 text-center"
+        role="status"
+        aria-live="polite"
+      >
+        <h1 className="auth-heading font-bold tracking-tight text-slate-900 text-xl sm:text-2xl">
+          Check your email
+        </h1>
+
         <div className="flex justify-center">
           <div className="flex h-14 w-14 items-center justify-center rounded-full border border-cyber-100 bg-cyber-50">
-            <Mail className="h-7 w-7 text-cyber-600" />
+            <Mail className="h-7 w-7 text-cyber-600" aria-hidden="true" />
           </div>
         </div>
 
         <p className="mx-auto max-w-sm text-center text-sm leading-6 text-slate-600">
-          Open the verification link to activate your account. If it does not
-          arrive, check your spam folder.
+          We sent a verification link to{" "}
+          <span className="font-semibold text-slate-900">
+            {maskEmail(email)}
+          </span>
+          . Open it to activate your account. If it does not arrive, check your
+          spam folder.
         </p>
 
         <div className="flex min-h-11 items-center justify-center pt-1">

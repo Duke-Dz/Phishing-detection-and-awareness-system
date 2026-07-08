@@ -133,7 +133,8 @@ export default function ForgotPasswordPage() {
             <span className="font-semibold text-slate-900">
               {maskEmail(submittedEmail)}
             </span>
-            , we&apos;ve sent a reset link. It expires in 60 minutes.
+            , we&apos;ve sent a reset link. It expires in 60 minutes. Check
+            your spam folder if it does not arrive.
           </p>
 
           <div className="flex min-h-11 items-center justify-center pt-1">
