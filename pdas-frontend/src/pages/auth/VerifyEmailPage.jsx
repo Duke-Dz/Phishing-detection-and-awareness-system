@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { AnimatePresence, motion as Motion } from "framer-motion";
 import { CheckCircle2, RotateCw, Mail } from "lucide-react";
 import { AuthShell } from "../../components/auth/AuthShell";
@@ -35,6 +35,7 @@ const formatRetryMessage = (error) => {
 
 export default function VerifyEmailPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [email, setEmail] = useState(() => getPendingVerificationEmail());
   const [token] = useState(() => readFragmentParamOnce("token"));
 
@@ -48,6 +49,15 @@ export default function VerifyEmailPage() {
   const [cardError, setCardError] = useState(null);
 
   useEffect(() => setNoReferrerPolicy(), []);
+
+  useEffect(() => {
+    if (location.state?.registrationSuccess) {
+      toast.success("Account created. Check your email for the verification link.", {
+        id: "registration-success",
+      });
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [location.pathname, location.state, navigate]);
 
   useEffect(() => {
     if (!email) {
@@ -106,7 +116,7 @@ export default function VerifyEmailPage() {
       const seconds = response.resend_available_in || 120;
       setVerificationCooldown(email, seconds);
       setResendCooldown(seconds);
-      toast.success("A new verification link has been sent to your  registered email address.");
+      toast.success("A new verification link has been sent to your registered email address.");
     } catch (error) {
       if (
         error.code === "VERIFICATION_RESEND_COOLDOWN" &&

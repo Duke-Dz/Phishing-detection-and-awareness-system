@@ -13,7 +13,6 @@ import { useForm, useWatch } from "react-hook-form";
 import { Link, useNavigate } from "react-router-dom";
 import { z } from "zod";
 import { AnimatePresence, motion as Motion } from "framer-motion";
-import { toast } from "sonner";
 
 import { AuthPasswordField } from "../../components/auth/AuthPasswordField";
 import { AuthShell } from "../../components/auth/AuthShell";
@@ -25,7 +24,7 @@ import { storePendingVerificationEmail } from "../../utils/sensitiveUrl";
 
 const REGISTER_ERROR_MESSAGES = {
   USERNAME_TAKEN: "Username already taken.",
-  EMAIL_IN_USE: "Email already in use.",
+  EMAIL_IN_USE: "Email already registered. Sign in or reset your password.",
   EMAIL_PENDING_VERIFICATION:
     "Registration pending. Check and verify your email to continue.",
   NETWORK_ERROR: "Check your internet connection.",
@@ -39,7 +38,7 @@ const registerSchema = z
       .min(1, "Enter your first name")
       .regex(
         /^[a-zA-Z\s]+$/,
-        "Use letters and spaces only.No special characters are  allowed.",
+        "Use letters and spaces only. No special characters are allowed.",
       ),
     last_name: z
       .string()
@@ -47,7 +46,7 @@ const registerSchema = z
       .min(1, "Enter your last name")
       .regex(
         /^[a-zA-Z\s]+$/,
-        "Use letters and spaces only.No special characters are  allowed.",
+        "Use letters and spaces only. No special characters are allowed.",
       ),
     username: z
       .string()
@@ -56,10 +55,10 @@ const registerSchema = z
       .max(13, "Username is too long")
       .regex(/^[a-zA-Z0-9_]+$/, "Use only letters, numbers, and underscores")
       .refine((value) => !value.includes("@"), {
-        message: "Username cannot be same as the  email address.",
+        message: "Username cannot be the same as the email address.",
       })
       .refine((value) => !z.string().email().safeParse(value).success, {
-        message: "Username cannot be same as the  email address.",
+        message: "Username cannot be the same as the email address.",
       }),
     email: z
       .string()
@@ -113,6 +112,7 @@ export default function RegisterPage() {
     register,
     handleSubmit,
     control,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm({
     resolver: zodResolver(registerSchema),
@@ -144,6 +144,23 @@ export default function RegisterPage() {
     [emailValue, firstNameValue, lastNameValue, passwordValue, usernameValue],
   );
 
+  const normalizeField = (field, value, { lowercase = false } = {}) => {
+    const normalized = lowercase
+      ? String(value || "").trim().toLowerCase()
+      : String(value || "").trim();
+    setValue(field, normalized, {
+      shouldDirty: true,
+      shouldTouch: true,
+      shouldValidate: true,
+    });
+    return normalized;
+  };
+
+  const firstNameRegistration = register("first_name");
+  const lastNameRegistration = register("last_name");
+  const usernameRegistration = register("username");
+  const emailRegistration = register("email");
+
   const onSubmit = async (values) => {
     setCardError(null);
     try {
@@ -159,10 +176,10 @@ export default function RegisterPage() {
         response.resend_available_in || 120,
       );
       storePendingVerificationEmail(normalizedEmail);
-      toast.success(
-        "Account created. Check your email for the verification link.",
-      );
-      navigate("/verify-email", { replace: true });
+      navigate("/verify-email", {
+        replace: true,
+        state: { registrationSuccess: true },
+      });
     } catch (error) {
       setCardError(
         REGISTER_ERROR_MESSAGES[error.code] ||
@@ -196,6 +213,7 @@ export default function RegisterPage() {
     >
       <form
         onSubmit={handleSubmit(onSubmit)}
+        noValidate
         className="w-full flex flex-col gap-4 sm:gap-5"
       >
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
@@ -222,12 +240,16 @@ export default function RegisterPage() {
               </span>
               <input
                 id="reg-firstname"
-                {...register("first_name")}
+                {...firstNameRegistration}
+                onBlur={(event) => {
+                  firstNameRegistration.onBlur(event);
+                  normalizeField("first_name", event.target.value);
+                }}
                 autoFocus
                 autoComplete="given-name"
                 placeholder="John"
                 pattern="[A-Za-z ]+"
-                title="Use letters and spaces only.No special characters are allowed."
+                title="Use letters and spaces only. No special characters are allowed."
                 required
                 className="auth-field auth-field-has-icon"
               />
@@ -257,11 +279,15 @@ export default function RegisterPage() {
               </span>
               <input
                 id="reg-lastname"
-                {...register("last_name")}
+                {...lastNameRegistration}
+                onBlur={(event) => {
+                  lastNameRegistration.onBlur(event);
+                  normalizeField("last_name", event.target.value);
+                }}
                 autoComplete="family-name"
                 placeholder="Doe"
                 pattern="[A-Za-z ]+"
-                title="Use letters and spaces only.No special characters are  allowed."
+                title="Use letters and spaces only. No special characters are allowed."
                 required
                 className="auth-field auth-field-has-icon"
               />
@@ -279,15 +305,21 @@ export default function RegisterPage() {
             </span>
             <input
               id="reg-username"
-              {...register("username")}
+              {...usernameRegistration}
+              onBlur={(event) => {
+                usernameRegistration.onBlur(event);
+                normalizeField("username", event.target.value, {
+                  lowercase: true,
+                });
+              }}
               autoComplete="username"
               autoCapitalize="none"
               spellCheck={false}
               placeholder="johndoe"
-              minLength={3}
-              maxLength={10}
-              pattern="[A-Za-z0-9_]{3,10}"
-              title="Use atleast 3 to 10 letters, numbers, or underscores.Email address are not allowed."
+              minLength={5}
+              maxLength={13}
+              pattern="[A-Za-z0-9_]{5,13}"
+              title="Use 5 to 13 letters, numbers, or underscores. Email addresses are not allowed."
               required
               className="auth-field auth-field-has-icon"
             />
@@ -305,7 +337,13 @@ export default function RegisterPage() {
               </span>
               <input
                 id="reg-email"
-                {...register("email")}
+                {...emailRegistration}
+                onBlur={(event) => {
+                  emailRegistration.onBlur(event);
+                  normalizeField("email", event.target.value, {
+                    lowercase: true,
+                  });
+                }}
                 type="email"
                 autoComplete="email"
                 autoCapitalize="none"
