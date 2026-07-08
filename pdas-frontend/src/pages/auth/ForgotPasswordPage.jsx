@@ -114,19 +114,19 @@ export default function ForgotPasswordPage() {
     >
       {sent ? (
         <div
-          className="space-y-3.5 text-center"
+          className="space-y-3 text-center"
           role="status"
           aria-live="polite"
         >
+          <h1 className="auth-heading font-bold tracking-tight text-slate-900 text-xl sm:text-2xl">
+            Check your inbox
+          </h1>
+
           <div className="flex justify-center">
             <div className="flex h-14 w-14 items-center justify-center rounded-full border border-cyber-100 bg-cyber-50">
               <Mail className="h-7 w-7 text-cyber-600" aria-hidden="true" />
             </div>
           </div>
-
-          <h1 className="auth-heading font-bold tracking-tight text-slate-900 text-xl sm:text-2xl">
-            Check your inbox
-          </h1>
 
           <p className="mx-auto max-w-sm text-sm leading-6 text-slate-600">
             If an account exists for{" "}
