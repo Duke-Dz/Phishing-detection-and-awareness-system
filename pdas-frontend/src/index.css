@@ -1698,12 +1698,12 @@ input[type="password"].auth-field {
 
   .auth-login-panel .auth-logo-container > div:first-of-type,
   .auth-login-panel .auth-logo-compact > div:first-of-type {
-    width: 5.15rem !important;
-    height: 5.15rem !important;
+    width: 4.55rem !important;
+    height: 4.55rem !important;
   }
 
   .auth-login-panel .auth-logo-wordmark {
-    font-size: clamp(1.42rem, 6vw, 1.62rem) !important;
+    font-size: clamp(1.28rem, 5.4vw, 1.48rem) !important;
     letter-spacing: -0.035em !important;
   }
 
@@ -1743,12 +1743,12 @@ input[type="password"].auth-field {
 @media (max-width: 380px) {
   .auth-login-panel .auth-logo-container > div:first-of-type,
   .auth-login-panel .auth-logo-compact > div:first-of-type {
-    width: 4.5rem !important;
-    height: 4.5rem !important;
+    width: 4.05rem !important;
+    height: 4.05rem !important;
   }
 
   .auth-login-panel .auth-logo-wordmark {
-    font-size: 1.32rem !important;
+    font-size: 1.22rem !important;
   }
 
   .auth-login-panel .auth-heading,
@@ -1802,14 +1802,14 @@ input[type="password"].auth-field {
   .auth-register-panel .auth-logo-compact > div:first-of-type,
   .auth-verify-panel .auth-logo-container > div:first-of-type,
   .auth-verify-panel .auth-logo-compact > div:first-of-type {
-    width: 5.15rem !important;
-    height: 5.15rem !important;
+    width: 4.55rem !important;
+    height: 4.55rem !important;
   }
 
   .auth-forgot-panel .auth-logo-wordmark,
   .auth-register-panel .auth-logo-wordmark,
   .auth-verify-panel .auth-logo-wordmark {
-    font-size: clamp(1.42rem, 6vw, 1.62rem) !important;
+    font-size: clamp(1.28rem, 5.4vw, 1.48rem) !important;
     letter-spacing: -0.035em !important;
   }
 
@@ -1841,6 +1841,19 @@ input[type="password"].auth-field {
   .auth-register-panel > .auth-shell-body {
     margin-top: 1.25rem !important;
   }
+
+  .auth-forgot-panel:has(.auth-forgot-success) .auth-logo-header {
+    margin-bottom: 0.25rem !important;
+  }
+
+  .auth-forgot-panel > .auth-shell-body:has(.auth-forgot-success) {
+    margin-top: 0.35rem !important;
+  }
+
+  .auth-forgot-success .auth-heading,
+  .auth-forgot-success h1.auth-heading {
+    font-size: clamp(1.5rem, 5.7vw, 1.72rem) !important;
+  }
 }
 
 @media (max-width: 380px) {
@@ -1850,14 +1863,14 @@ input[type="password"].auth-field {
   .auth-register-panel .auth-logo-compact > div:first-of-type,
   .auth-verify-panel .auth-logo-container > div:first-of-type,
   .auth-verify-panel .auth-logo-compact > div:first-of-type {
-    width: 4.65rem !important;
-    height: 4.65rem !important;
+    width: 4.05rem !important;
+    height: 4.05rem !important;
   }
 
   .auth-forgot-panel .auth-logo-wordmark,
   .auth-register-panel .auth-logo-wordmark,
   .auth-verify-panel .auth-logo-wordmark {
-    font-size: 1.32rem !important;
+    font-size: 1.22rem !important;
   }
 
   .auth-forgot-panel .auth-heading,

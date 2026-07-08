@@ -114,7 +114,7 @@ export default function ForgotPasswordPage() {
     >
       {sent ? (
         <div
-          className="space-y-3 text-center"
+          className="auth-forgot-success space-y-3 text-center"
           role="status"
           aria-live="polite"
         >
