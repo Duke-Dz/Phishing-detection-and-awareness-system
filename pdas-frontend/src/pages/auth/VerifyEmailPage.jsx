@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { AnimatePresence, motion as Motion } from "framer-motion";
 import { CheckCircle2, RotateCw, Mail } from "lucide-react";
 import { AuthShell } from "../../components/auth/AuthShell";
+import { getErrorMessage } from "../../services/api";
 import { authService } from "../../services/authService";
 import { toast } from "sonner";
 import {
@@ -28,7 +29,7 @@ const maskEmail = (value) => {
 
 const formatRetryMessage = (error) => {
   if (error.code !== "RATE_LIMITED" || !error.retryAfter) {
-    return error.message;
+    return getErrorMessage(error);
   }
   return `Too many verification email requests. Try again in ${formatCooldown(error.retryAfter)}.`;
 };
@@ -89,9 +90,11 @@ export default function VerifyEmailPage() {
       } catch (error) {
         setCardError(
           error.code === "NETWORK_ERROR"
-            ? error.message
-            : error.message ||
+            ? getErrorMessage(error)
+            : getErrorMessage(
+                error,
                 "This verification link is invalid or has expired.",
+              ),
         );
         setHasError(true);
       } finally {

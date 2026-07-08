@@ -6,6 +6,7 @@ import { Link, useLocation } from "react-router-dom";
 import { toast } from "sonner";
 import { z } from "zod";
 import { AuthShell } from "../../components/auth/AuthShell";
+import { getErrorMessage } from "../../services/api";
 import { authService } from "../../services/authService";
 import { formatCooldown } from "../../utils/verificationCooldown";
 
@@ -29,9 +30,9 @@ const formatResetError = (error) => {
   if (error.code === "RATE_LIMITED" && error.retryAfter > 0) {
     return `Too many reset email requests. Try again in ${formatCooldown(error.retryAfter)} or at a later time.`;
   }
-  return (
-    error.message ||
-    "We could not send the reset email right now. Please try again shortly."
+  return getErrorMessage(
+    error,
+    "We could not send the reset email right now. Please try again shortly.",
   );
 };
 

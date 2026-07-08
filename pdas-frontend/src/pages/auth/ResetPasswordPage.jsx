@@ -9,6 +9,7 @@ import { AnimatePresence, motion as Motion } from "framer-motion";
 import { AuthPasswordField } from "../../components/auth/AuthPasswordField";
 import { AuthShell } from "../../components/auth/AuthShell";
 import { PasswordChecklist } from "../../components/auth/PasswordChecklist";
+import { getErrorMessage } from "../../services/api";
 import { authService } from "../../services/authService";
 import { PASSWORD_RULES } from "../../utils/constants";
 import { evaluatePassword } from "../../utils/passwordPolicy";
@@ -81,7 +82,12 @@ export default function ResetPasswordPage() {
       setSuccess(true);
       toast.success("Password updated.");
     } catch (error) {
-      setCardError(error.message || "We could not reset your password. Please request a new link.");
+      setCardError(
+        getErrorMessage(
+          error,
+          "We could not reset your password. Please request a new link.",
+        ),
+      );
     }
   };
 

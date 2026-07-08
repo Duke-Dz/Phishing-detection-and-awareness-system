@@ -17,6 +17,7 @@ import { AnimatePresence, motion as Motion } from "framer-motion";
 import { AuthPasswordField } from "../../components/auth/AuthPasswordField";
 import { AuthShell } from "../../components/auth/AuthShell";
 import { useAuth } from "../../hooks/useAuth";
+import { getErrorMessage } from "../../services/api";
 import { PASSWORD_RULES } from "../../utils/constants";
 import { evaluatePassword } from "../../utils/passwordPolicy";
 import { setVerificationCooldown } from "../../utils/verificationCooldown";
@@ -183,8 +184,7 @@ export default function RegisterPage() {
     } catch (error) {
       setCardError(
         REGISTER_ERROR_MESSAGES[error.code] ||
-          error.message ||
-          "We could not create your account. Try again later.",
+          getErrorMessage(error, "We could not create your account. Try again later."),
       );
     }
   };

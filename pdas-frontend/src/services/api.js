@@ -44,9 +44,8 @@ const statusToCode = (status) => {
   return "REQUEST_FAILED";
 };
 
-const getSafeMessage = ({ code, status, isNetworkError, validationMessage }) => {
+const getSafeMessage = ({ code, status, isNetworkError }) => {
   if (isNetworkError) return SAFE_ERROR_MESSAGES.NETWORK_ERROR;
-  if (validationMessage && code === "VALIDATION_ERROR") return validationMessage;
   return (
     SAFE_ERROR_MESSAGES[code] ||
     SAFE_ERROR_MESSAGES[statusToCode(status)] ||
@@ -68,11 +67,10 @@ export const toApiError = (error) => {
   if (error instanceof ApiError) return error;
   const response = error?.response;
   const payload = response?.data || {};
-  const validationMessage = payload.errors?.[0]?.message || payload.details?.[0]?.message;
   const isNetworkError = !response;
   const status = response?.status || 0;
   const code = payload.code || (isNetworkError ? "NETWORK_ERROR" : statusToCode(status));
-  const message = getSafeMessage({ code, status, isNetworkError, validationMessage });
+  const message = getSafeMessage({ code, status, isNetworkError });
 
   return new ApiError(message, {
     status,
@@ -85,8 +83,22 @@ export const toApiError = (error) => {
   });
 };
 
-export const getErrorMessage = (error, fallback = "We could not complete your request. Please try again.") =>
-  toApiError(error).message || fallback;
+const FALLBACK_PREFERRED_CODES = new Set([
+  "BAD_REQUEST",
+  "REQUEST_FAILED",
+  "VALIDATION_ERROR",
+]);
+
+export const getErrorMessage = (
+  error,
+  fallback = "We could not complete your request. Please try again.",
+) => {
+  const apiError = toApiError(error);
+  if (fallback && FALLBACK_PREFERRED_CODES.has(apiError.code)) {
+    return fallback;
+  }
+  return apiError.message || fallback;
+};
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api',

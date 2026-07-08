@@ -2,6 +2,7 @@ import { Loader2, Send } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { emailService } from "../../services/emailService";
+import { getErrorMessage } from "../../services/api";
 import { reportService } from "../../services/reportService";
 import { scanService } from "../../services/scanService";
 
@@ -29,7 +30,7 @@ export default function ScanCenter({ onComplete }) {
       setContent("");
       onComplete?.();
     } catch (error) {
-      toast.error(error?.message || "Could not complete scan.");
+      toast.error(getErrorMessage(error, "Could not complete scan."));
     } finally { setSubmitting(false); }
   };
   const label = tab === "url" ? "Web address" : tab === "email" ? "Email content" : tab === "sms" ? "SMS content" : "Suspicious content";

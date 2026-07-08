@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { CheckCircle2, RotateCw } from "lucide-react";
 import { AnimatePresence, motion as Motion } from "framer-motion";
-import api from "../services/api";
+import api, { getErrorMessage } from "../services/api";
 import { AuthShell } from "../components/auth/AuthShell";
 import { readFragmentParamOnce, setNoReferrerPolicy } from "../utils/sensitiveUrl";
 
@@ -34,11 +34,16 @@ export default function Unsubscribe() {
           setMessage("You have successfully unsubscribed from email notifications.");
         } else {
           setStatus("error");
-          setMessage(data.message || "Failed to unsubscribe. Please try again later.");
+          setMessage("Failed to unsubscribe. Please try again later.");
         }
       } catch (err) {
         setStatus("error");
-        setMessage(err?.response?.data?.message || err.message || "An unexpected error occurred while unsubscribing.");
+        setMessage(
+          getErrorMessage(
+            err,
+            "An unexpected error occurred while unsubscribing.",
+          ),
+        );
       }
     };
 

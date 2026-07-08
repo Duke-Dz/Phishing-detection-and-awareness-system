@@ -8,6 +8,7 @@ import { z } from "zod";
 import { AuthPasswordField } from "../../components/auth/AuthPasswordField";
 import { AuthShell } from "../../components/auth/AuthShell";
 import { useAuth } from "../../hooks/useAuth";
+import { getErrorMessage } from "../../services/api";
 import { ROLE_DESTINATIONS } from "../../utils/constants";
 
 const loginSchema = z.object({
@@ -59,7 +60,7 @@ export default function LoginPage() {
       navigate(destination, { replace: true });
     } catch (error) {
       setCardError(
-        error.message || "We could not sign you in. Please try again later.",
+        getErrorMessage(error, "We could not sign you in. Please try again later."),
       );
     }
   };

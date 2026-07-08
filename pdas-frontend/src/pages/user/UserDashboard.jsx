@@ -9,6 +9,7 @@ import RecentScans from "../../components/scan/RecentScans";
 import ScanCenter from "../../components/scan/ScanCenter";
 import { useAuth } from "../../hooks/useAuth";
 import { awarenessService } from "../../services/awarenessService";
+import { getErrorMessage } from "../../services/api";
 import { dashboardService } from "../../services/dashboardService";
 import { reportService } from "../../services/reportService";
 import { scanService } from "../../services/scanService";
@@ -51,7 +52,7 @@ export default function UserDashboard() {
       setReports(reportsResponse.data || []);
       setLessons(lessonsResponse.data || []);
     } catch (error) {
-      toast.error(error?.message || "Could not load dashboard.");
+      toast.error(getErrorMessage(error, "Could not load dashboard."));
     } finally {
       setLoading(false);
       setRefreshing(false);
