@@ -6,7 +6,21 @@ const sequelize = new Sequelize(config.db.name || "", config.db.user || "", conf
   host: config.db.host,
   port: config.db.port,
   dialect: "postgres",
-  logging: config.db.logging ? (message) => logger.debug("database.query", { sql: message }) : false,
+  benchmark: true,
+  logging: (message, timingMs) => {
+    if (!config.db.logging && timingMs < config.performance.slowQueryThresholdMs) {
+      return;
+    }
+
+    const level = timingMs >= config.performance.slowQueryThresholdMs
+      ? "warn"
+      : "debug";
+    logger[level]("database.query", {
+      duration_ms: Number(timingMs || 0),
+      slow: timingMs >= config.performance.slowQueryThresholdMs,
+      sql: config.db.logging ? message : undefined,
+    });
+  },
   dialectOptions: config.db.ssl
     ? { ssl: { require: true, rejectUnauthorized: config.db.sslRejectUnauthorized } }
     : undefined,

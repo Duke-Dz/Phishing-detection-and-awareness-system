@@ -21,6 +21,8 @@ const persistScan = async ({ user_id, report_id = null, analysis }) => {
     });
 
   cacheService.del(cacheService.keys.dashboardStats(user_id));
+  cacheService.del(cacheService.keys.systemStats());
+  cacheService.del(cacheService.keys.adminAnalytics());
   cacheService.delByPrefix(`scan:list:${user_id}:`);
   cacheService.delByPrefix("scan:list:all:");
   cacheService.set(cacheService.keys.scanDetail(scanResult.scan_id), scanResult, cacheService.TTL.SCAN_RESULT);

@@ -14,6 +14,7 @@ const createNotification = async ({ user_id, title, message, type = "info", rela
     related_report_id,
   });
   cacheService.del(cacheService.keys.dashboardStats(user_id));
+  cacheService.del(cacheService.keys.systemStats());
   cacheService.delByPrefix(`notifications:${user_id}:`);
 
   // Push real-time notification via SSE (fire-and-forget)

@@ -1,6 +1,7 @@
 const { SystemSetting } = require("../models");
 const { createError } = require("../utils/inputValidation");
 const auditService = require("../services/auditService");
+const cacheService = require("../services/cacheService");
 
 /**
  * @desc    Get all public system settings mapped as key-value pairs
@@ -8,13 +9,18 @@ const auditService = require("../services/auditService");
  * @access  Public
  */
 const getSettings = async (req, res) => {
-  const settings = await SystemSetting.findAll();
-  
-  // Convert array of objects to key-value pairs
-  const settingsMap = {};
-  settings.forEach(s => {
-    settingsMap[s.key] = s.value;
-  });
+  const settingsMap = await cacheService.getOrSet(
+    cacheService.keys.settings(),
+    async () => {
+      const settings = await SystemSetting.findAll();
+      const mapped = {};
+      settings.forEach((setting) => {
+        mapped[setting.key] = setting.value;
+      });
+      return mapped;
+    },
+    cacheService.TTL.SYSTEM_STATS,
+  );
 
   res.json({
     success: true,
@@ -36,6 +42,7 @@ const updateSetting = async (req, res) => {
 
   setting.value = value;
   await setting.save();
+  cacheService.del(cacheService.keys.settings());
 
   auditService.logAction({
     userId: req.user.user_id,

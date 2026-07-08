@@ -1,6 +1,12 @@
 const bcrypt = require("bcryptjs");
 const { Op } = require("sequelize");
-const { User, PasswordResetToken, PendingRegistration, RefreshToken, SecurityEvent } = require("../models");
+const {
+  User,
+  PasswordResetToken,
+  PendingRegistration,
+  RefreshToken,
+  SecurityEvent,
+} = require("../models");
 const { logSecurityEvent } = require("../utils/securityLogger");
 const {
   issueTokenPair,
@@ -19,7 +25,9 @@ const mailService = require("../services/mailService");
 const emailTemplates = require("../templates/emailTemplates");
 const config = require("../config/env");
 const logger = require("../utils/logger");
-const { cleanupExpiredPendingRegistrations } = require("../services/pendingRegistrationService");
+const {
+  cleanupExpiredPendingRegistrations,
+} = require("../services/pendingRegistrationService");
 const VERIFICATION_RESEND_COOLDOWN_SECONDS = 120;
 
 const getVerificationExpiryMs = () =>
@@ -40,7 +48,8 @@ const getRefreshCookieOptions = (refreshTokenRecord = null) => {
   };
 
   if (refreshTokenRecord?.remember_me) {
-    const remainingMs = new Date(refreshTokenRecord.expires_at).getTime() - Date.now();
+    const remainingMs =
+      new Date(refreshTokenRecord.expires_at).getTime() - Date.now();
     options.maxAge = Math.max(0, remainingMs);
   }
 
@@ -48,7 +57,11 @@ const getRefreshCookieOptions = (refreshTokenRecord = null) => {
 };
 
 const setRefreshCookie = (res, refreshToken, refreshTokenRecord) => {
-  res.cookie(config.auth.cookieName, refreshToken, getRefreshCookieOptions(refreshTokenRecord));
+  res.cookie(
+    config.auth.cookieName,
+    refreshToken,
+    getRefreshCookieOptions(refreshTokenRecord),
+  );
 };
 
 const clearRefreshCookie = (res) => {
@@ -66,8 +79,9 @@ const notifyOnNewSignIn = async (user, req, historyPromise) => {
 
   const currentIp = req.ip || req.connection?.remoteAddress || null;
   const currentUa = req.headers["user-agent"] || null;
-  const isKnown = pastLogins.some((event) =>
-    event.ip_address === currentIp && event.user_agent === currentUa);
+  const isKnown = pastLogins.some(
+    (event) => event.ip_address === currentIp && event.user_agent === currentUa,
+  );
 
   if (pastLogins.length > 0 && !isKnown) {
     const template = emailTemplates.newSignIn({
@@ -91,18 +105,19 @@ const register = async (req, res) => {
 
   const existingUser = await User.findOne({ where: { email } });
   if (existingUser) {
-    throw createError("Email already in use.", 409, "EMAIL_IN_USE");
+    throw createError("Email already registered.", 409, "EMAIL_IN_USE");
   }
 
-  const [existingPendingEmail, existingUsername, pendingUsername] = await Promise.all([
-    PendingRegistration.findOne({ where: { email } }),
-    User.findOne({ where: { username } }),
-    PendingRegistration.findOne({ where: { username } }),
-  ]);
+  const [existingPendingEmail, existingUsername, pendingUsername] =
+    await Promise.all([
+      PendingRegistration.findOne({ where: { email } }),
+      User.findOne({ where: { username } }),
+      PendingRegistration.findOne({ where: { username } }),
+    ]);
 
   if (existingPendingEmail) {
     throw createError(
-      "Registration pending. Verify your email to continue.",
+      "Registration pending. Check and verify your email to continue.",
       409,
       "EMAIL_PENDING_VERIFICATION",
     );
@@ -127,14 +142,15 @@ const register = async (req, res) => {
   const verificationUrl = buildFrontendFragmentUrl("/verify-email", token);
   const template = emailTemplates.emailVerification({
     verificationUrl,
-    userName: req.body.full_name,
+    userName: String(req.body.full_name).trim(),
   });
-  
+
   mailService.sendMail({ to: email, ...template }).catch(() => {});
 
   res.status(201).json({
     success: true,
-    message: "Registration pending. Please check your verification email to activate your account.",
+    message:
+      "Registration pending. Please check your verification email to activate your account.",
     resend_available_in: VERIFICATION_RESEND_COOLDOWN_SECONDS,
   });
 };
@@ -158,8 +174,13 @@ const login = async (req, res) => {
 
   // Check if account is currently locked
   if (user.locked_until && new Date() < user.locked_until) {
-    await User.increment('failed_login_attempts', { where: { user_id: user.user_id } });
-    await User.update({ last_failed_login: new Date() }, { where: { user_id: user.user_id } });
+    await User.increment("failed_login_attempts", {
+      where: { user_id: user.user_id },
+    });
+    await User.update(
+      { last_failed_login: new Date() },
+      { where: { user_id: user.user_id } },
+    );
     throw createError(genericErrorMsg, 401);
   }
 
@@ -167,8 +188,13 @@ const login = async (req, res) => {
 
   if (!isMatch) {
     // Increment failed attempts and update last failed login atomically
-    await User.increment('failed_login_attempts', { where: { user_id: user.user_id } });
-    await User.update({ last_failed_login: new Date() }, { where: { user_id: user.user_id } });
+    await User.increment("failed_login_attempts", {
+      where: { user_id: user.user_id },
+    });
+    await User.update(
+      { last_failed_login: new Date() },
+      { where: { user_id: user.user_id } },
+    );
 
     const updatedUser = await User.findByPk(user.user_id);
     const attempts = updatedUser.failed_login_attempts;
@@ -182,7 +208,10 @@ const login = async (req, res) => {
 
     if (lockoutMinutes > 0) {
       const lockedUntil = new Date(Date.now() + lockoutMinutes * 60 * 1000);
-      await User.update({ locked_until: lockedUntil }, { where: { user_id: user.user_id } });
+      await User.update(
+        { locked_until: lockedUntil },
+        { where: { user_id: user.user_id } },
+      );
 
       const resetToken = generateToken();
       await PasswordResetToken.create({
@@ -198,10 +227,16 @@ const login = async (req, res) => {
         resetUrl,
       });
 
-      logSecurityEvent(user.user_id, 'ACCOUNT_LOCKED', req, { lockoutMinutes, attempts });
+      logSecurityEvent(user.user_id, "ACCOUNT_LOCKED", req, {
+        lockoutMinutes,
+        attempts,
+      });
       mailService.sendMail({ to: user.email, ...template }).catch(() => {});
     } else {
-      logSecurityEvent(user.user_id, 'LOGIN_FAILED', req, { reason: 'wrong_password', attempts });
+      logSecurityEvent(user.user_id, "LOGIN_FAILED", req, {
+        reason: "wrong_password",
+        attempts,
+      });
     }
 
     throw createError(genericErrorMsg, 401);
@@ -224,7 +259,7 @@ const login = async (req, res) => {
     });
   });
 
-  logSecurityEvent(user.user_id, 'LOGIN_SUCCESS', req, { method: 'password' });
+  logSecurityEvent(user.user_id, "LOGIN_SUCCESS", req, { method: "password" });
 
   const tokens = await issueTokenPair(user, req.body.remember_me === true, req);
   setRefreshCookie(res, tokens.refreshToken, tokens.refreshTokenRecord);
@@ -240,19 +275,23 @@ const login = async (req, res) => {
 const refresh = async (req, res) => {
   const refreshToken = getRefreshTokenFromRequest(req);
   if (!refreshToken) {
-    throw createError("Refresh token is required", 401);
+    throw createError("Refresh token is required", 401, "AUTH_EXPIRED");
   }
 
   const tokenPair = await rotateRefreshToken(refreshToken, req);
-  
-  if (tokenPair && tokenPair.error === 'ReplayDetected') {
+
+  if (tokenPair && tokenPair.error === "ReplayDetected") {
     clearRefreshCookie(res);
-    throw createError("Token replay detected. All sessions revoked for security.", 401);
+    throw createError(
+      "Token replay detected. All sessions revoked for security.",
+      401,
+      "AUTH_EXPIRED",
+    );
   }
 
   if (!tokenPair) {
     clearRefreshCookie(res);
-    throw createError("Invalid or expired refresh token", 401);
+    throw createError("Invalid or expired refresh token", 401, "AUTH_EXPIRED");
   }
   setRefreshCookie(res, tokenPair.refreshToken, tokenPair.refreshTokenRecord);
 
@@ -280,7 +319,7 @@ const logout = async (req, res) => {
   }
   clearRefreshCookie(res);
 
-  logSecurityEvent(req.user.user_id, 'LOGOUT', req);
+  logSecurityEvent(req.user.user_id, "LOGOUT", req);
 
   res.json({
     success: true,
@@ -316,7 +355,7 @@ const forgotPassword = async (req, res) => {
       expiryMinutes,
     });
 
-    logSecurityEvent(user.user_id, 'PASSWORD_RESET_REQUESTED', req);
+    logSecurityEvent(user.user_id, "PASSWORD_RESET_REQUESTED", req);
 
     mailService.sendMail({ to: user.email, ...template }).catch((error) => {
       logger.warn("password_reset.delivery_failed", {
@@ -327,14 +366,16 @@ const forgotPassword = async (req, res) => {
     });
   }
 
-  const remainingDelay = config.passwordResetResponseDelayMs - (Date.now() - requestStartedAt);
+  const remainingDelay =
+    config.passwordResetResponseDelayMs - (Date.now() - requestStartedAt);
   if (remainingDelay > 0) {
     await new Promise((resolve) => setTimeout(resolve, remainingDelay));
   }
 
   res.json({
     success: true,
-    message: "If that email is registered, a password reset link has been sent.",
+    message:
+      "If that email is registered, a password reset link has been sent.",
     resend_available_in: 60,
   });
 };
@@ -370,7 +411,7 @@ const resetPassword = async (req, res) => {
   // Revoke all refresh tokens (force re-login)
   await revokeUserRefreshTokens(user.user_id);
 
-  logSecurityEvent(user.user_id, 'PASSWORD_RESET_COMPLETED', req);
+  logSecurityEvent(user.user_id, "PASSWORD_RESET_COMPLETED", req);
 
   // Send confirmation email
   const template = emailTemplates.passwordChanged({ userName: user.full_name });
@@ -378,7 +419,8 @@ const resetPassword = async (req, res) => {
 
   res.json({
     success: true,
-    message: "Password has been reset successfully. Please log in with your new password.",
+    message:
+      "Password has been reset successfully. Please log in with your new password.",
   });
 };
 
@@ -399,7 +441,7 @@ const changePassword = async (req, res) => {
   user.password_hash = await bcrypt.hash(new_password, 12);
   await user.save();
 
-  logSecurityEvent(req.user.user_id, 'PASSWORD_CHANGED', req);
+  logSecurityEvent(req.user.user_id, "PASSWORD_CHANGED", req);
 
   // Send confirmation email
   const template = emailTemplates.passwordChanged({ userName: user.full_name });
@@ -429,7 +471,10 @@ const verifyEmail = async (req, res) => {
 
   if (new Date() > pendingReg.expires_at) {
     await pendingReg.destroy();
-    throw createError("This verification link has expired. Please register again.", 400);
+    throw createError(
+      "This verification link has expired. Please register again.",
+      400,
+    );
   }
 
   // The very first registered user in the system becomes the admin automatically.
@@ -449,8 +494,8 @@ const verifyEmail = async (req, res) => {
 
   await pendingReg.destroy();
 
-  logSecurityEvent(user.user_id, 'EMAIL_VERIFIED', req);
-  logSecurityEvent(user.user_id, 'ACCOUNT_REGISTERED', req);
+  logSecurityEvent(user.user_id, "EMAIL_VERIFIED", req);
+  logSecurityEvent(user.user_id, "ACCOUNT_REGISTERED", req);
 
   res.json({
     success: true,
@@ -472,15 +517,21 @@ const resendVerification = async (req, res) => {
     }
     return res.json({
       success: true,
-      message: "If that email is registered, a verification link has been sent.",
+      message:
+        "If that email is registered, a verification link has been sent.",
     });
   }
 
   const lastSentAt = pendingReg.updated_at || pendingReg.created_at;
-  const elapsedMs = lastSentAt ? Date.now() - new Date(lastSentAt).getTime() : Number.POSITIVE_INFINITY;
+  const elapsedMs = lastSentAt
+    ? Date.now() - new Date(lastSentAt).getTime()
+    : Number.POSITIVE_INFINITY;
   const cooldownMs = VERIFICATION_RESEND_COOLDOWN_SECONDS * 1000;
   if (elapsedMs < cooldownMs) {
-    const retryAfterSeconds = Math.max(1, Math.ceil((cooldownMs - elapsedMs) / 1000));
+    const retryAfterSeconds = Math.max(
+      1,
+      Math.ceil((cooldownMs - elapsedMs) / 1000),
+    );
     const error = createError(
       `Please wait ${retryAfterSeconds} seconds before requesting another verification email.`,
       429,
@@ -498,7 +549,10 @@ const resendVerification = async (req, res) => {
     userName: pendingReg.full_name,
   });
   try {
-    const delivery = await mailService.sendMail({ to: pendingReg.email, ...template });
+    const delivery = await mailService.sendMail({
+      to: pendingReg.email,
+      ...template,
+    });
     if (!delivery && mailService.isMailConfigured()) {
       throw new Error("Email delivery did not return a receipt");
     }
@@ -534,26 +588,26 @@ const getSessions = async (req, res) => {
     where: {
       user_id: req.user.user_id,
       revoked_at: null,
-      expires_at: { [Op.gt]: new Date() }
+      expires_at: { [Op.gt]: new Date() },
     },
-    order: [['last_used_at', 'DESC']]
+    order: [["last_used_at", "DESC"]],
   });
 
   const currentIp = req.ip || req.connection?.remoteAddress || null;
-  const currentUa = req.headers['user-agent'] || null;
+  const currentUa = req.headers["user-agent"] || null;
 
-  const sessionData = sessions.map(s => ({
+  const sessionData = sessions.map((s) => ({
     id: s.refresh_token_id,
     user_agent: s.user_agent,
     ip_address: s.ip_address,
     last_used_at: s.last_used_at || s.created_at,
     created_at: s.created_at,
-    is_current: (s.ip_address === currentIp && s.user_agent === currentUa)
+    is_current: s.ip_address === currentIp && s.user_agent === currentUa,
   }));
 
   res.json({
     success: true,
-    data: sessionData
+    data: sessionData,
   });
 };
 
@@ -561,12 +615,15 @@ const revokeSession = async (req, res) => {
   const session = await RefreshToken.findOne({
     where: {
       refresh_token_id: req.params.id,
-      user_id: req.user.user_id
-    }
+      user_id: req.user.user_id,
+    },
   });
 
   if (!session) {
-    throw createError("You do not have permission to revoke this session.", 403);
+    throw createError(
+      "You do not have permission to revoke this session.",
+      403,
+    );
   }
 
   session.revoked_at = new Date();
@@ -574,7 +631,7 @@ const revokeSession = async (req, res) => {
 
   res.json({
     success: true,
-    message: "Session revoked successfully"
+    message: "Session revoked successfully",
   });
 };
 

@@ -117,9 +117,33 @@ const verificationEmailKey = (req) => {
   return `verification-email:${crypto.createHash("sha256").update(email).digest("hex")}`;
 };
 
+const registrationIdentityKey = (req) => {
+  const email = String(req.body?.email || "").trim().toLowerCase();
+  const username = String(req.body?.username || "").trim().toLowerCase();
+  const identity = `${email}:${username}`;
+  return `registration:${crypto.createHash("sha256").update(identity).digest("hex")}`;
+};
+
 app.use(limiter(15 * 60 * 1000, 100, "Too many requests, please slow down."));
 app.use("/api/auth/login", limiter(15 * 60 * 1000, 10, "Too many login attempts, try again later."));
-app.use("/api/auth/register", limiter(60 * 60 * 1000, 5, "Too many accounts created from this IP."));
+app.use("/api/auth/register", limiter(
+  15 * 60 * 1000,
+  30,
+  "Too many signup attempts from this network. Please wait a few minutes and try again.",
+  { skipSuccessfulRequests: true },
+));
+app.use("/api/auth/register", limiter(
+  60 * 60 * 1000,
+  8,
+  "Too many signup attempts for these account details. Please wait before trying again.",
+  { keyGenerator: registrationIdentityKey },
+));
+app.use("/api/auth/register", limiter(
+  24 * 60 * 60 * 1000,
+  100,
+  "This network has created many account requests today. Please try again later.",
+  { skipFailedRequests: true },
+));
 app.use("/api/auth/resend-verification", limiter(
   60 * 60 * 1000,
   3,

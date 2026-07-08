@@ -74,18 +74,28 @@ const listUsers = async (req, res) => {
       }
     : {};
 
-  const { count, rows: users } = await User.findAndCountAll({
-    where,
-    order: [["created_at", "DESC"]],
-    limit: pagination.limit,
-    offset: pagination.offset,
-  });
+  const payload = await cacheService.getOrSet(
+    cacheService.keys.adminUsers(req.query),
+    async () => {
+      const { count, rows: users } = await User.findAndCountAll({
+        where,
+        order: [["created_at", "DESC"]],
+        limit: pagination.limit,
+        offset: pagination.offset,
+      });
+
+      return {
+        count: users.length,
+        pagination: buildPaginationMeta({ count, ...pagination }),
+        data: users,
+      };
+    },
+    cacheService.TTL.LIST_PAGE,
+  );
 
   res.json({
     success: true,
-    count: users.length,
-    pagination: buildPaginationMeta({ count, ...pagination }),
-    data: users,
+    ...payload,
   });
 };
 
@@ -111,6 +121,8 @@ const updateUser = async (req, res) => {
   await user.update(updates);
   clearUserCache(user.user_id);
   cacheService.del(cacheService.keys.systemStats());
+  cacheService.del(cacheService.keys.adminAnalytics());
+  cacheService.delByPrefix("admin:users:");
 
   res.json({
     success: true,
@@ -120,17 +132,27 @@ const updateUser = async (req, res) => {
 
 const listThreatIntel = async (req, res) => {
   const pagination = getPagination(req.query);
-  const { count, rows: threats } = await ThreatIntelligence.findAndCountAll({
-    order: [["last_seen", "DESC"]],
-    limit: pagination.limit,
-    offset: pagination.offset,
-  });
+  const payload = await cacheService.getOrSet(
+    cacheService.keys.threatIntelList(req.query),
+    async () => {
+      const { count, rows: threats } = await ThreatIntelligence.findAndCountAll({
+        order: [["last_seen", "DESC"]],
+        limit: pagination.limit,
+        offset: pagination.offset,
+      });
+
+      return {
+        count: threats.length,
+        pagination: buildPaginationMeta({ count, ...pagination }),
+        data: threats,
+      };
+    },
+    cacheService.TTL.LIST_PAGE,
+  );
 
   res.json({
     success: true,
-    count: threats.length,
-    pagination: buildPaginationMeta({ count, ...pagination }),
-    data: threats,
+    ...payload,
   });
 };
 
@@ -150,6 +172,7 @@ const createThreatIntel = async (req, res) => {
     data: threat,
   });
   cacheService.del(cacheService.keys.systemStats());
+  cacheService.delByPrefix("threat:list:");
 };
 
 const updateThreatIntel = async (req, res) => {
@@ -170,6 +193,8 @@ const updateThreatIntel = async (req, res) => {
 
   await threat.update(updates);
   cacheService.del(cacheService.keys.systemStats());
+  cacheService.del(cacheService.keys.threatIntel(threat.domain));
+  cacheService.delByPrefix("threat:list:");
 
   res.json({
     success: true,
@@ -185,6 +210,8 @@ const deleteThreatIntel = async (req, res) => {
 
   await threat.destroy();
   cacheService.del(cacheService.keys.systemStats());
+  cacheService.del(cacheService.keys.threatIntel(threat.domain));
+  cacheService.delByPrefix("threat:list:");
 
   res.json({
     success: true,
@@ -193,69 +220,73 @@ const deleteThreatIntel = async (req, res) => {
 };
 
 const getAnalytics = async (_req, res) => {
-  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+  const data = await cacheService.getOrSet(
+    cacheService.keys.adminAnalytics(),
+    async () => {
+      const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
 
-  const [dailyScans, classificationBreakdown, topDomains, userGrowth] = await Promise.all([
-    // Daily scan counts for last 30 days
-    ScanResult.findAll({
-      where: { analyzed_at: { [Op.gte]: thirtyDaysAgo } },
-      attributes: [
-        [sequelize.fn("DATE", sequelize.col("analyzed_at")), "date"],
-        [sequelize.fn("COUNT", sequelize.col("scan_id")), "count"],
-      ],
-      group: [sequelize.fn("DATE", sequelize.col("analyzed_at"))],
-      order: [[sequelize.fn("DATE", sequelize.col("analyzed_at")), "ASC"]],
-      raw: true,
-    }),
+      const [dailyScans, classificationBreakdown, topDomains, userGrowth] = await Promise.all([
+        ScanResult.findAll({
+          where: { analyzed_at: { [Op.gte]: thirtyDaysAgo } },
+          attributes: [
+            [sequelize.fn("DATE", sequelize.col("analyzed_at")), "date"],
+            [sequelize.fn("COUNT", sequelize.col("scan_id")), "count"],
+          ],
+          group: [sequelize.fn("DATE", sequelize.col("analyzed_at"))],
+          order: [[sequelize.fn("DATE", sequelize.col("analyzed_at")), "ASC"]],
+          raw: true,
+        }),
 
-    // Classification breakdown over last 30 days
-    ScanResult.findAll({
-      where: { analyzed_at: { [Op.gte]: thirtyDaysAgo } },
-      attributes: [
-        "classification",
-        [sequelize.fn("COUNT", sequelize.col("scan_id")), "count"],
-      ],
-      group: ["classification"],
-      raw: true,
-    }),
+        ScanResult.findAll({
+          where: { analyzed_at: { [Op.gte]: thirtyDaysAgo } },
+          attributes: [
+            "classification",
+            [sequelize.fn("COUNT", sequelize.col("scan_id")), "count"],
+          ],
+          group: ["classification"],
+          raw: true,
+        }),
 
-    // Top 10 targeted domains
-    ScanResult.findAll({
-      where: {
-        scan_type: "url",
-        analyzed_at: { [Op.gte]: thirtyDaysAgo },
-      },
-      attributes: [
-        "target",
-        [sequelize.fn("COUNT", sequelize.col("scan_id")), "count"],
-      ],
-      group: ["target"],
-      order: [[sequelize.fn("COUNT", sequelize.col("scan_id")), "DESC"]],
-      limit: 10,
-      raw: true,
-    }),
+        ScanResult.findAll({
+          where: {
+            scan_type: "url",
+            analyzed_at: { [Op.gte]: thirtyDaysAgo },
+          },
+          attributes: [
+            "target",
+            [sequelize.fn("COUNT", sequelize.col("scan_id")), "count"],
+          ],
+          group: ["target"],
+          order: [[sequelize.fn("COUNT", sequelize.col("scan_id")), "DESC"]],
+          limit: 10,
+          raw: true,
+        }),
 
-    // User growth over last 30 days
-    User.findAll({
-      where: { created_at: { [Op.gte]: thirtyDaysAgo } },
-      attributes: [
-        [sequelize.fn("DATE", sequelize.col("created_at")), "date"],
-        [sequelize.fn("COUNT", sequelize.col("user_id")), "count"],
-      ],
-      group: [sequelize.fn("DATE", sequelize.col("created_at"))],
-      order: [[sequelize.fn("DATE", sequelize.col("created_at")), "ASC"]],
-      raw: true,
-    }),
-  ]);
+        User.findAll({
+          where: { created_at: { [Op.gte]: thirtyDaysAgo } },
+          attributes: [
+            [sequelize.fn("DATE", sequelize.col("created_at")), "date"],
+            [sequelize.fn("COUNT", sequelize.col("user_id")), "count"],
+          ],
+          group: [sequelize.fn("DATE", sequelize.col("created_at"))],
+          order: [[sequelize.fn("DATE", sequelize.col("created_at")), "ASC"]],
+          raw: true,
+        }),
+      ]);
+
+      return {
+        dailyScans,
+        classificationBreakdown,
+        topDomains,
+        userGrowth,
+      };
+    },
+    cacheService.TTL.SYSTEM_STATS,
+  );
 
   res.json({
     success: true,
-    data: {
-      dailyScans,
-      classificationBreakdown,
-      topDomains,
-      userGrowth,
-    },
+    data,
   });
 };
 

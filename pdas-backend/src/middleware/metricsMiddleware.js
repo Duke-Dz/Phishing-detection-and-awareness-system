@@ -1,3 +1,6 @@
+const config = require("../config/env");
+const logger = require("../utils/logger");
+
 const metrics = {
   startedAt: new Date(),
   requests: 0,
@@ -17,7 +20,7 @@ const metricsMiddleware = (req, res, next) => {
     metrics.responses[res.statusCode] = (metrics.responses[res.statusCode] || 0) + 1;
 
     // Per-route timing
-    const routeKey = `${req.method} ${req.route ? req.route.path : req.path}`;
+    const routeKey = `${req.method} ${req.baseUrl || ""}${req.route ? req.route.path : req.path}`;
     if (!metrics.routeTimings[routeKey]) {
       metrics.routeTimings[routeKey] = { count: 0, totalMs: 0, maxMs: 0 };
     }
@@ -27,8 +30,16 @@ const metricsMiddleware = (req, res, next) => {
       metrics.routeTimings[routeKey].maxMs = durationMs;
     }
 
-    if (durationMs > 1000) {
+    if (durationMs > config.performance.slowRequestThresholdMs) {
       metrics.slowRequests += 1;
+      logger.warn("http.request.slow", {
+        method: req.method,
+        path: req.originalUrl,
+        route: routeKey,
+        status: res.statusCode,
+        duration_ms: Number(durationMs.toFixed(2)),
+        request_id: req.id,
+      });
     }
   });
 

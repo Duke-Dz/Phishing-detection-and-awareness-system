@@ -344,8 +344,75 @@ test("cache getStats returns valid statistics", () => {
 test("cache key builders produce consistent keys", () => {
   assert.equal(cacheService.keys.dashboardStats("user-123"), "dashboard:user-123");
   assert.equal(cacheService.keys.scanResult("https://example.com"), "scan:https://example.com");
+  assert.equal(cacheService.keys.reportDetail("report-1"), "reports:detail:report-1");
+  assert.equal(cacheService.keys.reportList("user-123", { page: 1 }), 'reports:list:user-123:{"page":1}');
   assert.equal(cacheService.keys.threatIntel("evil.com"), "threat:evil.com");
+  assert.equal(cacheService.keys.settings(), "settings:all");
   assert.equal(cacheService.keys.systemStats(), "admin:system_stats");
+});
+
+const { PendingRegistration } = require("../src/models");
+const {
+  cleanupExpiredPendingRegistrations,
+  startPendingRegistrationCleanup,
+  stopPendingRegistrationCleanup,
+} = require("../src/services/pendingRegistrationService");
+const { errorHandler } = require("../src/middleware/errorHandler");
+
+test("cleanupExpiredPendingRegistrations deletes expired rows only", async () => {
+  const originalDestroy = PendingRegistration.destroy;
+  let whereClause;
+  PendingRegistration.destroy = async ({ where }) => {
+    whereClause = where;
+    return 3;
+  };
+
+  try {
+    const now = new Date("2026-07-08T10:00:00.000Z");
+    const deleted = await cleanupExpiredPendingRegistrations(now);
+    assert.equal(deleted, 3);
+    assert.ok(whereClause.expires_at);
+  } finally {
+    PendingRegistration.destroy = originalDestroy;
+  }
+});
+
+test("pending registration cleanup scheduler starts and stops safely", () => {
+  const originalDestroy = PendingRegistration.destroy;
+  PendingRegistration.destroy = async () => 0;
+
+  try {
+    const timer = startPendingRegistrationCleanup();
+    assert.ok(timer);
+    assert.equal(startPendingRegistrationCleanup(), timer);
+    stopPendingRegistrationCleanup();
+    assert.doesNotThrow(() => stopPendingRegistrationCleanup());
+  } finally {
+    PendingRegistration.destroy = originalDestroy;
+  }
+});
+
+test("errorHandler hides internal server errors behind safe response", () => {
+  const req = { id: "req-test" };
+  const res = {
+    locals: {},
+    statusCode: null,
+    payload: null,
+    status(code) {
+      this.statusCode = code;
+      return this;
+    },
+    json(payload) {
+      this.payload = payload;
+      return this;
+    },
+  };
+
+  errorHandler(new Error("database password leaked"), req, res);
+  assert.equal(res.statusCode, 500);
+  assert.equal(res.payload.code, "INTERNAL_ERROR");
+  assert.equal(res.payload.message, "We could not complete your request. Please try again shortly.");
+  assert.equal(res.payload.request_id, "req-test");
 });
 
 // ── Email Parser Tests ──────────────────────────────────────────────────

@@ -6,12 +6,17 @@ const { sequelize, testConnection } = require("../config/sequelize");
 const logger = require("../utils/logger");
 const { installProcessHandlers } = require("./lifecycle");
 const { closeMailService } = require("../services/mailService");
+const {
+  startPendingRegistrationCleanup,
+  stopPendingRegistrationCleanup,
+} = require("../services/pendingRegistrationService");
 
 require("../models");
 
 const startApi = async () => {
   config.validateConfig(config);
   await testConnection();
+  startPendingRegistrationCleanup();
 
   const server = config.https.enabled
     ? https.createServer({
@@ -32,6 +37,7 @@ const startApi = async () => {
   });
 
   installProcessHandlers(async () => {
+    stopPendingRegistrationCleanup();
     await new Promise((resolve, reject) => server.close((error) => error ? reject(error) : resolve()));
     await closeMailService();
     await sequelize.close();

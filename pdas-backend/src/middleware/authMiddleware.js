@@ -1,6 +1,7 @@
 const jwt = require("jsonwebtoken");
 const { User } = require("../models");
 const config = require("../config/env");
+const cacheService = require("../services/cacheService");
 
 const protect = async (req, _res, next) => {
   try {
@@ -13,8 +14,13 @@ const protect = async (req, _res, next) => {
     }
 
     const decoded = jwt.verify(token, config.jwt.secret);
-    const user = await User.findByPk(decoded.user_id);
+    const user = await cacheService.getOrSet(
+      cacheService.keys.userSession(decoded.user_id),
+      () => User.findByPk(decoded.user_id),
+      60,
+    );
     if (!user || !user.is_active) {
+      cacheService.del(cacheService.keys.userSession(decoded.user_id));
       const error = new Error("User account is not active");
       error.statusCode = 401;
       throw error;
@@ -28,6 +34,10 @@ const protect = async (req, _res, next) => {
   }
 };
 
-const clearUserCache = () => {};
+const clearUserCache = (userId) => {
+  if (userId) {
+    cacheService.del(cacheService.keys.userSession(userId));
+  }
+};
 
 module.exports = { protect, clearUserCache };

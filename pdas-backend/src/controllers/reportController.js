@@ -8,6 +8,7 @@ const { buildPaginationMeta, getPagination } = require("../utils/pagination");
 const { sendMail } = require("../services/mailService");
 const emailTemplates = require("../templates/emailTemplates");
 const config = require("../config/env");
+const cacheService = require("../services/cacheService");
 
 const analyzeByType = async (reportType, content) => {
   if (reportType === "url") {
@@ -71,6 +72,13 @@ const createReport = async (req, res) => {
     scanResult,
     report_id: report.report_id,
   });
+  cacheService.del(cacheService.keys.dashboardStats(req.user.user_id));
+  cacheService.del(cacheService.keys.systemStats());
+  cacheService.del(cacheService.keys.adminAnalytics());
+  cacheService.delByPrefix(`reports:list:${req.user.user_id}:`);
+  cacheService.delByPrefix("reports:list:all:");
+  cacheService.delByPrefix(`scan:list:${req.user.user_id}:`);
+  cacheService.delByPrefix("scan:list:all:");
 
   // 1. Send receipt to the reporter
   if (req.user.email_notifications !== false) {
@@ -122,31 +130,46 @@ const listReports = async (req, res) => {
   const where = ["admin", "analyst"].includes(req.user.role)
     ? {}
     : { user_id: req.user.user_id };
+  const cacheUser = ["admin", "analyst"].includes(req.user.role) ? "all" : req.user.user_id;
 
-  const { count, rows: reports } = await Report.findAndCountAll({
-    where,
-    order: [["created_at", "DESC"]],
-    limit: pagination.limit,
-    offset: pagination.offset,
-    distinct: true,
-    include: [
-      { model: ScanResult, as: "scanResult" },
-      { model: User, as: "author", attributes: ["user_id", "full_name", "email", "role"] },
-    ],
-  });
+  const payload = await cacheService.getOrSet(
+    cacheService.keys.reportList(cacheUser, req.query),
+    async () => {
+      const { count, rows: reports } = await Report.findAndCountAll({
+        where,
+        order: [["created_at", "DESC"]],
+        limit: pagination.limit,
+        offset: pagination.offset,
+        distinct: true,
+        include: [
+          { model: ScanResult, as: "scanResult" },
+          { model: User, as: "author", attributes: ["user_id", "full_name", "email", "role"] },
+        ],
+      });
+
+      return {
+        count: reports.length,
+        pagination: buildPaginationMeta({ count, ...pagination }),
+        data: reports,
+      };
+    },
+    cacheService.TTL.LIST_PAGE,
+  );
 
   res.json({
     success: true,
-    count: reports.length,
-    pagination: buildPaginationMeta({ count, ...pagination }),
-    data: reports,
+    ...payload,
   });
 };
 
 const getReport = async (req, res) => {
-  const report = await Report.findByPk(req.params.reportId, {
-    include: [{ model: ScanResult, as: "scanResult" }],
-  });
+  const report = await cacheService.getOrSet(
+    cacheService.keys.reportDetail(req.params.reportId),
+    () => Report.findByPk(req.params.reportId, {
+      include: [{ model: ScanResult, as: "scanResult" }],
+    }),
+    cacheService.TTL.LIST_PAGE,
+  );
 
   if (!report) {
     throw createError("Report not found", 404);
@@ -176,6 +199,12 @@ const updateReportStatus = async (req, res) => {
 
   report.status = req.body.status;
   await report.save();
+  cacheService.del(cacheService.keys.reportDetail(report.report_id));
+  cacheService.del(cacheService.keys.dashboardStats(report.user_id));
+  cacheService.del(cacheService.keys.systemStats());
+  cacheService.del(cacheService.keys.adminAnalytics());
+  cacheService.delByPrefix(`reports:list:${report.user_id}:`);
+  cacheService.delByPrefix("reports:list:all:");
 
   await createNotification({
     user_id: report.user_id,
@@ -222,6 +251,9 @@ const uploadAttachment = async (req, res) => {
 
   report.changed("attachments", true);
   await report.save();
+  cacheService.del(cacheService.keys.reportDetail(report.report_id));
+  cacheService.delByPrefix(`reports:list:${report.user_id}:`);
+  cacheService.delByPrefix("reports:list:all:");
 
   res.json({
     success: true,

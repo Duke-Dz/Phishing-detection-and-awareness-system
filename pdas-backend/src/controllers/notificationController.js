@@ -43,6 +43,7 @@ const markNotificationRead = async (req, res) => {
   notification.is_read = true;
   await notification.save();
   cacheService.del(cacheService.keys.dashboardStats(notification.user_id));
+  cacheService.del(cacheService.keys.systemStats());
   cacheService.delByPrefix(`notifications:${notification.user_id}:`);
 
   res.json({
@@ -57,6 +58,7 @@ const markAllNotificationsRead = async (req, res) => {
     { where: { user_id: req.user.user_id, is_read: false } },
   );
   cacheService.del(cacheService.keys.dashboardStats(req.user.user_id));
+  cacheService.del(cacheService.keys.systemStats());
   cacheService.delByPrefix(`notifications:${req.user.user_id}:`);
 
   res.json({

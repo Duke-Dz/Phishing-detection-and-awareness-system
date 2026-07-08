@@ -56,6 +56,14 @@ const buildConfig = () => ({
     batchSize: integer("SCAN_WORKER_BATCH_SIZE", 5),
     maxAttempts: integer("SCAN_JOB_MAX_ATTEMPTS", 3),
   },
+  performance: {
+    slowQueryThresholdMs: integer("SLOW_QUERY_THRESHOLD_MS", 50),
+    slowRequestThresholdMs: integer("SLOW_REQUEST_THRESHOLD_MS", 250),
+    pendingRegistrationCleanupIntervalMinutes: integer(
+      "PENDING_REGISTRATION_CLEANUP_INTERVAL_MINUTES",
+      15,
+    ),
+  },
   mail: {
     host: process.env.MAIL_HOST,
     port: integer("MAIL_PORT", 587),

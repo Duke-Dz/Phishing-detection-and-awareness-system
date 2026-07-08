@@ -4,6 +4,7 @@ const { Op } = require("sequelize");
 const { User } = require("../models");
 const { createError } = require("../utils/inputValidation");
 const auditService = require("../services/auditService");
+const { clearUserCache } = require("../middleware/authMiddleware");
 const { decodeUnsubscribeToken, verifyUnsubscribeToken } = require("../utils/unsubscribeTokens");
 
 const updateProfile = async (req, res) => {
@@ -18,6 +19,7 @@ const updateProfile = async (req, res) => {
 
   user.full_name = full_name;
   await user.save();
+  clearUserCache(user.user_id);
 
   auditService.logAction({
     userId: user.user_id,
@@ -48,6 +50,7 @@ const uploadAvatar = async (req, res) => {
   const avatarPath = `/api/users/avatar/${req.file.filename}`;
   user.avatar_url = avatarPath;
   await user.save();
+  clearUserCache(user.user_id);
 
   auditService.logAction({
     userId: user.user_id,
@@ -112,6 +115,7 @@ const unsubscribe = async (req, res) => {
 
   user.email_notifications = false;
   await user.save();
+  clearUserCache(user.user_id);
 
   auditService.logAction({
     userId: user.user_id,
