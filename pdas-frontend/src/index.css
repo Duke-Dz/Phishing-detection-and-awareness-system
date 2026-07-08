@@ -1864,6 +1864,58 @@ input[type="password"].auth-field {
     margin-top: 1.25rem !important;
   }
 
+  .auth-register-panel.auth-glass-card {
+    padding-top: 1.45rem !important;
+    padding-bottom: 1.3rem !important;
+  }
+
+  .auth-register-panel .auth-logo-header {
+    margin-bottom: 0.45rem !important;
+  }
+
+  .auth-register-panel .auth-logo-container > div:first-of-type,
+  .auth-register-panel .auth-logo-compact > div:first-of-type {
+    width: 4.15rem !important;
+    height: 4.15rem !important;
+  }
+
+  .auth-register-panel .auth-logo-container svg,
+  .auth-register-panel .auth-logo-compact svg {
+    --tw-scale-x: 1.16 !important;
+    --tw-scale-y: 1.16 !important;
+  }
+
+  .auth-register-panel .auth-logo-wordmark {
+    font-size: clamp(1.2rem, 5vw, 1.36rem) !important;
+  }
+
+  .auth-register-panel .auth-heading,
+  .auth-register-panel h1.auth-heading {
+    font-size: clamp(1.48rem, 5.6vw, 1.68rem) !important;
+    line-height: 1.08 !important;
+  }
+
+  .auth-register-panel > .auth-shell-body {
+    margin-top: 1rem !important;
+  }
+
+  .auth-register-panel form {
+    gap: 0.9rem !important;
+  }
+
+  .auth-register-panel .auth-label {
+    margin-bottom: 0.18rem !important;
+    font-size: 0.76rem !important;
+  }
+
+  .auth-register-panel .auth-field {
+    height: 2.85rem !important;
+  }
+
+  .auth-register-panel .auth-btn-primary {
+    min-height: 2.85rem !important;
+  }
+
   .auth-forgot-panel:has(.auth-forgot-success) .auth-logo-header {
     margin-bottom: 0.25rem !important;
   }
