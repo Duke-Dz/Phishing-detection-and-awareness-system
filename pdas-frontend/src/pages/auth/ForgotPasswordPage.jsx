@@ -8,7 +8,11 @@ import { z } from "zod";
 import { AuthShell } from "../../components/auth/AuthShell";
 import { getErrorMessage } from "../../services/api";
 import { authService } from "../../services/authService";
-import { formatCooldown } from "../../utils/verificationCooldown";
+import {
+  formatCooldown,
+  getPasswordResetCooldown,
+  setPasswordResetCooldown,
+} from "../../utils/verificationCooldown";
 
 const forgotPasswordSchema = z.object({
   email: z
@@ -28,7 +32,7 @@ const maskEmail = (email) => {
 
 const formatResetError = (error) => {
   if (error.code === "RATE_LIMITED" && error.retryAfter > 0) {
-    return `Too many reset email requests. Try again in ${formatCooldown(error.retryAfter)} or at a later time.`;
+    return `Too many reset requests for this email. Try again in ${formatCooldown(error.retryAfter)}.`;
   }
   return getErrorMessage(
     error,
@@ -61,14 +65,27 @@ export default function ForgotPasswordPage() {
     const email = values.email.trim().toLowerCase();
 
     try {
+      const wasAlreadySent = sent;
       const response = await authService.forgotPassword(email);
       setSubmittedEmail(email);
       setSent(true);
-      setResendCountdown(response.resend_available_in || 60);
-      toast.success("Check your email for the new reset link.");
+      const cooldownSeconds = response.resend_available_in || 60;
+      setPasswordResetCooldown(email, cooldownSeconds);
+      setResendCountdown(cooldownSeconds);
+      toast.success(
+        wasAlreadySent
+          ? "We’ve sent a reset link to your email."
+          : "We’ve sent a new reset link to your email.",
+      );
       setCardError(null);
       return true;
     } catch (error) {
+      if (error.code === "RATE_LIMITED" && error.retryAfter > 0) {
+        setSubmittedEmail(email);
+        setSent(true);
+        setPasswordResetCooldown(email, error.retryAfter);
+        setResendCountdown(error.retryAfter);
+      }
       setCardError(formatResetError(error));
       return false;
     }
@@ -80,14 +97,23 @@ export default function ForgotPasswordPage() {
   });
 
   useEffect(() => {
-    if (resendCountdown > 0) {
-      const timer = setTimeout(
-        () => setResendCountdown((count) => count - 1),
-        1000,
-      );
-      return () => clearTimeout(timer);
-    }
-  }, [resendCountdown]);
+    if (!sent || !submittedEmail) return undefined;
+
+    const updateCountdown = () => {
+      setResendCountdown(getPasswordResetCooldown(submittedEmail));
+    };
+
+    updateCountdown();
+    const timer = window.setInterval(updateCountdown, 1000);
+    window.addEventListener("focus", updateCountdown);
+    document.addEventListener("visibilitychange", updateCountdown);
+
+    return () => {
+      window.clearInterval(timer);
+      window.removeEventListener("focus", updateCountdown);
+      document.removeEventListener("visibilitychange", updateCountdown);
+    };
+  }, [sent, submittedEmail]);
 
   return (
     <AuthShell
@@ -146,8 +172,8 @@ export default function ForgotPasswordPage() {
               className="auth-btn-secondary min-h-11"
             >
               {resendCountdown > 0
-                ? `Resend in ${resendCountdown}s`
-                : "Resend the verification link"}
+                ? `Resend in ${formatCooldown(resendCountdown)}`
+                : "Resend reset link"}
             </button>
           </div>
         </div>

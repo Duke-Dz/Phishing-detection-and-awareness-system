@@ -153,7 +153,7 @@ export default function CyberSenseLogo({
     ? "relative h-[40px] w-[40px] flex-shrink-0 sm:h-[48px] sm:w-[48px]"
     : "relative h-[96px] w-[96px] flex-shrink-0 sm:h-[104px] sm:w-[104px]";
   const wordmarkSize = isCompact
-    ? "0.9375rem"
+    ? "var(--auth-wordmark-size, 0.9375rem)"
     : "clamp(1.45rem, 4vw, 1.8rem)";
 
   const containerClass = stacked

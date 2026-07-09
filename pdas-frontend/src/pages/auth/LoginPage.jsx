@@ -2,7 +2,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { CheckCircle2, KeyRound, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { z } from "zod";
 import { AuthPasswordField } from "../../components/auth/AuthPasswordField";
@@ -40,6 +40,18 @@ export default function LoginPage() {
     defaultValues: { email: "", password: "", remember_me: false },
   });
 
+  const getCurrentEmailValue = () => {
+    if (typeof document === "undefined") return getValues("email") || "";
+    const emailInput = document.getElementById("login-email");
+    return emailInput?.value || getValues("email") || "";
+  };
+
+  const handleForgotPassword = () => {
+    navigate("/forgot-password", {
+      state: { email: getCurrentEmailValue().trim().toLowerCase() },
+    });
+  };
+
   const onSubmit = async (values) => {
     setCardError(null);
     try {
@@ -59,9 +71,12 @@ export default function LoginPage() {
       await new Promise((resolve) => window.setTimeout(resolve, 900));
       navigate(destination, { replace: true });
     } catch (error) {
-      setCardError(
-        getErrorMessage(error, "We could not sign you in. Please try again later."),
+      const message = getErrorMessage(
+        error,
+        "We could not sign you in. Please try again later.",
       );
+      setCardError(message);
+      toast.error(message);
     }
   };
 
@@ -137,13 +152,14 @@ export default function LoginPage() {
           placeholder="Enter your password"
           required
           labelAction={
-            <Link
-              to="/forgot-password"
-              state={{ email: getValues("email") }}
+            <button
+              type="button"
+              onMouseDown={(event) => event.preventDefault()}
+              onClick={handleForgotPassword}
               className="text-[13px] font-normal text-[#6B7280] no-underline hover:text-[#0D518C]"
             >
               Forgot password?
-            </Link>
+            </button>
           }
         />
 
