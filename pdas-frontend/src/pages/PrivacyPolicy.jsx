@@ -1,5 +1,6 @@
 import { ShieldCheck } from "lucide-react";
 import {
+  LegalIntro,
   LegalList,
   LegalListItem,
   LegalNotice,
@@ -31,9 +32,9 @@ export default function PrivacyPolicy() {
       documentType="Privacy notice"
       tableOfContents={tableOfContents}
     >
-      <div className="mb-10 rounded-2xl border border-slate-200 bg-slate-50 p-5 text-[15px] leading-7 text-slate-600">
+      <LegalIntro>
         CyberSense is designed to help you assess suspicious digital content. This notice applies when you use our website, account features, scanning tools, reports, notifications, and awareness resources.
-      </div>
+      </LegalIntro>
 
       <LegalSection id="scope" number="1" title="Scope of this policy" summary="Where this privacy notice applies.">
         <LegalSummary>This policy covers personal information processed through the CyberSense platform and related communications.</LegalSummary>

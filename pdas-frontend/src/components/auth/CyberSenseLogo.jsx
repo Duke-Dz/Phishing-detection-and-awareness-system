@@ -322,12 +322,7 @@ export default function CyberSenseLogo({
       {showWordmark && <div className="flex flex-col justify-center gap-0.5">
         <div className="auth-logo-wordmark font-extrabold leading-none" style={{ fontSize: wordmarkSize, letterSpacing: 0 }}>
           <span
-            style={{
-              background: "linear-gradient(135deg, #000000 0%, #020617 100%)",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-              backgroundClip: "text",
-            }}
+            className="bg-clip-text [-webkit-background-clip:text] [-webkit-text-fill-color:transparent] [background-clip:text] bg-gradient-to-br from-black to-[#020617] dark:from-[#f0f6fc] dark:to-[#c9d1d9]"
           >
             Cyber
           </span>

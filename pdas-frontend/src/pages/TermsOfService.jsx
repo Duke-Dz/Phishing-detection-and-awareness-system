@@ -1,5 +1,6 @@
 import { Scale } from "lucide-react";
 import {
+  LegalIntro,
   LegalList,
   LegalListItem,
   LegalNotice,
@@ -32,9 +33,9 @@ export default function TermsOfService() {
       documentType="Service agreement"
       tableOfContents={tableOfContents}
     >
-      <div className="mb-10 rounded-2xl border border-slate-200 bg-slate-50 p-5 text-[15px] leading-7 text-slate-600">
+      <LegalIntro>
         Please read these Terms of Service before using CyberSense. By creating an account, accessing the platform, or submitting content for analysis, you agree to these terms. If you do not agree, do not use the service.
-      </div>
+      </LegalIntro>
 
       <LegalSection id="agreement" number="1" title="Agreement to these terms" summary="When these terms apply to you.">
         <LegalSummary>Using CyberSense means that you accept this agreement and our Privacy Policy.</LegalSummary>
