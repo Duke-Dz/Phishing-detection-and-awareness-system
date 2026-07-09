@@ -15,6 +15,7 @@ function App() {
         mobileOffset="1rem"
         richColors 
         theme="light"
+        duration={5000}
         toastOptions={{
           style: {
             fontFamily: "Inter, sans-serif",

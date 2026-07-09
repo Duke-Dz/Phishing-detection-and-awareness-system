@@ -73,7 +73,7 @@ export default function LoginPage() {
     } catch (error) {
       const message = getErrorMessage(
         error,
-        "We could not sign you in. Please try again later.",
+        "The email or password you entered is incorrect. Please try again.",
       );
       setCardError(message);
       toast.error(message);
