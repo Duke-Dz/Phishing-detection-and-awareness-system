@@ -165,7 +165,7 @@ const login = async (req, res) => {
   const genericErrorMsg = "Incorrect email or password.";
 
   if (!user) {
-    throw createError(genericErrorMsg, 401);
+    throw createError(genericErrorMsg, 401, "INVALID_CREDENTIALS");
   }
 
   if (!user.is_active) {
@@ -181,7 +181,7 @@ const login = async (req, res) => {
       { last_failed_login: new Date() },
       { where: { user_id: user.user_id } },
     );
-    throw createError(genericErrorMsg, 401);
+    throw createError(genericErrorMsg, 401, "INVALID_CREDENTIALS");
   }
 
   const isMatch = await bcrypt.compare(req.body.password, user.password_hash);
@@ -239,7 +239,7 @@ const login = async (req, res) => {
       });
     }
 
-    throw createError(genericErrorMsg, 401);
+    throw createError(genericErrorMsg, 401, "INVALID_CREDENTIALS");
   }
 
   user.failed_login_attempts = 0;
