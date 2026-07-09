@@ -106,6 +106,13 @@ test("Auth Endpoints", async (t) => {
     assert.equal(repeated.body.code, "RATE_LIMITED");
     assert.ok(repeated.body.retry_after_seconds > 0);
     assert.ok(repeated.body.retry_after_seconds <= 60);
+
+    const differentEmail = await agent.post("/api/auth/forgot-password", {
+      body: { email: "other-reset@example.com" }
+    });
+
+    assert.equal(differentEmail.status, 200);
+    assert.equal(differentEmail.body.success, true);
   });
 
   await t.test("POST /api/auth/resend-verification enforces a two-minute cooldown", async () => {

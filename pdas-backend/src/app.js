@@ -152,11 +152,6 @@ app.use("/api/auth/resend-verification", limiter(
 ));
 app.use("/api/auth/forgot-password", limiter(
   60 * 60 * 1000,
-  10,
-  "Too many password reset requests from this network, try again later.",
-));
-app.use("/api/auth/forgot-password", limiter(
-  60 * 60 * 1000,
   3,
   "Too many password reset requests for this account, try again later.",
   { keyGenerator: passwordResetEmailKey },
