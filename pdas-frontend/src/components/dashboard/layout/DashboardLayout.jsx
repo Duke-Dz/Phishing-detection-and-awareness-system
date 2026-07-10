@@ -25,10 +25,12 @@ export default function DashboardLayout({ children, unread = 0, refreshing = fal
   return (
     <div className={dark ? "dark" : ""}>
       <div className="min-h-screen overflow-x-hidden bg-[#f5f8fc] text-slate-900 dark:bg-slate-950 dark:text-slate-100">
-        <DashboardSidebar open={sidebarOpen} collapsed={collapsed} onClose={() => setSidebarOpen(false)} onToggle={() => setCollapsed((value) => !value)} />
-        <div className={`transition-[padding] duration-300 ${collapsed ? "lg:pl-[88px]" : "lg:pl-[252px]"}`}>
+        <DashboardSidebar open={sidebarOpen} collapsed={collapsed} onClose={() => setSidebarOpen(false)} onToggle={() => setCollapsed((value) => !value)} user={user} avatarSrc={avatarSrc} onLogout={signOut} />
+        <div className={`min-h-screen transition-[padding] duration-300 ease-in-out ${collapsed ? "lg:pl-24" : "lg:pl-[280px]"}`}>
+          <div className="min-h-screen lg:py-3 lg:pr-3">
           <DashboardHeader user={user} avatarSrc={avatarSrc} unread={unread} refreshing={refreshing} dark={dark} onMenu={() => setSidebarOpen(true)} onRefresh={onRefresh} onTheme={toggleTheme} onLogout={signOut} onUnreadChange={onUnreadChange} />
-          <main className="mx-auto w-full max-w-[1500px] px-4 py-6 sm:px-7 sm:py-8 lg:px-9">{children}</main>
+          <main className="mx-auto w-full max-w-[1500px] px-4 py-6 sm:px-7 sm:py-8 lg:min-h-[calc(100dvh-6.5rem)] lg:px-5 lg:pb-7">{children}</main>
+          </div>
         </div>
       </div>
     </div>

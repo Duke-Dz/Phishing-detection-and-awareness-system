@@ -9,7 +9,7 @@ export default function DashboardHeader({ user, avatarSrc, unread, refreshing, d
   const closeNotifications = useCallback(() => setNotificationsOpen(false), []);
   const closeProfile = useCallback(() => setProfileOpen(false), []);
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-slate-200 bg-white/90 px-4 backdrop-blur-xl dark:border-slate-800 dark:bg-slate-900/90 sm:h-20 sm:px-7 lg:px-9">
+    <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-slate-200 bg-white/90 px-4 backdrop-blur-xl dark:border-slate-800 dark:bg-slate-900/90 sm:h-20 sm:px-7 lg:top-3 lg:rounded-2xl lg:border lg:px-7 lg:shadow-[0_14px_32px_-26px_rgba(15,23,42,0.36)]">
       <div className="flex items-center gap-3"><button type="button" onClick={onMenu} className="grid h-10 w-10 place-items-center rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 lg:hidden" aria-label="Open navigation"><Menu size={22} /></button><div><p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-400">User dashboard</p><p className="hidden text-sm text-slate-500 sm:block">Your security command centre</p></div></div>
       <div className="flex items-center gap-1.5">
         <button type="button" onClick={onRefresh} className="hidden h-10 w-10 place-items-center rounded-xl text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 sm:grid" aria-label="Refresh dashboard"><RefreshCw size={19} className={refreshing ? "animate-spin" : ""} /></button>

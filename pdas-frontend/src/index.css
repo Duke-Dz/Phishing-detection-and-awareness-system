@@ -1160,6 +1160,12 @@ input[type="password"].auth-field {
   flex: 0 0 auto;
 }
 
+.auth-single-panel > header,
+.auth-single-panel > .auth-shell-body,
+.auth-single-panel > .auth-shell-footer {
+  flex: 0 0 auto;
+}
+
 .auth-single-content {
   display: flex;
   width: 100%;
@@ -1326,8 +1332,14 @@ input[type="password"].auth-field {
 }
 
 @media (min-width: 641px) {
+  /* Keep the desktop auth-card composition identical to the original direct
+     flex-child layout. The wrapper exists solely for the mobile card balance. */
+  .auth-single-content {
+    display: contents;
+  }
+
   :root {
-    --auth-card-max: 22rem;
+    --auth-card-max: 24rem;
     --auth-card-padding-x: clamp(1.35rem, 3vw, 1.8rem);
     --auth-card-padding-y: clamp(1.35rem, 3dvh, 1.9rem);
     --auth-logo-size: clamp(4.35rem, 7vw, 5rem);
@@ -1336,11 +1348,15 @@ input[type="password"].auth-field {
     --auth-desc-size: clamp(0.88rem, 1.8vw, 0.96rem);
   }
 
+  .auth-register-panel {
+    --auth-card-max: 25rem;
+  }
+
 }
 
 @media (min-width: 1025px) {
   :root {
-    --auth-card-max: 22rem;
+    --auth-card-max: 24.5rem;
     --auth-shell-pad-y: clamp(1.5rem, 4dvh, 2.5rem);
     --auth-card-padding-x: clamp(1.45rem, 1.8vw, 1.9rem);
     --auth-card-padding-y: clamp(1.45rem, 2.6dvh, 2rem);
@@ -1355,7 +1371,7 @@ input[type="password"].auth-field {
 
 @media (min-width: 1920px) {
   :root {
-    --auth-card-max: 22rem;
+    --auth-card-max: 25rem;
     --auth-card-padding-x: 1.85rem;
     --auth-card-padding-y: 2rem;
     --auth-shell-pad-y: 3rem;

@@ -64,15 +64,41 @@ export default function UserDashboard() {
   useEffect(() => { load(); }, [load]);
 
   const path = location.pathname;
+  const sectionByPath = {
+    "/dashboard/email-scan": "email-scanning",
+    "/dashboard/url-scan": "url-scanning",
+    "/dashboard/sms-scan": "sms-scanning",
+    "/dashboard/training": "awareness-training",
+  };
+
+  useEffect(() => {
+    const sectionId = sectionByPath[path] || location.hash.slice(1);
+    if (!sectionId) return undefined;
+    const frame = window.requestAnimationFrame(() => {
+      document.getElementById(sectionId)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [location.hash, path]);
+
+  const dashboardContent = (
+    <div className="space-y-10">
+      <section id="dashboard-overview" className="scroll-mt-28">
+        <OverviewPanel user={user} stats={stats} scans={scans} reports={reports} lessons={lessons} loading={loading} />
+      </section>
+      <section id="email-scanning" className="scroll-mt-28"><ScanCenter initialTab="email" lockedTab onComplete={() => load(true)} /></section>
+      <section id="url-scanning" className="scroll-mt-28"><ScanCenter initialTab="url" lockedTab onComplete={() => load(true)} /></section>
+      <section id="sms-scanning" className="scroll-mt-28"><ScanCenter initialTab="sms" lockedTab onComplete={() => load(true)} /></section>
+      <section id="awareness-training" className="scroll-mt-28"><AwarenessTraining lessons={lessons} loading={loading} /></section>
+    </div>
+  );
+
   let content;
-  if (path === "/dashboard/scans") content = <ScanCenter onComplete={() => load(true)} />;
-  else if (path === "/dashboard/activity") content = <RecentScans scans={scans} loading={loading} onScan={() => navigate("/dashboard/scans")} />;
+  if (path === "/dashboard/activity") content = <RecentScans scans={scans} loading={loading} onScan={() => navigate("/dashboard#url-scanning")} />;
   else if (path === "/dashboard/reports") content = <UserReports reports={reports} loading={loading} />;
-  else if (path === "/dashboard/training") content = <AwarenessTraining lessons={lessons} loading={loading} />;
   else if (path === "/dashboard/notifications") content = <NotificationsPage />;
   else if (path === "/dashboard/profile") content = <ProfilePage />;
   else if (path === "/dashboard/settings") content = <SettingsPage />;
-  else content = <OverviewPanel user={user} stats={stats} scans={scans} reports={reports} lessons={lessons} loading={loading} />;
+  else content = dashboardContent;
 
   return (
     <DashboardLayout
