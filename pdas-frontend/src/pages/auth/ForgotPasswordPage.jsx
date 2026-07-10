@@ -76,6 +76,7 @@ export default function ForgotPasswordPage() {
         wasAlreadySent
           ? "We’ve sent a new reset link to your email."
           : "We’ve sent a reset link to your email.",
+        { id: "password-reset-email-sent" },
       );
       setCardError(null);
       return true;

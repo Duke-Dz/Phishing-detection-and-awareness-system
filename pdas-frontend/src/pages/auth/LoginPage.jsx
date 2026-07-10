@@ -65,6 +65,7 @@ export default function LoginPage() {
         ROLE_DESTINATIONS[response.data.role] ||
         "/dashboard";
       toast.success("Sign in successful.", {
+        id: "login-success",
         icon: <CheckCircle2 size={18} strokeWidth={2.25} />,
         duration: 1500,
       });
@@ -76,7 +77,6 @@ export default function LoginPage() {
         "The email or password you entered is incorrect. Please try again.",
       );
       setCardError(message);
-      toast.error(message);
     }
   };
 

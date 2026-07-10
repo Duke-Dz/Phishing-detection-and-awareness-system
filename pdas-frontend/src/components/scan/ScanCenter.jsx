@@ -26,11 +26,15 @@ export default function ScanCenter({ onComplete }) {
       if (tab === "sms") await scanService.scanSms(content.trim());
       if (tab === "email") await emailService.analyze(content.trim());
       if (tab === "report") await reportService.create({ report_type: reportType, content: content.trim() });
-      toast.success(tab === "report" ? "Threat reported." : "Scan complete.");
+      toast.success(tab === "report" ? "Threat reported." : "Scan complete.", {
+        id: "scan-complete",
+      });
       setContent("");
       onComplete?.();
     } catch (error) {
-      toast.error(getErrorMessage(error, "Could not complete scan."));
+      toast.error(getErrorMessage(error, "Could not complete scan."), {
+        id: "scan-error",
+      });
     } finally { setSubmitting(false); }
   };
   const label = tab === "url" ? "Web address" : tab === "email" ? "Email content" : tab === "sms" ? "SMS content" : "Suspicious content";

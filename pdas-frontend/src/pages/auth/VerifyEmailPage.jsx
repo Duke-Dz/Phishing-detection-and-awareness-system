@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { AnimatePresence, motion as Motion } from "framer-motion";
 import { CheckCircle2, RotateCw, Mail } from "lucide-react";
@@ -48,6 +48,7 @@ export default function VerifyEmailPage() {
   );
   const [success, setSuccess] = useState(false);
   const [cardError, setCardError] = useState(null);
+  const verificationStartedRef = useRef(false);
 
   useEffect(() => setNoReferrerPolicy(), []);
 
@@ -84,7 +85,7 @@ export default function VerifyEmailPage() {
         clearVerificationCooldown(email);
         clearPendingVerificationEmail();
         setSuccess(true);
-        toast.success("Email verified.");
+        toast.success("Email verified.", { id: "email-verified" });
         // Auto redirects to login after 3 seconds
         setTimeout(() => navigate("/login", { replace: true }), 3000);
       } catch (error) {
@@ -105,7 +106,14 @@ export default function VerifyEmailPage() {
   );
 
   useEffect(() => {
-    if (token && !submitting && !success && !hasError) {
+    if (
+      token &&
+      !verificationStartedRef.current &&
+      !submitting &&
+      !success &&
+      !hasError
+    ) {
+      verificationStartedRef.current = true;
       handleVerify(token);
     }
   }, [token, submitting, success, hasError, handleVerify]);
@@ -119,7 +127,9 @@ export default function VerifyEmailPage() {
       const seconds = response.resend_available_in || 120;
       setVerificationCooldown(email, seconds);
       setResendCooldown(seconds);
-      toast.success("A new verification link has been sent to your registered email address.");
+      toast.success("A new verification link has been sent to your registered email address.", {
+        id: "verification-email-resent",
+      });
     } catch (error) {
       if (
         error.code === "VERIFICATION_RESEND_COOLDOWN" &&

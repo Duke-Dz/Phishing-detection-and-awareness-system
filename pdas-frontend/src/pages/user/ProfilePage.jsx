@@ -19,16 +19,16 @@ export default function ProfilePage() {
   const save = async (event) => {
     event.preventDefault();
     setSaving(true);
-    try { await userService.updateProfile({ full_name: fullName.trim() }); await refreshSession(); toast.success("Profile updated."); }
-    catch { toast.error("Could not update profile."); }
+    try { await userService.updateProfile({ full_name: fullName.trim() }); await refreshSession(); toast.success("Profile updated.", { id: "profile-updated" }); }
+    catch { toast.error("Could not update profile.", { id: "profile-update-error" }); }
     finally { setSaving(false); }
   };
   const upload = async (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
     setUploading(true);
-    try { const response = await userService.uploadAvatar(file); const src = await userService.getAvatar(response.avatar_url); setAvatarSrc(src); await refreshSession(); toast.success("Avatar updated."); }
-    catch { toast.error("Could not upload avatar."); }
+    try { const response = await userService.uploadAvatar(file); const src = await userService.getAvatar(response.avatar_url); setAvatarSrc(src); await refreshSession(); toast.success("Avatar updated.", { id: "avatar-updated" }); }
+    catch { toast.error("Could not upload avatar.", { id: "avatar-update-error" }); }
     finally { setUploading(false); event.target.value = ""; }
   };
   return (

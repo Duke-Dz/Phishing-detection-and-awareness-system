@@ -80,7 +80,7 @@ export default function ResetPasswordPage() {
         confirm_password: values.confirm_password,
       });
       setSuccess(true);
-      toast.success("Password updated.");
+      toast.success("Password updated.", { id: "password-updated" });
     } catch (error) {
       setCardError(
         getErrorMessage(

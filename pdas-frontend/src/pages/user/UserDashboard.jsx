@@ -52,7 +52,9 @@ export default function UserDashboard() {
       setReports(reportsResponse.data || []);
       setLessons(lessonsResponse.data || []);
     } catch (error) {
-      toast.error(getErrorMessage(error, "Could not load dashboard."));
+      toast.error(getErrorMessage(error, "Could not load dashboard."), {
+        id: "dashboard-load-error",
+      });
     } finally {
       setLoading(false);
       setRefreshing(false);
