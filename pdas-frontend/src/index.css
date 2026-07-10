@@ -1222,8 +1222,11 @@ input[type="password"].auth-field {
   :root {
     --auth-shell-pad-x: clamp(0.75rem, 4vw, 1rem);
     --auth-shell-pad-y: clamp(0.75rem, 2.5dvh, 1rem);
-    --auth-mobile-card-min-height: calc(
-      100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 1.5rem
+    --auth-short-card-min-height: min(
+      calc(
+        100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 1.5rem
+      ),
+      clamp(34rem, 78dvh, 44rem)
     );
   }
 
@@ -1294,13 +1297,14 @@ input[type="password"].auth-field {
     font-size: 0.9rem;
   }
 
-  /* Short auth journeys use the available dynamic viewport without fixing the
-     card height. Registration remains content-led and can scroll naturally. */
+  /* Short auth journeys use a medium-tall adaptive minimum. The available
+     viewport wins on short screens, while tall phones stop at a balanced cap.
+     Registration remains content-led and can scroll naturally. */
   .auth-single-panel.auth-login-panel,
   .auth-single-panel.auth-forgot-panel,
   .auth-single-panel.auth-reset-panel,
   .auth-single-panel.auth-verify-panel {
-    min-height: var(--auth-mobile-card-min-height);
+    min-height: var(--auth-short-card-min-height);
   }
 
   .auth-single-panel.auth-login-panel .auth-single-content,
@@ -1309,7 +1313,13 @@ input[type="password"].auth-field {
   .auth-single-panel.auth-verify-panel .auth-single-content {
     flex: 1 0 auto;
     justify-content: center;
-    transform: translateY(clamp(-0.65rem, -1.5dvh, -0.25rem));
+  }
+
+  @media (min-width: 375px) {
+    .auth-login-panel .auth-footer-pill {
+      flex-wrap: nowrap;
+      white-space: nowrap;
+    }
   }
 }
 
