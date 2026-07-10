@@ -461,11 +461,14 @@ body {
 }
 
 .auth-register-panel {
-  --auth-card-max: 23rem;
   --auth-form-gap: clamp(0.62rem, 1.65dvh, 0.9rem);
   --auth-section-gap: clamp(0.72rem, 1.9dvh, 1.05rem);
   --auth-card-padding-y: clamp(0.95rem, 2.4dvh, 1.35rem);
   --auth-title-size: clamp(1.32rem, 4.8vw, 1.62rem);
+}
+
+.auth-terms-link {
+  white-space: nowrap;
 }
 
 .auth-single-panel--mobile-full {
@@ -1199,6 +1202,16 @@ input[type="password"].auth-field {
   }
 }
 
+@media (max-height: 740px) and (max-width: 640px) {
+  .auth-single-shell:has(.auth-register-panel) {
+    place-items: start center;
+  }
+
+  .auth-register-panel {
+    align-self: start;
+  }
+}
+
 @media (max-width: 640px) {
   .auth-immersive-bg {
     background: linear-gradient(180deg, #f8fafc 0%, #ffffff 42%, #f8fafc 100%);
@@ -1270,7 +1283,7 @@ input[type="password"].auth-field {
 
 @media (min-width: 641px) {
   :root {
-    --auth-card-max: 24rem;
+    --auth-card-max: 22rem;
     --auth-card-padding-x: clamp(1.35rem, 3vw, 1.8rem);
     --auth-card-padding-y: clamp(1.35rem, 3dvh, 1.9rem);
     --auth-logo-size: clamp(4.35rem, 7vw, 5rem);
@@ -1279,14 +1292,11 @@ input[type="password"].auth-field {
     --auth-desc-size: clamp(0.88rem, 1.8vw, 0.96rem);
   }
 
-  .auth-register-panel {
-    --auth-card-max: 25rem;
-  }
 }
 
 @media (min-width: 1025px) {
   :root {
-    --auth-card-max: 24.5rem;
+    --auth-card-max: 22rem;
     --auth-shell-pad-y: clamp(1.5rem, 4dvh, 2.5rem);
     --auth-card-padding-x: clamp(1.45rem, 1.8vw, 1.9rem);
     --auth-card-padding-y: clamp(1.45rem, 2.6dvh, 2rem);
@@ -1301,7 +1311,7 @@ input[type="password"].auth-field {
 
 @media (min-width: 1920px) {
   :root {
-    --auth-card-max: 25rem;
+    --auth-card-max: 22rem;
     --auth-card-padding-x: 1.85rem;
     --auth-card-padding-y: 2rem;
     --auth-shell-pad-y: 3rem;

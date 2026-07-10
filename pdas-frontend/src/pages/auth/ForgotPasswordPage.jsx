@@ -86,11 +86,7 @@ export default function ForgotPasswordPage() {
         setPasswordResetCooldown(email, error.retryAfter);
         setResendCountdown(error.retryAfter);
       }
-      const toastMessage = error.code === "RATE_LIMITED"
-        ? "Please wait before requesting another reset link."
-        : formatResetError(error);
       setCardError(formatResetError(error));
-      toast.error(toastMessage, { duration: 5000 });
       return false;
     }
   };

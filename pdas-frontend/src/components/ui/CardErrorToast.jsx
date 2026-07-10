@@ -1,30 +1,37 @@
 import { AlertCircle } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { createPortal } from "react-dom";
 
 export const CardErrorToast = ({ message, onClose }) => {
   const [mounted, setMounted] = useState(false);
+  const onCloseRef = useRef(onClose);
 
   useEffect(() => {
     setMounted(true);
-    return () => setMounted(false);
   }, []);
+
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
 
   useEffect(() => {
     if (message) {
       const timer = setTimeout(() => {
-        onClose();
+        onCloseRef.current?.();
       }, 4000);
       return () => clearTimeout(timer);
     }
-  }, [message, onClose]);
+  }, [message]);
 
   const toastContent = (
     <AnimatePresence>
       {message && (
         <div className="fixed left-1/2 top-4 z-[9999] w-max max-w-[calc(100vw-2rem)] -translate-x-1/2 pointer-events-none">
           <motion.div
+            role="alert"
+            aria-live="assertive"
+            aria-atomic="true"
             initial={{ y: -20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: -20, opacity: 0 }}

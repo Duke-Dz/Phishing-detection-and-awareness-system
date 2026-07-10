@@ -245,7 +245,6 @@ export default function RegisterPage() {
                   firstNameRegistration.onBlur(event);
                   normalizeField("first_name", event.target.value);
                 }}
-                autoFocus
                 autoComplete="given-name"
                 placeholder="John"
                 pattern="[A-Za-z ]+"
@@ -434,11 +433,19 @@ export default function RegisterPage() {
               style={{ wordBreak: "break-word", overflowWrap: "break-word" }}
             >
               I agree to the{" "}
-              <Link to="/terms" style={{ color: "#0D818C", fontWeight: 500 }}>
+              <Link
+                to="/terms"
+                className="auth-terms-link"
+                style={{ color: "#0D818C", fontWeight: 500 }}
+              >
                 Terms of Service
               </Link>{" "}
               and{" "}
-              <Link to="/privacy" style={{ color: "#0D818C", fontWeight: 500 }}>
+              <Link
+                to="/privacy"
+                className="auth-terms-link"
+                style={{ color: "#0D818C", fontWeight: 500 }}
+              >
                 Privacy Policy
               </Link>
             </label>
