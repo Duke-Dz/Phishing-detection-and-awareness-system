@@ -1154,10 +1154,16 @@ input[type="password"].auth-field {
 }
 
 /* Auth responsive layout */
-.auth-single-panel > header,
-.auth-single-panel > .auth-shell-body,
-.auth-single-panel > .auth-shell-footer {
+.auth-single-content > header,
+.auth-single-content > .auth-shell-body,
+.auth-single-content > .auth-shell-footer {
   flex: 0 0 auto;
+}
+
+.auth-single-content {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
 }
 
 .auth-shell-body {
@@ -1213,6 +1219,14 @@ input[type="password"].auth-field {
 }
 
 @media (max-width: 640px) {
+  :root {
+    --auth-shell-pad-x: clamp(0.75rem, 4vw, 1rem);
+    --auth-shell-pad-y: clamp(0.75rem, 2.5dvh, 1rem);
+    --auth-mobile-card-min-height: calc(
+      100dvh - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 1.5rem
+    );
+  }
+
   .auth-immersive-bg {
     background: linear-gradient(180deg, #f8fafc 0%, #ffffff 42%, #f8fafc 100%);
   }
@@ -1278,6 +1292,24 @@ input[type="password"].auth-field {
 
   .app-toast-message {
     font-size: 0.9rem;
+  }
+
+  /* Short auth journeys use the available dynamic viewport without fixing the
+     card height. Registration remains content-led and can scroll naturally. */
+  .auth-single-panel.auth-login-panel,
+  .auth-single-panel.auth-forgot-panel,
+  .auth-single-panel.auth-reset-panel,
+  .auth-single-panel.auth-verify-panel {
+    min-height: var(--auth-mobile-card-min-height);
+  }
+
+  .auth-single-panel.auth-login-panel .auth-single-content,
+  .auth-single-panel.auth-forgot-panel .auth-single-content,
+  .auth-single-panel.auth-reset-panel .auth-single-content,
+  .auth-single-panel.auth-verify-panel .auth-single-content {
+    flex: 1 0 auto;
+    justify-content: center;
+    transform: translateY(clamp(-0.65rem, -1.5dvh, -0.25rem));
   }
 }
 

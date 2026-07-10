@@ -98,6 +98,7 @@ export default function ResetPasswordPage() {
         description="Request a new reset link to choose a new password."
         layout="single"
         showHeaderBrand
+        panelClassName="auth-reset-panel"
         footer={
           <Link
             to="/login"
@@ -132,6 +133,7 @@ export default function ResetPasswordPage() {
       }
       layout="single"
       showHeaderBrand
+      panelClassName="auth-reset-panel"
       cardError={cardError}
       onClearCardError={() => setCardError(null)}
       mobileCardMode="full"

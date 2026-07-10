@@ -114,9 +114,11 @@ export const AuthShell = ({
       >
         <CardErrorToast message={cardError} onClose={onClearCardError} />
 
-        {showHeaderBrand && <AuthLogoHeader />}
+        <div className="auth-single-content w-full">
+          {showHeaderBrand && <AuthLogoHeader />}
 
-        {innerContent}
+          {innerContent}
+        </div>
       </main>
     </div>
   );
