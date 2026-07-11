@@ -24,12 +24,12 @@ export default function DashboardLayout({ children, unread = 0, refreshing = fal
   const signOut = async () => { await logout(); navigate("/login", { replace: true }); };
   return (
     <div className={dark ? "dark" : ""}>
-      <div className="min-h-screen overflow-x-hidden bg-[#f5f8fc] text-slate-900 dark:bg-slate-950 dark:text-slate-100">
+      <div className="min-h-screen overflow-x-hidden bg-white text-slate-900 dark:bg-slate-950 dark:text-slate-100">
         <DashboardSidebar open={sidebarOpen} collapsed={collapsed} onClose={() => setSidebarOpen(false)} onToggle={() => setCollapsed((value) => !value)} user={user} avatarSrc={avatarSrc} onLogout={signOut} />
-        <div className={`min-h-screen transition-[padding] duration-300 ease-in-out ${collapsed ? "lg:pl-24" : "lg:pl-[280px]"}`}>
-          <div className="min-h-screen lg:py-3 lg:pr-3">
+        <div className={`min-h-screen transition-[padding] duration-300 ease-in-out ${collapsed ? "lg:pl-24" : "lg:pl-[266px]"}`}>
+          <div className="min-h-screen lg:px-4 lg:pt-4">
           <DashboardHeader user={user} avatarSrc={avatarSrc} unread={unread} refreshing={refreshing} dark={dark} onMenu={() => setSidebarOpen(true)} onRefresh={onRefresh} onTheme={toggleTheme} onLogout={signOut} onUnreadChange={onUnreadChange} />
-          <main className="mx-auto w-full max-w-[1500px] px-4 py-6 sm:px-7 sm:py-8 lg:min-h-[calc(100dvh-6.5rem)] lg:px-5 lg:pb-7">{children}</main>
+          <main className="mx-auto w-full max-w-[1600px] px-4 py-5 sm:px-6 sm:py-7 lg:min-h-[calc(100dvh-8rem)] lg:px-0 lg:py-5">{children}</main>
           </div>
         </div>
       </div>

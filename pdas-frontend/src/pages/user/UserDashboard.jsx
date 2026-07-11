@@ -37,10 +37,12 @@ export default function UserDashboard() {
   const [lessons, setLessons] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [dashboardError, setDashboardError] = useState(false);
 
   const load = useCallback(async (quiet = false) => {
     quiet ? setRefreshing(true) : setLoading(true);
     try {
+      setDashboardError(false);
       const [statsResponse, scansResponse, reportsResponse, lessonsResponse] = await Promise.all([
         dashboardService.getStats(),
         scanService.list({ page: 1, page_size: 20 }),
@@ -52,6 +54,7 @@ export default function UserDashboard() {
       setReports(reportsResponse.data || []);
       setLessons(lessonsResponse.data || []);
     } catch (error) {
+      setDashboardError(true);
       toast.error(getErrorMessage(error, "Could not load dashboard."), {
         id: "dashboard-load-error",
       });
@@ -68,8 +71,11 @@ export default function UserDashboard() {
     "/dashboard/email-scan": "email-scanning",
     "/dashboard/url-scan": "url-scanning",
     "/dashboard/sms-scan": "sms-scanning",
-    "/dashboard/training": "awareness-training",
   };
+
+  useEffect(() => {
+    if (path === "/dashboard/activity") navigate("/dashboard#scan-history", { replace: true });
+  }, [navigate, path]);
 
   useEffect(() => {
     const sectionId = sectionByPath[path] || location.hash.slice(1);
@@ -80,20 +86,42 @@ export default function UserDashboard() {
     return () => window.cancelAnimationFrame(frame);
   }, [location.hash, path]);
 
+  useEffect(() => {
+    if (path !== "/dashboard") return undefined;
+    const sectionIds = ["dashboard-overview", "email-scanning", "url-scanning", "sms-scanning", "scan-history"];
+    const observer = new IntersectionObserver((entries) => {
+      const visible = entries
+        .filter((entry) => entry.isIntersecting)
+        .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+      if (!visible) return;
+      const hash = `#${visible.target.id}`;
+      if (window.location.hash === hash) return;
+      window.history.replaceState(null, "", `${window.location.pathname}${window.location.search}${hash}`);
+      window.dispatchEvent(new HashChangeEvent("hashchange"));
+    }, { rootMargin: "-18% 0px -62% 0px", threshold: [0.1, 0.5] });
+    sectionIds.forEach((id) => {
+      const section = document.getElementById(id);
+      if (section) observer.observe(section);
+    });
+    return () => observer.disconnect();
+  }, [path]);
+
   const dashboardContent = (
-    <div className="space-y-10">
+    <div className="rounded-[30px] border border-[#ebebeb] bg-[#f7f7f7] p-4 sm:p-6 lg:p-7">
+      <div className="space-y-10">
       <section id="dashboard-overview" className="scroll-mt-28">
-        <OverviewPanel user={user} stats={stats} scans={scans} reports={reports} lessons={lessons} loading={loading} />
+        <OverviewPanel stats={stats} scans={scans} loading={loading} error={dashboardError} />
       </section>
       <section id="email-scanning" className="scroll-mt-28"><ScanCenter initialTab="email" lockedTab onComplete={() => load(true)} /></section>
       <section id="url-scanning" className="scroll-mt-28"><ScanCenter initialTab="url" lockedTab onComplete={() => load(true)} /></section>
       <section id="sms-scanning" className="scroll-mt-28"><ScanCenter initialTab="sms" lockedTab onComplete={() => load(true)} /></section>
-      <section id="awareness-training" className="scroll-mt-28"><AwarenessTraining lessons={lessons} loading={loading} /></section>
+      <section id="scan-history" className="scroll-mt-28"><RecentScans scans={scans} loading={loading} onScan={() => navigate("/dashboard#url-scanning")} /></section>
+      </div>
     </div>
   );
 
   let content;
-  if (path === "/dashboard/activity") content = <RecentScans scans={scans} loading={loading} onScan={() => navigate("/dashboard#url-scanning")} />;
+  if (path === "/dashboard/training") content = <AwarenessTraining lessons={lessons} loading={loading} />;
   else if (path === "/dashboard/reports") content = <UserReports reports={reports} loading={loading} />;
   else if (path === "/dashboard/notifications") content = <NotificationsPage />;
   else if (path === "/dashboard/profile") content = <ProfilePage />;

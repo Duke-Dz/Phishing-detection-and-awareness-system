@@ -3,7 +3,7 @@ import LanguageRoundedIcon from "@mui/icons-material/LanguageRounded";
 import SmsRoundedIcon from "@mui/icons-material/SmsRounded";
 import VerifiedUserRoundedIcon from "@mui/icons-material/VerifiedUserRounded";
 import { motion, useAnimationFrame } from "framer-motion";
-import { useRef } from "react";
+import { useId, useRef } from "react";
 
 const PULSE_DELAY_CLASSES = [
   "orbit-pulse-delay-0",
@@ -60,6 +60,34 @@ const orbitItems = [
 ];
 
 const ACCENT_DOT_ANGLES = [45, 135, 225, 315];
+
+export function CyberSenseShield({ className = "" }) {
+  const uid = useId().replace(/:/g, "");
+  const outerGradient = `${uid}-shield-outer`;
+  const innerGradient = `${uid}-shield-inner`;
+
+  return (
+    <svg viewBox="82 68 96 124" className={className} aria-hidden="true">
+      <defs>
+        <linearGradient id={outerGradient} x1="20%" y1="0%" x2="80%" y2="100%">
+          <stop offset="0%" stopColor="#4ee0a9" />
+          <stop offset="52%" stopColor="#07966b" />
+          <stop offset="100%" stopColor="#02382f" />
+        </linearGradient>
+        <linearGradient id={innerGradient} x1="80%" y1="0%" x2="20%" y2="100%">
+          <stop offset="0%" stopColor="#68edba" />
+          <stop offset="100%" stopColor="#08a574" />
+        </linearGradient>
+      </defs>
+      <path d="M130 75 169 99v37q0 31-39 49-39-18-39-49V99Z" fill={`url(#${outerGradient})`} />
+      <path d="M130 90 157 107v25q0 23-27 37-27-12-27-35v-27Z" fill={`url(#${innerGradient})`} opacity=".9" />
+      <path d="M97 102 130 79l33 20q-4 17-33 17-29 0-33-14Z" fill="rgba(255,255,255,.18)" />
+      <path d="m121 127 7 8 14-17" fill="none" stroke="white" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M130 75 169 99" fill="none" stroke="rgba(255,255,255,.42)" strokeWidth="1.5" strokeLinecap="round" />
+      <path d="M130 75 91 99" fill="none" stroke="rgba(255,255,255,.32)" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  );
+}
 
 function polarToCart(angleDeg, radius) {
   const rad = ((angleDeg - 90) * Math.PI) / 180;
