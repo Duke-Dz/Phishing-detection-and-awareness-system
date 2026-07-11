@@ -10,13 +10,7 @@ const formatDate = (value = new Date()) => new Date(value).toLocaleString("en-KE
 });
 
 const result = ({ subject, title = subject, preheader, body, text, tone, essential = false }) => {
-  const renderedHtml = layout({ title, preheader, body, tone });
-  const html = essential
-    ? renderedHtml.replace(
-        /<span[^>]*>[^<]*<\/span><a href="\{\{UNSUBSCRIBE_URL\}\}"[^>]*>Unsubscribe from non-essential emails<\/a>/,
-        "",
-      )
-    : renderedHtml;
+  const html = layout({ title, preheader, body, tone, essential });
   return {
     subject,
     html,

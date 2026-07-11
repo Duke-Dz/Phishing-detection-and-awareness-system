@@ -41,10 +41,30 @@ for (const [name, input] of Object.entries(fixtures)) {
     }
     assert.match(output.html, /src="cid:cybersense-logo"/);
     assert.match(output.html, /alt="CyberSense"/);
-    assert.match(output.html, /text-align:center/);
+    assert.match(output.html, /Security communications/i);
+    assert.match(output.html, /CyberSense Security Team/i);
+    assert.match(output.html, /CyberSense will never ask for your password or verification code/i);
     assert.doesNotMatch(output.html, /Phishing detection and security awareness/i);
   });
 }
+
+test("templates use message-specific visual hierarchy", () => {
+  const dangerous = templates.accountLocked(fixtures.accountLocked);
+  const successful = templates.passwordChanged(fixtures.passwordChanged);
+
+  assert.match(dangerous.html, /Security alert/i);
+  assert.match(dangerous.html, /#FEF3F2/i);
+  assert.match(successful.html, /Activity confirmed/i);
+  assert.match(successful.html, /#ECFDF3/i);
+});
+
+test("primary actions include an Outlook-compatible button fallback", () => {
+  const output = templates.passwordReset(fixtures.passwordReset);
+
+  assert.match(output.html, /<v:roundrect/i);
+  assert.match(output.html, /xmlns:v="urn:schemas-microsoft-com:vml"/i);
+  assert.match(output.html, /mso-hide:all/i);
+});
 
 test("password reset is concise and avoids unreliable request metadata", () => {
   const output = templates.passwordReset({
