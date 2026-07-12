@@ -687,6 +687,11 @@ html {
   padding-left: 2.65rem;
 }
 
+/* Reserve a clear interaction area for the password visibility control. */
+.auth-field.auth-field-has-icon {
+  padding-right: 3.25rem;
+}
+
 .auth-field::placeholder {
   color: #94a3b8;
   font-weight: 400;
@@ -967,6 +972,10 @@ input[type="password"].auth-field {
 }
 .auth-alert-warning::before {
   background: #f59e0b;
+}
+
+.auth-alert-no-accent::before {
+  display: none;
 }
 
 .auth-alert-info {

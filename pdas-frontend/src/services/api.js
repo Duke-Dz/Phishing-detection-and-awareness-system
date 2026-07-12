@@ -22,6 +22,8 @@ const SAFE_ERROR_MESSAGES = {
   NETWORK_ERROR:
     "We could not connect to CyberSense. Check your internet connection and try again.",
   NOT_FOUND: "We could not find what you requested.",
+  PASSWORD_REUSE:
+    "Your new password must be different from your current password.",
   RATE_LIMITED: "Too many requests. Please wait and try again.",
   REQUEST_FAILED: "We could not complete your request. Please try again.",
   RESOURCE_CONFLICT: "That information is already in use.",

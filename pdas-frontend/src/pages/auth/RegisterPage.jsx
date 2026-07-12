@@ -5,16 +5,14 @@ import {
   Hash,
   Loader2,
   UserPlus,
-  Check,
-  X,
 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { Link, useNavigate } from "react-router-dom";
 import { z } from "zod";
-import { AnimatePresence, motion as Motion } from "framer-motion";
 
 import { AuthPasswordField } from "../../components/auth/AuthPasswordField";
+import { PasswordRequirementsPopover } from "../../components/auth/PasswordRequirementsPopover";
 import { AuthShell } from "../../components/auth/AuthShell";
 import { useAuth } from "../../hooks/useAuth";
 import { getErrorMessage } from "../../services/api";
@@ -370,52 +368,10 @@ export default function RegisterPage() {
             onBlur={() => setIsPasswordFocused(false)}
           />
 
-          <AnimatePresence>
-            {isPasswordFocused && (
-              <Motion.div
-                initial={{ opacity: 0, y: 4, scale: 0.95 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: 4, scale: 0.95 }}
-                transition={{ duration: 0.15 }}
-                className="auth-pw-popover absolute z-50 bg-white shadow-[0_4px_16px_rgba(0,0,0,0.12)] rounded-[8px] p-[10px_14px] w-full max-w-[260px] bottom-full left-0 mb-2 sm:bottom-auto sm:top-0 sm:left-full sm:ml-3 sm:mb-0 sm:w-[220px]"
-              >
-                <div className="absolute -bottom-[6px] left-[20px] w-0 h-0 border-t-[6px] border-t-white border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent sm:hidden" />
-                <div className="absolute top-[32px] -left-[6px] hidden sm:block w-0 h-0 border-t-[6px] border-t-transparent border-r-[6px] border-r-white border-b-[6px] border-b-transparent" />
-
-                <ul className="flex flex-col gap-1.5">
-                  {passwordState.checks?.map((check) => (
-                    <li
-                      key={check.id}
-                      className="flex items-start gap-2 text-[12px] leading-tight"
-                    >
-                      {check.passed ? (
-                        <Check
-                          size={14}
-                          strokeWidth={3}
-                          className="text-emerald-500 shrink-0"
-                          aria-hidden="true"
-                        />
-                      ) : (
-                        <X
-                          size={14}
-                          strokeWidth={3}
-                          className="text-slate-300 shrink-0"
-                          aria-hidden="true"
-                        />
-                      )}
-                      <span
-                        className={
-                          check.passed ? "text-slate-800" : "text-slate-500"
-                        }
-                      >
-                        {check.label}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </Motion.div>
-            )}
-          </AnimatePresence>
+          <PasswordRequirementsPopover
+            visible={isPasswordFocused}
+            passwordState={passwordState}
+          />
         </div>
 
         <div className="mt-1.5">

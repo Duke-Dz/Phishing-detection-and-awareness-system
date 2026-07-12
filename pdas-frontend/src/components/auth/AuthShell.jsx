@@ -6,6 +6,7 @@ import { CardErrorToast } from "../ui/CardErrorToast";
 
 export const AuthShell = ({
   heading,
+  headerAccessory,
   pageTitle,
   description,
   children,
@@ -45,6 +46,8 @@ export const AuthShell = ({
               {heading}
             </h1>
           )}
+
+          {headerAccessory}
 
           {description && (
             <p className="auth-description mt-2 leading-relaxed text-slate-600 text-xs sm:text-sm">

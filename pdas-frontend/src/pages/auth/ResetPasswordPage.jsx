@@ -8,12 +8,15 @@ import { z } from "zod";
 import { AnimatePresence, motion as Motion } from "framer-motion";
 import { AuthPasswordField } from "../../components/auth/AuthPasswordField";
 import { AuthShell } from "../../components/auth/AuthShell";
-import { PasswordChecklist } from "../../components/auth/PasswordChecklist";
+import { PasswordRequirementsPopover } from "../../components/auth/PasswordRequirementsPopover";
 import { getErrorMessage } from "../../services/api";
 import { authService } from "../../services/authService";
 import { PASSWORD_RULES } from "../../utils/constants";
 import { evaluatePassword } from "../../utils/passwordPolicy";
 import { readFragmentParamOnce, setNoReferrerPolicy } from "../../utils/sensitiveUrl";
+
+const escapeHtmlPattern = (value = "") =>
+  String(value).replace(/[\\^$.*+?()[\]{}|/\-]/g, "\\$&");
 
 const resetPasswordSchema = z
   .object({
@@ -49,6 +52,7 @@ export default function ResetPasswordPage() {
 
   const [success, setSuccess] = useState(false);
   const [cardError, setCardError] = useState(null);
+  const [isPasswordFocused, setIsPasswordFocused] = useState(false);
 
   useEffect(() => setNoReferrerPolicy(), []);
 
@@ -69,8 +73,6 @@ export default function ResetPasswordPage() {
     () => evaluatePassword(passwordValue),
     [passwordValue],
   );
-  const showChecklist = passwordValue.length > 0;
-
   const onSubmit = async (values) => {
     setCardError(null);
     try {
@@ -108,7 +110,10 @@ export default function ResetPasswordPage() {
           </Link>
         }
       >
-        <div className="auth-alert auth-alert-warning" role="alert">
+        <div
+          className="auth-alert auth-alert-warning auth-alert-no-accent"
+          role="alert"
+        >
           This reset link is missing or invalid. Please request a new password
           reset.
         </div>
@@ -126,9 +131,17 @@ export default function ResetPasswordPage() {
   return (
     <AuthShell
       heading={success ? "Password updated" : "Reset your password"}
+      headerAccessory={success ? (
+        <div
+          className="mt-3 flex h-11 w-11 items-center justify-center rounded-full border border-emerald-200 bg-emerald-50 text-emerald-600"
+          aria-hidden="true"
+        >
+          <CheckCircle2 size={24} strokeWidth={2.25} />
+        </div>
+      ) : null}
       description={
         success
-          ? "Your password has been changed. Sign in with your new credentials."
+          ? "Your password is secure and all active sessions have been signed out."
           : "Choose a new password for your account."
       }
       layout="single"
@@ -137,7 +150,7 @@ export default function ResetPasswordPage() {
       cardError={cardError}
       onClearCardError={() => setCardError(null)}
       mobileCardMode="full"
-      footer={
+      footer={success ? null : (
         <>
           <p className="text-sm text-black">Back to your account?</p>
           <Link
@@ -147,7 +160,7 @@ export default function ResetPasswordPage() {
             Back to sign in -&gt;
           </Link>
         </>
-      }
+      )}
     >
       <AnimatePresence mode="wait">
         {success ? (
@@ -160,20 +173,9 @@ export default function ResetPasswordPage() {
             role="status"
             aria-live="polite"
           >
-            <div className="auth-success-icon">
-              <CheckCircle2
-                size={26}
-                className="text-cyber-600"
-                aria-hidden="true"
-              />
-            </div>
-            <div className="auth-alert auth-alert-success">
-              Your password has been reset successfully. All previous sessions
-              have been revoked.
-            </div>
             <Link to="/login" className="auth-btn-primary no-underline">
               <KeyRound size={16} />
-              Back to sign in
+              Continue to sign in
             </Link>
           </Motion.div>
         ) : (
@@ -185,38 +187,58 @@ export default function ResetPasswordPage() {
             onSubmit={handleSubmit(onSubmit)}
             className="space-y-2.5"
           >
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-              <AuthPasswordField
-                id="reset-new-password"
-                label="New password"
-                error={errors.new_password?.message}
-                registration={register("new_password")}
-                autoComplete="new-password"
-                placeholder="Create a password"
-                minLength={PASSWORD_RULES.minLength}
-                maxLength={PASSWORD_RULES.maxLength}
-                required
-              />
+            <div className="space-y-3">
+              <div className="relative">
+                <AuthPasswordField
+                  id="reset-new-password"
+                  label="New password"
+                  error={errors.new_password?.message}
+                  registration={register("new_password")}
+                  autoComplete="new-password"
+                  placeholder="Enter a new password"
+                  minLength={PASSWORD_RULES.minLength}
+                  maxLength={PASSWORD_RULES.maxLength}
+                  pattern={'(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*\\(\\),.?":\\{\\}\\|<>]).{8,128}'}
+                  title="Use 8–128 characters with uppercase, lowercase, a number, and a special character."
+                  onInput={(event) => event.currentTarget.setCustomValidity("")}
+                  onInvalid={(event) => {
+                    if (event.currentTarget.validity.patternMismatch) {
+                      event.currentTarget.setCustomValidity(
+                        "Please meet all password creation requirements.",
+                      );
+                    }
+                  }}
+                  onFocus={() => setIsPasswordFocused(true)}
+                  onBlur={() => setIsPasswordFocused(false)}
+                  required
+                />
+                <PasswordRequirementsPopover
+                  visible={isPasswordFocused}
+                  passwordState={passwordState}
+                />
+              </div>
               <AuthPasswordField
                 id="reset-confirm-password"
-                label="Confirm password"
+                label="Confirm new password"
                 error={errors.confirm_password?.message}
                 registration={register("confirm_password")}
                 autoComplete="new-password"
-                placeholder="Repeat password"
+                placeholder="Re-enter your new password"
                 minLength={PASSWORD_RULES.minLength}
                 maxLength={PASSWORD_RULES.maxLength}
+                pattern={escapeHtmlPattern(passwordValue)}
+                title="Enter the same password in both fields."
+                onInput={(event) => event.currentTarget.setCustomValidity("")}
+                onInvalid={(event) => {
+                  if (event.currentTarget.validity.patternMismatch) {
+                    event.currentTarget.setCustomValidity(
+                      "Passwords do not match.",
+                    );
+                  }
+                }}
                 required
               />
             </div>
-
-            <PasswordChecklist
-              id="reset-password-checklist"
-              passwordState={passwordState}
-              show={showChecklist}
-            />
-
-
 
             <button
               type="submit"

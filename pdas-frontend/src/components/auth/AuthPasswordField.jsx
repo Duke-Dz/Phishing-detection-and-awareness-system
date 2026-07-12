@@ -86,6 +86,7 @@ export const AuthPasswordField = ({
           {visible ? <EyeOff size={16} /> : <Eye size={16} />}
         </button>
       </div>
+
     </div>
   );
 };
