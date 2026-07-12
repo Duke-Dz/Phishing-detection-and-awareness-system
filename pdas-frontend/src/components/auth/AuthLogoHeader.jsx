@@ -8,7 +8,7 @@ import CyberSenseLogo from "./CyberSenseLogo";
 export default function AuthLogoHeader() {
   return (
     <div className="auth-logo-header">
-      <CyberSenseLogo variant="compact" stacked />
+      <CyberSenseLogo variant="auth" stacked />
     </div>
   );
 }

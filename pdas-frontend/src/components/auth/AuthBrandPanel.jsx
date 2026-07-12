@@ -3,6 +3,7 @@ import ManageSearchRoundedIcon from "@mui/icons-material/ManageSearchRounded";
 import MarkEmailReadRoundedIcon from "@mui/icons-material/MarkEmailReadRounded";
 import PublicRoundedIcon from "@mui/icons-material/PublicRounded";
 import { Shield } from "lucide-react";
+import { CyberSenseShield } from "./CyberSenseLogo";
 
 const features = [
   { Icon: ManageSearchRoundedIcon, label: "Real-time phishing URL detection" },
@@ -45,10 +46,7 @@ export const AuthBrandPanel = ({ title = "Welcome to CyberSense", subtitle }) =>
 
       <div className="relative z-10 flex items-center gap-3">
         <div className="auth-bp-logo-ring flex h-11 w-11 items-center justify-center rounded-2xl">
-          <svg viewBox="0 0 16 18" width="18" height="20" aria-hidden="true">
-            <path d="M8 1 L15 4 L15 9 Q15 14 8 17 Q1 14 1 9 L1 4 Z" fill="#059669" />
-            <path d="M5 9 L7.2 11.2 L11 7" fill="none" stroke="#fff" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
+          <CyberSenseShield className="h-8 w-8" />
         </div>
         <p className="text-sm font-bold text-white/90">CyberSense</p>
       </div>

@@ -558,27 +558,31 @@ html {
 .auth-logo-container,
 .auth-logo-compact {
   max-width: 100%;
-  gap: var(--auth-logo-gap);
   margin: 0;
   transform: none;
 }
 
-.auth-logo-header .auth-logo-container > div:first-of-type,
-.auth-logo-header .auth-logo-compact > div:first-of-type {
-  width: var(--auth-logo-size);
-  height: var(--auth-logo-size);
+.auth-brand-logo {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  object-fit: contain;
+  user-select: none;
 }
 
-.auth-logo-header .auth-logo-container svg,
-.auth-logo-header .auth-logo-compact svg {
-  --tw-scale-x: var(--auth-logo-scale);
-  --tw-scale-y: var(--auth-logo-scale);
+.auth-brand-logo--auth {
+  width: clamp(5.75rem, 20vw, 7rem);
 }
 
-.auth-logo-wordmark,
-.auth-logo-header .auth-logo-wordmark {
-  font-size: var(--auth-wordmark-size);
-  letter-spacing: 0;
+.auth-brand-logo--lockup {
+  width: clamp(9.5rem, 18vw, 12rem);
+}
+
+.dark .auth-logo-compact {
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  border-radius: 0.75rem;
+  background: rgba(255, 255, 255, 0.96);
+  padding: 0.25rem 0.45rem;
 }
 
 /* Auth heading & description */
@@ -1252,6 +1256,10 @@ input[type="password"].auth-field {
     --auth-field-height: clamp(2.55rem, 6dvh, 2.8rem);
     --auth-button-height: clamp(2.65rem, 6.2dvh, 2.85rem);
   }
+
+  .auth-logo-header .auth-brand-logo--auth {
+    width: clamp(4.75rem, 20vw, 5.5rem);
+  }
 }
 
 @media (max-height: 740px) and (max-width: 640px) {
@@ -1274,6 +1282,10 @@ input[type="password"].auth-field {
       ),
       clamp(34rem, 78dvh, 44rem)
     );
+  }
+
+  .auth-brand-logo--auth {
+    width: clamp(5.25rem, 24vw, 6.25rem);
   }
 
   .auth-immersive-bg {
@@ -1390,6 +1402,10 @@ input[type="password"].auth-field {
 
   .auth-register-panel {
     --auth-card-max: 25rem;
+  }
+
+  .auth-brand-logo--auth {
+    width: clamp(5.75rem, 8vw, 7rem);
   }
 
 }
