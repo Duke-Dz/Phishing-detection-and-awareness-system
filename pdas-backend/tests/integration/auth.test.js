@@ -201,6 +201,28 @@ test("Auth Endpoints", async (t) => {
     testPassword = "NewPassword123!";
   });
 
+  await t.test("POST /api/auth/reset-password rejects the current password", async () => {
+    const token = crypto.randomBytes(32).toString("hex");
+    mockDb.PasswordResetToken.records = [{
+      token_hash: hashToken(token),
+      user_id: testUser.user_id,
+      used_at: null,
+      expires_at: new Date(Date.now() + 60_000),
+    }];
+
+    const res = await agent.post("/api/auth/reset-password", {
+      body: {
+        token,
+        new_password: testPassword,
+        confirm_password: testPassword,
+      },
+    });
+
+    assert.equal(res.status, 409);
+    assert.equal(res.body.code, "PASSWORD_REUSE");
+    assert.match(res.body.message, /must be different/i);
+  });
+
   await t.test("POST /api/auth/refresh rotates a refresh token", async () => {
     const loginRes = await agent.post("/api/auth/login", {
       body: { identifier: "test@example.com", password: testPassword }

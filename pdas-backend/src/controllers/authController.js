@@ -400,6 +400,17 @@ const resetPassword = async (req, res) => {
   }
 
   validatePassword(new_password);
+  const reusesCurrentPassword = await bcrypt.compare(
+    new_password,
+    user.password_hash,
+  );
+  if (reusesCurrentPassword) {
+    throw createError(
+      "Your new password must be different from your current password.",
+      409,
+      "PASSWORD_REUSE",
+    );
+  }
   const passwordHash = await bcrypt.hash(new_password, 12);
   user.password_hash = passwordHash;
   await user.save();
@@ -438,6 +449,13 @@ const changePassword = async (req, res) => {
   }
 
   validatePassword(new_password);
+  if (await bcrypt.compare(new_password, user.password_hash)) {
+    throw createError(
+      "Your new password must be different from your current password.",
+      409,
+      "PASSWORD_REUSE",
+    );
+  }
   user.password_hash = await bcrypt.hash(new_password, 12);
   await user.save();
 
