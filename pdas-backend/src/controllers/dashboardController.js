@@ -44,20 +44,36 @@ const getUserDashboardStats = async (req, res) => {
     }),
   ]);
 
-  // Get recent activity (last 7 days, daily counts)
-  const recentActivity = await ScanResult.findAll({
-    where: {
-      user_id: userId,
-      analyzed_at: { [Op.gte]: sevenDaysAgo },
-    },
-    attributes: [
-      [sequelize.fn("DATE", sequelize.col("analyzed_at")), "date"],
-      [sequelize.fn("COUNT", sequelize.col("scan_id")), "count"],
-    ],
-    group: [sequelize.fn("DATE", sequelize.col("analyzed_at"))],
-    order: [[sequelize.fn("DATE", sequelize.col("analyzed_at")), "ASC"]],
-    raw: true,
-  });
+  // Get recent activity (last 7 days), including classification trends.
+  const [recentActivity, classificationActivity] = await Promise.all([
+    ScanResult.findAll({
+      where: {
+        user_id: userId,
+        analyzed_at: { [Op.gte]: sevenDaysAgo },
+      },
+      attributes: [
+        [sequelize.fn("DATE", sequelize.col("analyzed_at")), "date"],
+        [sequelize.fn("COUNT", sequelize.col("scan_id")), "count"],
+      ],
+      group: [sequelize.fn("DATE", sequelize.col("analyzed_at"))],
+      order: [[sequelize.fn("DATE", sequelize.col("analyzed_at")), "ASC"]],
+      raw: true,
+    }),
+    ScanResult.findAll({
+      where: {
+        user_id: userId,
+        analyzed_at: { [Op.gte]: sevenDaysAgo },
+      },
+      attributes: [
+        [sequelize.fn("DATE", sequelize.col("analyzed_at")), "date"],
+        "classification",
+        [sequelize.fn("COUNT", sequelize.col("scan_id")), "count"],
+      ],
+      group: [sequelize.fn("DATE", sequelize.col("analyzed_at")), "classification"],
+      order: [[sequelize.fn("DATE", sequelize.col("analyzed_at")), "ASC"]],
+      raw: true,
+    }),
+  ]);
 
   const typeBreakdown = {};
   for (const row of scansByType) {
@@ -74,6 +90,7 @@ const getUserDashboardStats = async (req, res) => {
       unreadNotifications,
       scanTypeBreakdown: typeBreakdown,
       recentActivity,
+      classificationActivity,
     };
 
   cacheService.set(cacheKey, statsData, cacheService.TTL.DASHBOARD_STATS);

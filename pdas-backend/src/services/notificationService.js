@@ -5,6 +5,50 @@ const config = require("../config/env");
 const sseService = require("./sseService");
 const cacheService = require("./cacheService");
 
+const scanTypeLabel = (value) => ({ url: "URL", email: "Email", sms: "SMS" }[value] || "Content");
+
+const buildScanNotification = (scanResult) => {
+  const classification = String(scanResult.classification || "suspicious").toLowerCase();
+  const score = Math.max(0, Math.min(100, Math.round(Number(scanResult.risk_score) || 0)));
+  const label = scanTypeLabel(scanResult.scan_type);
+  const feedback = scanResult.detection_details?.user_feedback || scanResult.user_feedback || {};
+  const verdict = String(feedback.verdict || "").trim();
+  const action = String(feedback.recommended_action || "").trim();
+
+  const content = {
+    safe: {
+      title: `${label} scan: no strong threats detected`,
+      fallback: "No strong known threat indicators were found. Continue with normal caution.",
+      type: "success",
+    },
+    suspicious: {
+      title: `${label} scan needs your review`,
+      fallback: "Suspicious indicators were found. Verify the sender or destination before taking action.",
+      type: "warning",
+    },
+    phishing: {
+      title: `Phishing warning from ${label} scan`,
+      fallback: "Strong phishing indicators were detected. Do not click links, reply, or provide sensitive information.",
+      type: "alert",
+    },
+  }[classification] || {
+    title: `${label} scan result available`,
+    fallback: "Review the scan result before interacting with this content.",
+    type: "info",
+  };
+
+  const guidance = [verdict || content.fallback, action]
+    .filter(Boolean)
+    .filter((value, index, values) => index === 0 || value !== values[0])
+    .join(" ");
+
+  return {
+    title: content.title,
+    message: `Risk score ${score}/100. ${guidance}`.slice(0, 900),
+    type: content.type,
+  };
+};
+
 const createNotification = async ({ user_id, title, message, type = "info", related_report_id }) => {
   const notification = await Notification.create({
     user_id,
@@ -33,12 +77,10 @@ const createNotification = async ({ user_id, title, message, type = "info", rela
 const createScanNotification = async ({ user_id, scanResult, report_id }) => {
   if (!user_id) return null;
 
-  const type = scanResult.classification === "phishing" ? "alert" : "info";
+  const content = buildScanNotification(scanResult);
   const notification = await createNotification({
     user_id,
-    title: "Scan completed",
-    message: `Your ${scanResult.scan_type} scan was classified as ${scanResult.classification} with a risk score of ${scanResult.risk_score}.`,
-    type,
+    ...content,
     related_report_id: report_id,
   });
 
@@ -91,4 +133,4 @@ const createScanNotification = async ({ user_id, scanResult, report_id }) => {
   return notification;
 };
 
-module.exports = { createNotification, createScanNotification };
+module.exports = { buildScanNotification, createNotification, createScanNotification };

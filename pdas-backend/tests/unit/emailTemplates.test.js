@@ -44,8 +44,13 @@ for (const [name, input] of Object.entries(fixtures)) {
     assert.match(output.html, /Security communications/i);
     assert.match(output.html, /CyberSense Security Team/i);
     assert.match(output.html, /CyberSense will never ask for your password or verification code/i);
-    assert.doesNotMatch(output.html, /Phishing detection and security awareness/i);
+    assert.match(output.html, /Phishing detection and security awareness/i);
+    assert.match(output.html, new RegExp(`mailto:${configSafeSupport()}`, "i"));
   });
+}
+
+function configSafeSupport() {
+  return require("../../src/config/env").mail.support.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 test("templates use message-specific visual hierarchy", () => {
@@ -56,6 +61,13 @@ test("templates use message-specific visual hierarchy", () => {
   assert.match(dangerous.html, /#FEF3F2/i);
   assert.match(successful.html, /Activity confirmed/i);
   assert.match(successful.html, /#ECFDF3/i);
+});
+
+test("phishing alerts label detected signals and recommended actions", () => {
+  const output = templates.phishingAlert(fixtures.phishingAlert);
+
+  assert.match(output.html, /Signals detected/i);
+  assert.match(output.html, /Recommended next steps/i);
 });
 
 test("primary actions include an Outlook-compatible button fallback", () => {

@@ -60,9 +60,11 @@ const list = (items = []) => items.length
   ? `<ul style="margin:18px 0;padding-left:20px;color:${brand.text};font-size:14px;line-height:23px">${items.map((item) => `<li style="margin-bottom:7px;padding-left:2px">${escapeHtml(item)}</li>`).join("")}</ul>`
   : "";
 
+const sectionHeading = (text) => `<h2 style="margin:24px 0 8px;color:${brand.navy};font-size:15px;line-height:22px;font-weight:700">${escapeHtml(text)}</h2>`;
+
 const brandHeader = () => `<tr><td style="padding:17px 32px;background:#ffffff;border-bottom:1px solid ${brand.border}"><table role="presentation" width="100%" cellspacing="0" cellpadding="0"><tr><td style="vertical-align:middle"><img src="cid:${brand.logoCid}" width="142" alt="${brand.name}" style="display:block;width:142px;max-width:100%;height:auto;border:0"></td><td class="header-label" align="right" style="vertical-align:middle;color:${brand.muted};font-size:11px;line-height:16px;font-weight:700;text-transform:uppercase;letter-spacing:.8px">Security communications</td></tr></table></td></tr>`;
 
-const footer = (essential) => `<tr><td class="email-footer" style="padding:22px 32px;border-top:1px solid ${brand.border};background:${brand.subtle};color:${brand.muted};font-size:11px;line-height:18px"><strong style="color:${brand.text};font-size:12px">CyberSense Security Team</strong><br>This email relates to your CyberSense account or security activity.<br>Questions? Contact ${escapeHtml(config.mail.support)}.<div style="margin-top:12px"><a href="{{PRIVACY_URL}}" style="color:${brand.blue};text-decoration:underline">Privacy policy</a>${essential ? "" : `<span style="color:#98A2B3"> &nbsp;|&nbsp; </span><a href="{{UNSUBSCRIBE_URL}}" style="color:${brand.blue};text-decoration:underline">Email preferences</a>`}</div><div style="margin-top:10px;color:#98A2B3">CyberSense will never ask for your password or verification code by email.</div></td></tr>`;
+const footer = (essential) => `<tr><td class="email-footer" style="padding:22px 32px;border-top:1px solid ${brand.border};background:${brand.subtle};color:${brand.muted};font-size:11px;line-height:18px"><strong style="color:${brand.text};font-size:12px">CyberSense Security Team</strong><br>Phishing detection and security awareness for safer digital communities.<br>Questions? <a href="mailto:${escapeHtml(config.mail.support)}" style="color:${brand.blue};text-decoration:underline">Contact ${escapeHtml(config.mail.support)}</a>.<div style="margin-top:12px"><a href="{{PRIVACY_URL}}" style="color:${brand.blue};text-decoration:underline">Privacy policy</a>${essential ? "" : `<span style="color:#98A2B3"> &nbsp;|&nbsp; </span><a href="{{UNSUBSCRIBE_URL}}" style="color:${brand.blue};text-decoration:underline">Email preferences</a>`}</div><div style="margin-top:10px;color:#98A2B3">CyberSense will never ask for your password or verification code by email.</div></td></tr>`;
 
 const layout = ({ title, preheader, body, tone = "info", essential = false }) => {
   const palette = tones[tone] || tones.info;
@@ -73,4 +75,4 @@ const layout = ({ title, preheader, body, tone = "info", essential = false }) =>
 const greeting = (name) => `<p style="margin:0 0 16px;color:${brand.text};font-size:15px;line-height:24px">Hello ${escapeHtml(name || "there")},</p>`;
 const paragraph = (text) => `<p style="margin:0 0 16px;color:${brand.text};font-size:14px;line-height:23px">${escapeHtml(text)}</p>`;
 
-module.exports = { alert, brand, button, details, escapeHtml, greeting, layout, list, paragraph, safeUrl };
+module.exports = { alert, brand, button, details, escapeHtml, greeting, layout, list, paragraph, safeUrl, sectionHeading };

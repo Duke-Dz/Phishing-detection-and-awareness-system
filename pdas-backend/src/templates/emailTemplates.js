@@ -1,5 +1,5 @@
 const config = require("../config/env");
-const { alert, button, details, greeting, layout, list, paragraph, safeUrl } = require("./components");
+const { alert, button, details, greeting, layout, list, paragraph, safeUrl, sectionHeading } = require("./components");
 
 const verificationExpiryHours = () => config.pendingRegistrationExpiryHours || 2;
 
@@ -52,7 +52,9 @@ module.exports = {
       paragraph(`CyberSense has completed the security analysis of your ${scanType.toUpperCase()} submission.`) +
       alert(`Assessment: ${classification.toUpperCase()} - risk score ${score}/100`, tone) +
       details([["Target", target], ["Scan ID", scanId], ["Scanned", formatDate(scannedAt)]]) +
+      (detectedSignals.length ? sectionHeading("Signals detected") : "") +
       list(detectedSignals) +
+      sectionHeading("Recommended next steps") +
       list(actions) +
       button(`${frontendUrl}/scan/${scanId}`, "Review security report");
     return result({

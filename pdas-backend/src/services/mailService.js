@@ -5,8 +5,8 @@ const logger = require("../utils/logger");
 const { generateUnsubscribeToken } = require("../utils/unsubscribeTokens");
 
 const brandLogo = {
-  filename: "cybersense-logo.png",
-  path: path.resolve(__dirname, "../templates/assets/cybersense-logo.png"),
+  filename: "cybersense-email-logo.png",
+  path: path.resolve(__dirname, "../templates/assets/cybersense-email-logo.png"),
   cid: "cybersense-logo",
 };
 

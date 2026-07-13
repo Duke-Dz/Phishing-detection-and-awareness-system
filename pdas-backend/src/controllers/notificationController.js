@@ -68,4 +68,19 @@ const markAllNotificationsRead = async (req, res) => {
   });
 };
 
-module.exports = { listNotifications, markNotificationRead, markAllNotificationsRead };
+const clearReadNotifications = async (req, res) => {
+  const deletedCount = await Notification.destroy({
+    where: { user_id: req.user.user_id, is_read: true },
+  });
+  cacheService.del(cacheService.keys.dashboardStats(req.user.user_id));
+  cacheService.del(cacheService.keys.systemStats());
+  cacheService.delByPrefix(`notifications:${req.user.user_id}:`);
+
+  res.json({
+    success: true,
+    message: `${deletedCount} read notification(s) cleared.`,
+    data: { deleted_count: deletedCount },
+  });
+};
+
+module.exports = { listNotifications, markNotificationRead, markAllNotificationsRead, clearReadNotifications };

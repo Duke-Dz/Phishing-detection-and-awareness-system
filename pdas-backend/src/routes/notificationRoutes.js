@@ -3,6 +3,7 @@ const {
   listNotifications,
   markNotificationRead,
   markAllNotificationsRead,
+  clearReadNotifications,
 } = require("../controllers/notificationController");
 const { asyncHandler } = require("../middleware/errorHandler");
 const { protect } = require("../middleware/authMiddleware");
@@ -85,6 +86,21 @@ router.get("/", asyncHandler(listNotifications));
  *         description: Not authenticated
  */
 router.patch("/read-all", asyncHandler(markAllNotificationsRead));
+
+/**
+ * @swagger
+ * /notifications/read:
+ *   delete:
+ *     tags: [Notifications]
+ *     summary: Clear read notifications
+ *     description: Delete all read notifications belonging to the authenticated user.
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Read notifications cleared
+ */
+router.delete("/read", asyncHandler(clearReadNotifications));
 
 /**
  * @swagger
