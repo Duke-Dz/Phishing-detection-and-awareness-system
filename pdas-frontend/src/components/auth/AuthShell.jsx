@@ -1,4 +1,4 @@
-import { useEffect, useId } from "react";
+import { useId } from "react";
 import { AuthBrandPanel } from "./AuthBrandPanel";
 import AuthLogoHeader from "./AuthLogoHeader";
 import CyberSenseLogo from "./CyberSenseLogo";
@@ -7,7 +7,6 @@ import { CardErrorToast } from "../ui/CardErrorToast";
 export const AuthShell = ({
   heading,
   headerAccessory,
-  pageTitle,
   description,
   children,
   footer,
@@ -24,15 +23,6 @@ export const AuthShell = ({
   const isImmersive = layout === "immersive";
   const isCompactMobileCard = mobileCardMode === "full";
   const hasHeaderContent = Boolean(heading || description);
-
-  useEffect(() => {
-    if (typeof document !== "undefined") {
-      const titleToUse = pageTitle || heading;
-      if (titleToUse) {
-        document.title = `${titleToUse} • CyberSense`;
-      }
-    }
-  }, [heading, pageTitle]);
 
   const innerContent = (
     <>

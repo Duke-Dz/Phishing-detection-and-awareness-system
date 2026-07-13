@@ -1,4 +1,5 @@
 import { AnimatePresence } from "framer-motion";
+import { useEffect } from "react";
 import { Route, Routes, useLocation } from "react-router-dom";
 import { PageTransition } from "../components/common/PageTransition";
 
@@ -20,8 +21,43 @@ import TermsOfService from "../pages/TermsOfService.jsx";
 import { RoleRoute } from "../components/auth/RoleRoute";
 import UserDashboard from "../pages/user/UserDashboard";
 
+const pageTitles = {
+  "/": "CyberSense Sign In",
+  "/login": "CyberSense Sign In",
+  "/register": "CyberSense Create Account",
+  "/verify-email": "CyberSense Verify Email",
+  "/forgot-password": "CyberSense Forgot Password",
+  "/reset-password": "CyberSense Reset Password",
+  "/dashboard": "CyberSense Dashboard",
+  "/dashboard/profile": "CyberSense Profile",
+  "/dashboard/settings": "CyberSense Settings",
+  "/dashboard/notifications": "CyberSense Notifications",
+  "/dashboard/email-scan": "CyberSense Email Scanner",
+  "/dashboard/url-scan": "CyberSense URL Scanner",
+  "/dashboard/sms-scan": "CyberSense SMS Scanner",
+  "/dashboard/activity": "CyberSense Scan Activity",
+  "/dashboard/reports": "CyberSense Security Reports",
+  "/dashboard/training": "CyberSense Awareness Training",
+  "/unsubscribe": "CyberSense Email Preferences",
+  "/privacy": "CyberSense Privacy Policy",
+  "/terms": "CyberSense Terms of Service",
+  "/maintenance": "CyberSense Maintenance",
+};
+
+const titleForPath = (pathname) => {
+  if (pageTitles[pathname]) return pageTitles[pathname];
+  if (pathname.startsWith("/admin")) return "CyberSense Admin Dashboard";
+  if (pathname.startsWith("/analyst")) return "CyberSense Analyst Dashboard";
+  return "CyberSense Page Not Found";
+};
+
 const AppRouter = () => {
   const location = useLocation();
+
+  useEffect(() => {
+    document.title = titleForPath(location.pathname);
+  }, [location.pathname]);
+
   const userDashboardPaths = [
     "/dashboard",
     "/dashboard/profile",
