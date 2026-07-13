@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import AwarenessTraining from "../../components/awareness/AwarenessTraining";
 import DashboardLayout from "../../components/dashboard/layout/DashboardLayout";
 import OverviewPanel from "../../components/dashboard/overview/OverviewPanel";
+import SecurityNews from "../../components/dashboard/shared/SecurityNews";
 import UserReports from "../../components/reports/UserReports";
 import RecentScans from "../../components/scan/RecentScans";
 import ScanCenter from "../../components/scan/ScanCenter";
@@ -73,9 +74,7 @@ export default function UserDashboard() {
     "/dashboard/sms-scan": "sms-scanning",
   };
 
-  useEffect(() => {
-    if (path === "/dashboard/activity") navigate("/dashboard#scan-history", { replace: true });
-  }, [navigate, path]);
+
 
   useEffect(() => {
     const sectionId = sectionByPath[path] || location.hash.slice(1);
@@ -123,6 +122,7 @@ export default function UserDashboard() {
   let content;
   if (path === "/dashboard/training") content = <AwarenessTraining lessons={lessons} loading={loading} />;
   else if (path === "/dashboard/reports") content = <UserReports reports={reports} loading={loading} />;
+  else if (path === "/dashboard/activity") content = <SecurityNews />;
   else if (path === "/dashboard/notifications") content = <NotificationsPage />;
   else if (path === "/dashboard/profile") content = <ProfilePage />;
   else if (path === "/dashboard/settings") content = <SettingsPage />;

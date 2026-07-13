@@ -1,8 +1,9 @@
-import { Bell, ChevronDown, Menu, Moon, Search, Sun } from "lucide-react";
+import { Bell, ChevronDown, Menu, Moon, Sun } from "lucide-react";
 import { useCallback, useState } from "react";
 import NotificationDropdown from "../../notifications/NotificationDropdown";
 import ProfileMenu from "../profile/ProfileMenu";
 import DashboardDateBar from "./DashboardDateBar";
+import DashboardSearch from "./DashboardSearch";
 
 export default function DashboardHeader({ user, avatarSrc, unread, dark, onMenu, onTheme, onLogout, onUnreadChange }) {
   const [notificationsOpen, setNotificationsOpen] = useState(false);
@@ -13,10 +14,7 @@ export default function DashboardHeader({ user, avatarSrc, unread, dark, onMenu,
     <header className="sticky top-0 z-30 flex min-h-14 items-center justify-between gap-2.5 border-b border-slate-200 bg-white px-4 py-1.5 backdrop-blur-xl dark:border-[#34383d] dark:bg-[#1a1d20]/95 sm:px-5 lg:top-4 lg:min-h-0 lg:rounded-xl lg:border lg:px-4 lg:py-1.5 lg:shadow-[0_12px_28px_-24px_rgba(15,23,42,0.18)]">
       <div className="flex min-w-0 flex-1 items-center gap-2.5">
         <button type="button" onClick={onMenu} className="grid h-9 w-9 shrink-0 place-items-center rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 lg:hidden" aria-label="Open navigation"><Menu size={19} /></button>
-        <label className="hidden h-9 w-full max-w-[330px] items-center gap-2.5 rounded-lg border border-slate-300 bg-white px-3.5 text-slate-500 shadow-[0_2px_6px_rgba(15,23,42,0.08)] transition focus-within:border-[#087CF0] focus-within:ring-2 focus-within:ring-[#087CF0]/15 dark:border-slate-600 dark:bg-slate-800 sm:flex">
-          <Search size={18} strokeWidth={2.1} className="shrink-0 text-slate-900 dark:text-slate-100" />
-          <input type="search" placeholder="Search task" className="min-w-0 flex-1 bg-transparent text-[13px] font-medium text-slate-800 outline-none placeholder:font-normal placeholder:text-slate-500 dark:text-slate-100 dark:placeholder:text-slate-400" aria-label="Search tasks" />
-        </label>
+        <DashboardSearch />
         <DashboardDateBar />
         <p className="truncate text-sm font-semibold text-slate-700 dark:text-slate-200 sm:hidden">Dashboard</p>
       </div>
