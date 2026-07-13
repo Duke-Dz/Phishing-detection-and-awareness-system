@@ -9,7 +9,7 @@ export default function ProfileMenu({ open, onClose, user, avatarSrc, onLogout }
     if (!open) return undefined;
     const dismiss = (event) => {
       if (event.key === "Escape") onClose();
-      if (event.type === "mousedown" && !ref.current?.contains(event.target)) onClose();
+      if (event.type === "mousedown" && !ref.current?.contains(event.target) && !event.target.closest?.('[data-profile-menu-trigger="true"]')) onClose();
     };
     document.addEventListener("mousedown", dismiss);
     window.addEventListener("keydown", dismiss);

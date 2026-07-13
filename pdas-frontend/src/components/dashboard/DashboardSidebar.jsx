@@ -17,7 +17,7 @@ import CyberSenseLogo from "../auth/CyberSenseLogo";
 export const DASHBOARD_NAV_ITEMS = [
   { id: "overview", label: "Overview", helper: "Security snapshot", Icon: LayoutDashboard },
   { id: "quick-actions", label: "Quick actions", helper: "Scan and report", Icon: ScanLine },
-  { id: "recent-scans", label: "Scan activity", helper: "Latest results", Icon: BarChart3 },
+  { id: "recent-scans", label: "Scan history", helper: "Previous results", Icon: BarChart3 },
   { id: "reports", label: "My reports", helper: "Track submissions", Icon: FileWarning },
   { id: "training", label: "Training", helper: "Build awareness", Icon: BookOpen },
 ];

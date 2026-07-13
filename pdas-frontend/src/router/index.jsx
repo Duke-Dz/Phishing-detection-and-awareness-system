@@ -35,7 +35,7 @@ const pageTitles = {
   "/dashboard/email-scan": "CyberSense Email Scanner",
   "/dashboard/url-scan": "CyberSense URL Scanner",
   "/dashboard/sms-scan": "CyberSense SMS Scanner",
-  "/dashboard/activity": "CyberSense Scan Activity",
+  "/dashboard/activity": "CyberSense Scan History",
   "/dashboard/reports": "CyberSense Security Reports",
   "/dashboard/training": "CyberSense Awareness Training",
   "/unsubscribe": "CyberSense Email Preferences",

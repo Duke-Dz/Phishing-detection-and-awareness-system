@@ -107,8 +107,8 @@ export default function UserDashboard() {
   }, [path]);
 
   const dashboardContent = (
-    <div className="rounded-[30px] border border-[#ebebeb] bg-[#f7f7f7] p-4 sm:p-6 lg:p-7">
-      <div className="space-y-10">
+    <div className="rounded-xl border border-slate-200 bg-white p-2.5 sm:p-3 lg:p-3">
+      <div className="space-y-4">
       <section id="dashboard-overview" className="scroll-mt-28">
         <OverviewPanel stats={stats} scans={scans} loading={loading} error={dashboardError} />
       </section>

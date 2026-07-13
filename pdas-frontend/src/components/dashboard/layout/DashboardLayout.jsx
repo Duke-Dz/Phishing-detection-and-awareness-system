@@ -4,6 +4,7 @@ import { useAuth } from "../../../hooks/useAuth";
 import { userService } from "../../../services/userService";
 import DashboardHeader from "./DashboardHeader";
 import DashboardSidebar from "./DashboardSidebar";
+import FloatingHelp from "./FloatingHelp";
 
 export default function DashboardLayout({ children, unread = 0, refreshing = false, onRefresh, onUnreadChange }) {
   const { user, logout } = useAuth();
@@ -12,6 +13,15 @@ export default function DashboardLayout({ children, unread = 0, refreshing = fal
   const [collapsed, setCollapsed] = useState(false);
   const [dark, setDark] = useState(() => localStorage.getItem("dashboard_theme") === "dark");
   const [avatarSrc, setAvatarSrc] = useState("");
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", dark);
+    document.documentElement.style.colorScheme = dark ? "dark" : "light";
+    window.dispatchEvent(new CustomEvent("dashboard-theme-change", { detail: dark ? "dark" : "light" }));
+    return () => {
+      document.documentElement.classList.remove("dark");
+      document.documentElement.style.colorScheme = "";
+    };
+  }, [dark]);
   useEffect(() => {
     if (!user?.avatar_url) return undefined;
     let active = true;
@@ -24,7 +34,7 @@ export default function DashboardLayout({ children, unread = 0, refreshing = fal
   const signOut = async () => { await logout(); navigate("/login", { replace: true }); };
   return (
     <div className={dark ? "dark" : ""}>
-      <div className="min-h-screen overflow-x-hidden bg-white text-slate-900 dark:bg-slate-950 dark:text-slate-100">
+      <div className="min-h-screen overflow-x-hidden bg-slate-50 text-slate-900 transition-colors duration-200 dark:bg-[#111315] dark:text-[#f1f3f5]">
         <DashboardSidebar open={sidebarOpen} collapsed={collapsed} onClose={() => setSidebarOpen(false)} onToggle={() => setCollapsed((value) => !value)} user={user} avatarSrc={avatarSrc} onLogout={signOut} />
         <div className={`min-h-screen transition-[padding] duration-300 ease-in-out ${collapsed ? "lg:pl-24" : "lg:pl-[266px]"}`}>
           <div className="min-h-screen lg:px-4 lg:pt-4">
@@ -32,6 +42,7 @@ export default function DashboardLayout({ children, unread = 0, refreshing = fal
           <main className="mx-auto w-full max-w-[1600px] px-4 py-5 sm:px-6 sm:py-7 lg:min-h-[calc(100dvh-8rem)] lg:px-0 lg:py-5">{children}</main>
           </div>
         </div>
+        <FloatingHelp />
       </div>
     </div>
   );
