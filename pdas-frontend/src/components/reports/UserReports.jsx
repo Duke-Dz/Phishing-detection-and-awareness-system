@@ -31,11 +31,11 @@ export default function UserReports({ reports = [], loading, compact = false }) 
           <p className="mt-2 text-slate-500">Track threats you submitted for review.</p>
         </div>
       )}
-      <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+      <div className="dashboard-theme-surface overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
         {loading ? (
           <div className="animate-pulse space-y-3 p-6">
             {[1, 2, 3].map((item) => (
-              <div key={item} className="h-20 rounded-xl bg-slate-100 dark:bg-slate-800" />
+              <div key={item} className="h-20 rounded-xl bg-slate-100 dark:bg-[#252c35]" />
             ))}
           </div>
         ) : !rows.length ? (
@@ -50,7 +50,7 @@ export default function UserReports({ reports = [], loading, compact = false }) 
               return (
                 <article
                   key={report.report_id}
-                  className="flex cursor-pointer flex-col gap-3 p-5 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50 sm:flex-row sm:items-center sm:justify-between sm:gap-6 sm:px-6"
+                  className="dashboard-theme-hover flex cursor-pointer flex-col gap-3 p-5 transition-colors hover:bg-slate-50 sm:flex-row sm:items-center sm:justify-between sm:gap-6 sm:px-6"
                   onClick={() => setSelected(report)}
                 >
                   <div className="min-w-0 flex-1">

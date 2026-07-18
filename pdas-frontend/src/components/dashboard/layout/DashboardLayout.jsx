@@ -20,6 +20,7 @@ export default function DashboardLayout({ children, unread = 0, refreshing = fal
     return () => {
       document.documentElement.classList.remove("dark");
       document.documentElement.style.colorScheme = "";
+      window.dispatchEvent(new CustomEvent("dashboard-theme-change", { detail: "light" }));
     };
   }, [dark]);
   useEffect(() => {
@@ -34,7 +35,7 @@ export default function DashboardLayout({ children, unread = 0, refreshing = fal
   const signOut = async () => { await logout(); navigate("/login", { replace: true }); };
   return (
     <div className={dark ? "dark" : ""}>
-      <div className="min-h-screen overflow-x-hidden bg-slate-50 text-slate-900 transition-colors duration-200 dark:bg-[#111315] dark:text-[#f1f3f5]">
+      <div className="dashboard-theme-canvas min-h-screen overflow-x-hidden bg-slate-50 text-slate-900 transition-colors duration-200">
         <DashboardSidebar open={sidebarOpen} collapsed={collapsed} onClose={() => setSidebarOpen(false)} onToggle={() => setCollapsed((value) => !value)} user={user} avatarSrc={avatarSrc} onLogout={signOut} />
         <div className={`min-h-screen transition-[padding] duration-300 ease-in-out ${collapsed ? "lg:pl-24" : "lg:pl-[266px]"}`}>
           <div className="min-h-screen lg:px-4 lg:pt-4">

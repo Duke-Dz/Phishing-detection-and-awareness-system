@@ -26,7 +26,7 @@ export default function DashboardDateBar() {
 
   return (
     <div
-      className="ml-2 hidden shrink-0 items-center gap-2.5 border-l border-slate-200 pl-4 dark:border-slate-700 md:flex lg:ml-3 lg:pl-5"
+      className="dashboard-theme-divider ml-2 hidden shrink-0 items-center gap-2.5 border-l border-slate-200 pl-4 md:flex lg:ml-3 lg:pl-5"
       aria-label={`Today is ${date.day}, ${date.full}`}
     >
       <div className="grid h-9 w-9 shrink-0 place-items-center rounded-md bg-cyber-50 text-cyber-700 ring-1 ring-cyber-100 dark:bg-cyber-950/60 dark:text-cyber-300 dark:ring-cyber-900">

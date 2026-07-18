@@ -137,7 +137,7 @@ export default function DashboardSearch() {
   return (
     <div ref={wrapperRef} className="relative hidden sm:block w-full max-w-[330px]">
       {/* Search input */}
-      <label className="flex h-9 w-full items-center gap-2.5 rounded-lg border border-slate-300 bg-white px-3.5 text-slate-500 shadow-[0_2px_6px_rgba(15,23,42,0.08)] transition focus-within:border-[#087CF0] focus-within:ring-2 focus-within:ring-[#087CF0]/15 dark:border-slate-600 dark:bg-slate-800">
+      <label className="dashboard-theme-control flex h-9 w-full items-center gap-2.5 rounded-lg border border-slate-300 bg-white px-3.5 text-slate-500 shadow-[0_2px_6px_rgba(15,23,42,0.08)] transition focus-within:border-[#087CF0] focus-within:ring-2 focus-within:ring-[#087CF0]/15">
         <Search size={18} strokeWidth={2.1} className="shrink-0 text-slate-900 dark:text-slate-100" />
         <input
           ref={inputRef}
@@ -173,12 +173,12 @@ export default function DashboardSearch() {
       {/* Dropdown results */}
       {open && (
         <div
-          className="absolute left-0 top-[calc(100%+6px)] z-50 w-full min-w-[320px] overflow-hidden rounded-xl border border-slate-200 bg-white shadow-[0_20px_48px_-16px_rgba(15,23,42,0.18)] dark:border-slate-700 dark:bg-slate-900 dark:shadow-[0_20px_48px_-16px_rgba(0,0,0,0.5)]"
+          className="dashboard-theme-popover absolute left-0 top-[calc(100%+6px)] z-50 w-full min-w-[320px] overflow-hidden rounded-xl border border-slate-200 bg-white shadow-[0_20px_48px_-16px_rgba(15,23,42,0.18)]"
           role="listbox"
           id="dashboard-search-listbox"
         >
           {/* Header hint */}
-          <div className="border-b border-slate-100 px-3.5 py-2 dark:border-slate-800">
+          <div className="dashboard-theme-divider border-b border-slate-100 px-3.5 py-2">
             <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-slate-400 dark:text-slate-500">
               {query.trim() ? `${results.length} result${results.length !== 1 ? "s" : ""}` : "Quick navigation"}
             </p>
@@ -202,14 +202,14 @@ export default function DashboardSearch() {
                     className={`mx-1.5 flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5 transition-colors ${
                       isActive
                         ? "bg-cyber-50 text-cyber-900 dark:bg-cyber-900/40 dark:text-cyber-100"
-                        : "text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800/60"
+                        : "dashboard-theme-hover text-slate-700 hover:bg-slate-50 dark:text-slate-300"
                     }`}
                   >
                     <span
                       className={`grid h-8 w-8 shrink-0 place-items-center rounded-lg transition-colors ${
                         isActive
                           ? "bg-cyber-100 text-cyber-700 shadow-sm dark:bg-cyber-800/50 dark:text-cyber-300"
-                          : "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400"
+                          : "dashboard-theme-control bg-slate-100 text-slate-500 dark:text-slate-400"
                       }`}
                     >
                       <item.Icon size={16} strokeWidth={2.1} />
@@ -225,7 +225,7 @@ export default function DashboardSearch() {
                       </p>
                     </div>
                     {isActive && (
-                      <kbd className="hidden shrink-0 rounded border border-slate-200 bg-slate-100 px-1.5 py-0.5 text-[10px] font-semibold text-slate-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-400 sm:inline-block">
+                      <kbd className="dashboard-theme-control hidden shrink-0 rounded border border-slate-200 bg-slate-100 px-1.5 py-0.5 text-[10px] font-semibold text-slate-500 dark:text-slate-400 sm:inline-block">
                         Enter
                       </kbd>
                     )}
@@ -246,19 +246,19 @@ export default function DashboardSearch() {
           )}
 
           {/* Keyboard hint footer */}
-          <div className="border-t border-slate-100 px-3.5 py-2 dark:border-slate-800">
+          <div className="dashboard-theme-divider border-t border-slate-100 px-3.5 py-2">
             <div className="flex items-center gap-3 text-[11px] font-medium text-slate-400 dark:text-slate-500">
               <span className="flex items-center gap-1">
-                <kbd className="rounded border border-slate-200 bg-slate-50 px-1 py-px text-[10px] dark:border-slate-700 dark:bg-slate-800">↑</kbd>
-                <kbd className="rounded border border-slate-200 bg-slate-50 px-1 py-px text-[10px] dark:border-slate-700 dark:bg-slate-800">↓</kbd>
+                <kbd className="dashboard-theme-control rounded border border-slate-200 bg-slate-50 px-1 py-px text-[10px]">↑</kbd>
+                <kbd className="dashboard-theme-control rounded border border-slate-200 bg-slate-50 px-1 py-px text-[10px]">↓</kbd>
                 navigate
               </span>
               <span className="flex items-center gap-1">
-                <kbd className="rounded border border-slate-200 bg-slate-50 px-1 py-px text-[10px] dark:border-slate-700 dark:bg-slate-800">↵</kbd>
+                <kbd className="dashboard-theme-control rounded border border-slate-200 bg-slate-50 px-1 py-px text-[10px]">↵</kbd>
                 select
               </span>
               <span className="flex items-center gap-1">
-                <kbd className="rounded border border-slate-200 bg-slate-50 px-1 py-px text-[10px] dark:border-slate-700 dark:bg-slate-800">esc</kbd>
+                <kbd className="dashboard-theme-control rounded border border-slate-200 bg-slate-50 px-1 py-px text-[10px]">esc</kbd>
                 close
               </span>
             </div>

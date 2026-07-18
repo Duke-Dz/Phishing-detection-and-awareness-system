@@ -128,7 +128,7 @@ export default function SecurityNews() {
             className={`min-h-10 shrink-0 rounded-xl px-3 text-xs font-bold capitalize ${
               filter === item
                 ? "bg-cyan-600 text-white"
-                : "bg-white text-slate-500 dark:bg-slate-900"
+                : "dashboard-theme-control bg-white text-slate-500"
             }`}
           >
             {item === "all" ? "All" : (categoryConfig[item]?.label || item)}
@@ -147,7 +147,7 @@ export default function SecurityNews() {
             <article
               key={item.id}
               onClick={() => setSelected(item)}
-              className="flex cursor-pointer flex-col rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition-colors hover:border-slate-300 hover:bg-slate-50/50 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-slate-700 dark:hover:bg-slate-800/50"
+              className="dashboard-theme-surface dashboard-theme-hover flex cursor-pointer flex-col rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition-colors hover:border-slate-300 hover:bg-slate-50/50 dark:hover:border-[#3a4450]"
             >
               <div className="flex items-center justify-between gap-2">
                 <span className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-bold ${cat.tone}`}>
@@ -160,7 +160,7 @@ export default function SecurityNews() {
               </div>
 
               <div className="mt-4 flex items-start gap-3.5 flex-1">
-                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400">
+                <span className="dashboard-theme-control grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-slate-100 text-slate-500 dark:text-slate-400">
                   <ItemIcon size={19} strokeWidth={2} />
                 </span>
                 <div className="min-w-0 flex-1">

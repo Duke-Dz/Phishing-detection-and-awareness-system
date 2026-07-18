@@ -25,6 +25,7 @@ export default function CyberSenseLogo({
   stacked = false,
   showWordmark = true,
   iconSize = "md",
+  darkModeBlend = false,
   className = "",
 }) {
   if (!showWordmark) {
@@ -46,11 +47,12 @@ export default function CyberSenseLogo({
   }
 
   const useAuthLockup = stacked || variant === "auth";
+  const blendWithDarkSurface = darkModeBlend && !useAuthLockup;
   return (
     <span
       className={`auth-logo-container inline-flex max-w-full items-center justify-center ${
         useAuthLockup ? "auth-logo-container--stacked" : "auth-logo-compact"
-      } ${className}`}
+      } ${blendWithDarkSurface ? "dashboard-logo-lockup" : ""} ${className}`}
       role="img"
       aria-label="CyberSense — Security Intelligence"
     >
@@ -61,6 +63,24 @@ export default function CyberSenseLogo({
         aria-hidden="true"
         draggable="false"
       />
+      {blendWithDarkSurface && (
+        <>
+          <img
+            src={dashboardLogo}
+            alt=""
+            className="auth-brand-logo auth-brand-logo--lockup dashboard-logo-lockup__wordmark"
+            aria-hidden="true"
+            draggable="false"
+          />
+          <img
+            src={dashboardLogo}
+            alt=""
+            className="auth-brand-logo auth-brand-logo--lockup dashboard-logo-lockup__tagline"
+            aria-hidden="true"
+            draggable="false"
+          />
+        </>
+      )}
     </span>
   );
 }

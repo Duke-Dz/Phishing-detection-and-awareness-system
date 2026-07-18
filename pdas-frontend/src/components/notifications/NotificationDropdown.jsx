@@ -59,10 +59,10 @@ export default function NotificationDropdown({ open, onClose, onUnreadChange }) 
 
   if (!open) return null;
   return (
-    <div ref={panelRef} className="fixed inset-x-4 top-[72px] z-[70] max-h-[75vh] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl dark:border-slate-700 dark:bg-slate-900 sm:absolute sm:inset-x-auto sm:right-0 sm:top-12 sm:w-[380px]" role="dialog" aria-label="Notifications">
-      <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4 dark:border-slate-800">
+    <div ref={panelRef} className="dashboard-theme-popover fixed inset-x-4 top-[72px] z-[70] max-h-[75vh] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl sm:absolute sm:inset-x-auto sm:right-0 sm:top-12 sm:w-[380px]" role="dialog" aria-label="Notifications">
+      <div className="dashboard-theme-divider flex items-center justify-between border-b border-slate-100 px-5 py-4">
         <div><h2 className="font-extrabold dark:text-white">Notifications</h2><p className="text-xs text-slate-500">Recent account activity</p></div>
-        <div className="flex items-center gap-1"><button type="button" onClick={markAll} disabled={!items.some((item) => !item.is_read)} className="min-h-9 rounded-lg px-2 text-xs font-bold text-cyber-700 hover:bg-cyber-50 disabled:cursor-not-allowed disabled:text-slate-400 dark:hover:bg-cyber-500/10"><CheckCheck className="mr-1 inline" size={15} />Mark all read</button><button type="button" onClick={clearRead} disabled={clearing || !items.some((item) => item.is_read)} className="min-h-9 rounded-lg px-2 text-xs font-bold text-slate-600 hover:bg-slate-100 hover:text-rose-600 disabled:cursor-not-allowed disabled:text-slate-300 dark:text-slate-300 dark:hover:bg-slate-800"><Trash2 className="mr-1 inline" size={14} />{clearing ? "Clearing…" : "Clear read"}</button></div>
+        <div className="flex items-center gap-1"><button type="button" onClick={markAll} disabled={!items.some((item) => !item.is_read)} className="min-h-9 rounded-lg px-2 text-xs font-bold text-cyber-700 hover:bg-cyber-50 disabled:cursor-not-allowed disabled:text-slate-400 dark:hover:bg-cyber-500/10"><CheckCheck className="mr-1 inline" size={15} />Mark all read</button><button type="button" onClick={clearRead} disabled={clearing || !items.some((item) => item.is_read)} className="dashboard-theme-hover min-h-9 rounded-lg px-2 text-xs font-bold text-slate-600 hover:bg-slate-100 hover:text-rose-600 disabled:cursor-not-allowed disabled:text-slate-300 dark:text-slate-300"><Trash2 className="mr-1 inline" size={14} />{clearing ? "Clearing…" : "Clear read"}</button></div>
       </div>
       <div className="max-h-[60vh] overflow-y-auto">
         {loading ? <div className="grid place-items-center py-16"><Loader2 className="animate-spin text-cyber-600" /></div>
@@ -71,7 +71,7 @@ export default function NotificationDropdown({ open, onClose, onUnreadChange }) 
           : items.map((item) => {
             const presented = presentNotification(item);
             return (
-            <button key={item.notification_id} type="button" onClick={() => markRead(item)} className="flex w-full gap-3 border-b border-slate-100 px-5 py-4 text-left last:border-0 hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800">
+            <button key={item.notification_id} type="button" onClick={() => markRead(item)} className="dashboard-theme-hover flex w-full gap-3 border-b border-slate-100 px-5 py-4 text-left last:border-0 hover:bg-slate-50 dark:border-[#2d343e]">
               <span className={`mt-1 h-2.5 w-2.5 shrink-0 rounded-full ${item.is_read ? "bg-slate-200 dark:bg-slate-700" : "bg-cyber-500"}`} />
               <span className="min-w-0"><span className="block text-sm font-bold text-slate-900 dark:text-white">{presented.title}</span><span className="mt-1 block text-sm leading-5 text-slate-600 dark:text-slate-300">{presented.message}</span><span className="mt-2 block text-xs font-medium text-slate-400">{dateLabel(item.created_at)}</span></span>
             </button>

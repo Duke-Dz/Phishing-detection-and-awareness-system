@@ -21,7 +21,7 @@ const resourceLinks = [
 
 function BrandMark() {
   return (
-    <div className="grid h-[58px] w-[58px] shrink-0 place-items-center overflow-hidden rounded-[18px] border border-slate-200 bg-white shadow-[0_7px_18px_-10px_rgba(13,81,140,0.55)] dark:border-slate-700 dark:bg-slate-950" aria-label="CyberSense">
+    <div className="dashboard-theme-card grid h-[58px] w-[58px] shrink-0 place-items-center overflow-hidden rounded-[18px] border border-slate-200 bg-white shadow-[0_7px_18px_-10px_rgba(13,81,140,0.55)]" aria-label="CyberSense">
       <CyberSenseShield className="h-[48px] w-[48px]" />
     </div>
   );
@@ -49,10 +49,10 @@ export default function DashboardSidebar({ open, collapsed, onClose, onLogout })
       || (destination === "#awareness-training" && location.pathname === "/dashboard/training");
   };
   const to = (destination) => destination.startsWith("/") ? destination : `/dashboard${destination}`;
-  const linkClass = (active) => `group flex h-11 items-center rounded-lg px-3.5 text-sm font-semibold transition-[background-color,color,box-shadow] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyber-500 ${active ? "bg-cyber-50 text-cyber-800 shadow-[inset_0_0_0_1px_rgba(13,81,140,0.10)] dark:bg-cyber-900/45 dark:text-cyber-200 dark:shadow-[inset_0_0_0_1px_rgba(127,181,220,0.16)]" : "text-slate-700 hover:bg-slate-100 hover:text-slate-950 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"} ${expanded ? "" : "lg:justify-center lg:px-0"}`;
+  const linkClass = (active) => `group flex h-11 items-center rounded-lg px-3.5 text-sm font-semibold transition-[background-color,color,box-shadow] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyber-500 ${active ? "bg-cyber-50 text-cyber-800 shadow-[inset_0_0_0_1px_rgba(13,81,140,0.10)] dark:bg-[#193149] dark:text-[#9bceff] dark:shadow-[inset_0_0_0_1px_rgba(77,163,255,0.22)]" : "dashboard-theme-hover text-slate-700 hover:bg-slate-100 hover:text-slate-950 dark:text-slate-300 dark:hover:text-white"} ${expanded ? "" : "lg:justify-center lg:px-0"}`;
   const renderLinks = (links) => links.map(([destination, label, Icon]) => (
     <Link key={`${destination}-${label}`} to={to(destination)} onClick={onClose} title={collapsed && !open ? label : undefined} className={linkClass(isActive(destination))}>
-      <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-md transition-colors ${isActive(destination) ? "bg-white text-cyber-700 shadow-sm dark:bg-slate-950 dark:text-cyber-300" : "text-slate-500 group-hover:text-slate-800 dark:text-slate-400 dark:group-hover:text-white"}`}>
+      <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-md transition-colors ${isActive(destination) ? "bg-white text-cyber-700 shadow-sm dark:bg-[#202a34] dark:text-[#74b9ff]" : "text-slate-500 group-hover:text-slate-800 dark:text-slate-400 dark:group-hover:text-white"}`}>
         <Icon size={17} strokeWidth={2.1} aria-hidden="true" />
       </span>
       <span className={expanded ? "ml-3" : "ml-3 lg:hidden"}>{label}</span>
@@ -62,11 +62,11 @@ export default function DashboardSidebar({ open, collapsed, onClose, onLogout })
 
   return <>
     {open && <button type="button" className="fixed inset-0 z-40 bg-slate-950/55 backdrop-blur-[2px] lg:hidden" onClick={onClose} aria-label="Close navigation" />}
-    <aside className={`fixed inset-y-0 left-0 z-50 flex flex-col overflow-hidden border-r border-slate-200 bg-white shadow-xl transition-[width,transform] duration-300 ease-in-out dark:border-slate-800 dark:bg-slate-900 lg:shadow-none ${collapsed ? "lg:w-20" : "lg:w-[266px]"} ${open ? "w-[min(88vw,280px)] translate-x-0" : "w-[min(88vw,280px)] -translate-x-full lg:translate-x-0"}`}>
-      <div className={`flex h-[76px] shrink-0 items-center border-b border-dashed border-slate-200 dark:border-slate-800 ${expanded ? "px-4" : "lg:justify-center lg:px-0"}`}>
+    <aside className={`dashboard-theme-surface fixed inset-y-0 left-0 z-50 flex flex-col overflow-hidden border-r border-slate-200 bg-white shadow-xl transition-[width,transform] duration-300 ease-in-out lg:shadow-none ${collapsed ? "lg:w-20" : "lg:w-[266px]"} ${open ? "w-[min(88vw,280px)] translate-x-0" : "w-[min(88vw,280px)] -translate-x-full lg:translate-x-0"}`}>
+      <div className={`dashboard-theme-divider flex h-[76px] shrink-0 items-center border-b border-dashed border-slate-200 ${expanded ? "px-4" : "lg:justify-center lg:px-0"}`}>
         <div className="flex min-w-0 items-center gap-3.5" title={compactBrand ? "CyberSense User Portal" : undefined}>
           {expanded ? (
-            <CyberSenseLogo variant="compact" />
+            <CyberSenseLogo variant="compact" darkModeBlend />
           ) : (
             <BrandMark />
           )}
@@ -76,7 +76,7 @@ export default function DashboardSidebar({ open, collapsed, onClose, onLogout })
       <nav className="min-h-0 flex-1 overflow-y-auto px-4 py-4" aria-label="Dashboard navigation">
         {sectionHeading("Workspace")}
         <div className="space-y-0.5">{renderLinks(workspaceLinks)}</div>
-        <div className="mt-5 border-t border-dashed border-slate-200 pt-4 dark:border-slate-700">
+        <div className="dashboard-theme-divider mt-5 border-t border-dashed border-slate-200 pt-4">
           {sectionHeading("Resources")}
           <div className="space-y-0.5">{renderLinks(resourceLinks)}</div>
         </div>

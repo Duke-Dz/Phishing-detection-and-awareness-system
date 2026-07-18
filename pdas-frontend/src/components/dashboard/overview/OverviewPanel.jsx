@@ -104,12 +104,12 @@ function DonutChart({ title, value, segments }) {
     : `${title}: no scan data yet.`;
 
   return (
-    <article className="rounded-[10px] border border-slate-300 bg-white px-4 py-3.5 dark:border-[#383c41] dark:bg-[#1b1e21]">
+    <article className="dashboard-theme-card rounded-[10px] border border-slate-300 bg-white px-4 py-3.5">
       <h2 className="text-center text-sm font-bold text-slate-800 dark:text-slate-100">{title}</h2>
       <figure className="mt-2.5" aria-label={description}>
         <div className="relative mx-auto h-32 w-32">
           <svg viewBox="0 0 100 100" className="h-full w-full -rotate-90" role="img" aria-label={description}>
-            <circle cx="50" cy="50" r={radius} fill="none" stroke="#cbd5e1" strokeWidth="12" />
+            <circle cx="50" cy="50" r={radius} fill="none" strokeWidth="12" className="stroke-slate-300 dark:stroke-[#343c46]" />
             {chartSegments.map((segment) => {
               const fraction = segment.value / segmentTotal;
               const length = fraction * circumference;
@@ -161,7 +161,7 @@ function MetricCharts({ stats, safe, phishing, suspicious, total }) {
 }
 
 function OverviewSkeleton() {
-  return <div className="animate-pulse space-y-5" aria-label="Loading dashboard"><div className="h-10 w-56 rounded-lg bg-[#e8e8e8]" /><div className="grid gap-4 md:grid-cols-3">{Array.from({ length: 3 }, (_, index) => <div key={index} className="h-48 rounded-[10px] border border-[#e7e7e7] bg-white" />)}</div><div className="h-72 rounded-[10px] border border-[#e7e7e7] bg-white" /></div>;
+  return <div className="animate-pulse space-y-5" aria-label="Loading dashboard"><div className="h-10 w-56 rounded-lg bg-[#e8e8e8] dark:bg-[#252c35]" /><div className="grid gap-4 md:grid-cols-3">{Array.from({ length: 3 }, (_, index) => <div key={index} className="dashboard-theme-card h-48 rounded-[10px] border border-[#e7e7e7] bg-white" />)}</div><div className="dashboard-theme-card h-72 rounded-[10px] border border-[#e7e7e7] bg-white" /></div>;
 }
 
 export default function OverviewPanel({ stats, loading, error }) {
@@ -171,10 +171,10 @@ export default function OverviewPanel({ stats, loading, error }) {
   const total = Number(stats.totalScans || 0);
 
   if (loading) return <OverviewSkeleton />;
-  if (error) return <section className="rounded-[10px] border border-[#f0d7d7] bg-white p-8 text-center"><ShieldAlert className="mx-auto text-[#cb6161]" size={30} /><h1 className="mt-3 text-xl font-semibold text-slate-950">Dashboard data is unavailable</h1><p className="mt-2 text-sm text-slate-600">Refresh the page or try again in a moment.</p></section>;
+  if (error) return <section className="dashboard-theme-surface rounded-[10px] border border-[#f0d7d7] bg-white p-8 text-center dark:border-rose-900/60"><ShieldAlert className="mx-auto text-[#cb6161]" size={30} /><h1 className="mt-3 text-xl font-semibold text-slate-950 dark:text-white">Dashboard data is unavailable</h1><p className="mt-2 text-sm text-slate-600 dark:text-slate-400">Refresh the page or try again in a moment.</p></section>;
 
   return (
-    <div className="rounded-xl border border-slate-300 bg-white p-4 text-[#202020] shadow-sm dark:border-[#34383d] dark:bg-[#17191c] dark:text-[#f1f3f5] sm:p-6">
+    <div className="dashboard-theme-surface rounded-xl border border-slate-300 bg-white p-4 text-[#202020] shadow-sm dark:text-[#f1f3f5] sm:p-6">
       <div className="mb-6">
         <h1 className="text-[28px] font-bold tracking-[-0.035em] text-slate-950 dark:text-white">Dashboard overview</h1>
         <p className="mt-1.5 text-sm font-medium text-slate-700 dark:text-slate-300">A clear summary of your scans and detected risks.</p>
@@ -183,7 +183,7 @@ export default function OverviewPanel({ stats, loading, error }) {
       <MetricCharts stats={stats} safe={safe} phishing={phishing} suspicious={suspicious} total={total} />
 
       <section className="mt-4">
-        <article className="rounded-[10px] border border-slate-300 bg-white p-5 dark:border-[#383c41] dark:bg-[#1b1e21] sm:p-6">
+        <article className="dashboard-theme-card rounded-[10px] border border-slate-300 bg-white p-5 sm:p-6">
           <p className="text-base font-bold text-slate-950 dark:text-white">Threat detection breakdown</p>
           <p className="mt-1.5 text-sm font-medium text-slate-700 dark:text-slate-300">Daily safe and harmful scan results from the last seven days.</p>
           <ThreatTrendChart activity={stats.classificationActivity} />
