@@ -5,3 +5,4 @@ logs/*.log
 README.md
 .postman/
 postman/
+DETECTION_ENGINE.md

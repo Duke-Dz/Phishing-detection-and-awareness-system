@@ -2,9 +2,9 @@
  * @module mlScorerService
  * @description Layer 3 feature-based scoring engine.
  *
- * Extracts numeric features from URLs and message text, then applies
- * pre-trained threshold weights (mimicking Random Forest classification)
- * to produce a 0–100 phishing risk score.
+ * Extracts numeric features from URLs and normalized visible message text,
+ * then applies documented deterministic weights. This is not a trained ML
+ * model and its 0–100 output is an evidence score, not a probability.
  */
 
 // ───────────────────────── constants ─────────────────────────
@@ -34,39 +34,40 @@ const SUSPICIOUS_PATTERNS = [
 
 const IP_ADDRESS_RE = /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/;
 
-/** Weights derived from common phishing URL characteristics. */
+/**
+ * Conservative URL feature weights. Long paths, digits, and tracking query
+ * strings are common on legitimate sites, so lexical/shape-only evidence is
+ * deliberately capped well below a phishing verdict.
+ */
 const URL_WEIGHTS = {
-  urlLength:      { threshold: 75,  weight: 8,  direction: 'above' },
-  domainLength:   { threshold: 15,  weight: 10, direction: 'above' },
-  domainDotCount: { threshold: 3,   weight: 12, direction: 'above' },
-  hyphenCount:    { threshold: 1,   weight: 10, direction: 'above_eq' },
-  specialCharCount: { threshold: 1, weight: 8,  direction: 'above' },
-  digitCount:     { threshold: 1,   weight: 20, direction: 'above_eq' },
-  digitRatio:     { threshold: 0.3, weight: 15, direction: 'above' },
-  pathLength:     { threshold: 15,  weight: 15, direction: 'above' },
-  pathSegments:   { threshold: 2,   weight: 10, direction: 'above_eq' },
-  credentialPathKeywordCount: { threshold: 2, weight: 20, direction: 'above_eq' },
-  hasHttps:       { threshold: 0,   weight: 25, direction: 'equals' },
-  hasAtSymbol:    { threshold: 1,   weight: 15, direction: 'equals' },
-  hasIpAddress:   { threshold: 1,   weight: 18, direction: 'equals' },
-  subdomainCount: { threshold: 3,   weight: 8,  direction: 'above' },
+  urlLength:      { threshold: 180, weight: 3,  direction: 'above' },
+  domainLength:   { threshold: 40,  weight: 4,  direction: 'above' },
+  domainDotCount: { threshold: 4,   weight: 6,  direction: 'above' },
+  hyphenCount:    { threshold: 3,   weight: 6,  direction: 'above_eq' },
+  specialCharCount: { threshold: 4, weight: 4,  direction: 'above' },
+  digitCount:     { threshold: 4,   weight: 5,  direction: 'above_eq' },
+  digitRatio:     { threshold: 0.35, weight: 7, direction: 'above' },
+  pathLength:     { threshold: 120, weight: 3,  direction: 'above' },
+  pathSegments:   { threshold: 6,   weight: 4,  direction: 'above_eq' },
+  credentialPathKeywordCount: { threshold: 2, weight: 12, direction: 'above_eq' },
+  hasHttps:       { threshold: 0,   weight: 8,  direction: 'equals' },
+  hasAtSymbol:    { threshold: 1,   weight: 25, direction: 'equals' },
+  hasIpAddress:   { threshold: 1,   weight: 35, direction: 'equals' },
+  subdomainCount: { threshold: 3,   weight: 6,  direction: 'above' },
 };
 
-/** Weights for message-level phishing indicators. */
+/** Message weights require contextual combinations, not isolated keywords. */
 const MSG_WEIGHTS = {
-  urlCount:               { threshold: 1,    weight: 15, direction: 'above_eq' },
-  urgencyWordCount:       { threshold: 2,    weight: 20, direction: 'above_eq' },
-  sensitiveWordCount:     { threshold: 3,    weight: 20, direction: 'above_eq' },
-  exclamationCount:       { threshold: 3,    weight: 8,  direction: 'above' },
-  capsRatio:              { threshold: 0.08, weight: 10, direction: 'above' },
-  suspiciousPatternCount: { threshold: 1,    weight: 15, direction: 'above_eq' },
-  allCapsWordCount:       { threshold: 1,    weight: 10, direction: 'above_eq' },
-  hasHttpOnly:            { threshold: 1,    weight: 20, direction: 'equals' },
-  hasSuspiciousDomain:    { threshold: 1,    weight: 15, direction: 'equals' },
-  claimsCompromised:      { threshold: 1,    weight: 25, direction: 'equals' },
-  claimsPrize:            { threshold: 1,    weight: 20, direction: 'equals' },
-  mentionsDeadline:       { threshold: 1,    weight: 10, direction: 'equals' },
-  hasBankKeywordWithUrl:  { threshold: 1,    weight: 15, direction: 'equals' },
+  credentialRequest:          { threshold: 1, weight: 30, direction: 'equals' },
+  credentialRequestWithUrl:   { threshold: 1, weight: 20, direction: 'equals' },
+  paymentRequest:             { threshold: 1, weight: 24, direction: 'equals' },
+  urgencyWithSensitiveAction: { threshold: 1, weight: 15, direction: 'equals' },
+  linkCallToAction:           { threshold: 1, weight: 8,  direction: 'equals' },
+  claimsCompromisedWithUrl:   { threshold: 1, weight: 15, direction: 'equals' },
+  claimsPrizeWithUrl:         { threshold: 1, weight: 18, direction: 'equals' },
+  hasHttpOnly:                { threshold: 1, weight: 4,  direction: 'equals' },
+  hasSuspiciousDomain:        { threshold: 1, weight: 12, direction: 'equals' },
+  highPressureFormatting:     { threshold: 1, weight: 5,  direction: 'equals' },
 };
 
 // ───────────────────── helper utilities ──────────────────────
@@ -100,6 +101,11 @@ const countSubstring = (haystack, needle) => {
     pos += target.length;
   }
   return count;
+};
+
+const countPhrase = (text, phrase) => {
+  const escaped = phrase.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\s+/g, '\\s+');
+  return (String(text || '').match(new RegExp(`\\b${escaped}\\b`, 'gi')) || []).length;
 };
 
 // ──────────────── URL feature extraction ─────────────────────
@@ -240,6 +246,14 @@ const extractMessageFeatures = (text) => {
     claimsPrize: 0,
     mentionsDeadline: 0,
     hasBankKeywordWithUrl: 0,
+    credentialRequest: 0,
+    credentialRequestWithUrl: 0,
+    paymentRequest: 0,
+    urgencyWithSensitiveAction: 0,
+    linkCallToAction: 0,
+    claimsCompromisedWithUrl: 0,
+    claimsPrizeWithUrl: 0,
+    highPressureFormatting: 0,
   };
 
   if (!text || typeof text !== 'string') return defaults;
@@ -256,12 +270,12 @@ const extractMessageFeatures = (text) => {
   const lowerText = text.toLowerCase();
   let urgencyWordCount = 0;
   for (const word of URGENCY_WORDS) {
-    urgencyWordCount += countSubstring(lowerText, word);
+    urgencyWordCount += countPhrase(lowerText, word);
   }
 
   let sensitiveWordCount = 0;
   for (const word of SENSITIVE_WORDS) {
-    sensitiveWordCount += countSubstring(lowerText, word);
+    sensitiveWordCount += countPhrase(lowerText, word);
   }
 
   // Punctuation / casing
@@ -283,11 +297,25 @@ const extractMessageFeatures = (text) => {
   const allCapsWordCount = words.filter((w) => w.length > 2 && w === w.toUpperCase()).length;
   const hasHttpOnly = /http:\/\//i.test(text) && !/https:\/\//i.test(text) ? 1 : 0;
   const hasSuspiciousDomain = /\b\w+(-\w+){2,}\.(com|net|org)/i.test(text) ? 1 : 0;
-  const claimsCompromised = /compromised|hacked|unauthorized|unauthorised|suspicious.activity/i.test(text) ? 1 : 0;
-  const claimsPrize = /won|winner|prize|reward|congratulations|selected/i.test(text) ? 1 : 0;
-  const hasBankKeyword = /bank|mpesa|equity|kcb|account|wallet/i.test(text) ? 1 : 0;
-  const mentionsDeadline = /expire|hours?|today|immediately|before it|deadline/i.test(text) ? 1 : 0;
+  const claimsCompromised = /\b(?:compromised|hacked|unauthorized|unauthorised|suspicious activity)\b/i.test(text) ? 1 : 0;
+  const claimsPrize = /\b(?:won|winner|prize|reward|congratulations|selected)\b/i.test(text) ? 1 : 0;
+  const hasBankKeyword = /\b(?:bank|account|wallet)\b/i.test(text) ? 1 : 0;
+  const mentionsDeadline = /\b(?:expires?|hours?|today|immediately|before it|deadline)\b/i.test(text) ? 1 : 0;
   const hasBankKeywordWithUrl = hasBankKeyword && urlCount > 0 ? 1 : 0;
+
+  const credentialRequest = /\b(?:enter|send|provide|share|submit|reply\s+with|type|confirm|verify|validate|reset)\b[\s\S]{0,80}\b(?:password|passcode|pin|otp|one[- ]time code|security code|card number|cvv|credentials?)\b/i.test(text)
+    || /\b(?:password|passcode|pin|otp|one[- ]time code|security code|card number|cvv|credentials?)\b[\s\S]{0,80}\b(?:enter|send|provide|share|submit|required|needed|confirm|verify|validate|reset)\b/i.test(text)
+    ? 1
+    : 0;
+  const paymentRequest = /\b(?:send|transfer|pay|purchase|buy)\b[\s\S]{0,80}\b(?:money|funds?|wire|gift cards?|cryptocurrency|crypto|bitcoin|bank details?|payment)\b/i.test(text)
+    || /\b(?:bank details?|gift cards?|cryptocurrency|crypto|bitcoin)\b[\s\S]{0,80}\b(?:send|transfer|pay|purchase|buy)\b/i.test(text)
+    ? 1
+    : 0;
+  const urgencyWithSensitiveAction = mentionsDeadline && (credentialRequest || paymentRequest) ? 1 : 0;
+  const linkCallToAction = urlCount > 0 && /\b(?:click|open|follow|visit|use)\b[\s\S]{0,50}\b(?:link|button|url|website|portal|below|here)\b/i.test(text) ? 1 : 0;
+  const claimsCompromisedWithUrl = claimsCompromised && urlCount > 0 ? 1 : 0;
+  const claimsPrizeWithUrl = claimsPrize && urlCount > 0 ? 1 : 0;
+  const highPressureFormatting = urgencyWordCount >= 2 && (exclamationCount >= 4 || allCapsWordCount >= 3) ? 1 : 0;
 
   return {
     textLength,
@@ -305,6 +333,14 @@ const extractMessageFeatures = (text) => {
     claimsPrize,
     mentionsDeadline,
     hasBankKeywordWithUrl,
+    credentialRequest,
+    credentialRequestWithUrl: credentialRequest && urlCount > 0 ? 1 : 0,
+    paymentRequest,
+    urgencyWithSensitiveAction,
+    linkCallToAction,
+    claimsCompromisedWithUrl,
+    claimsPrizeWithUrl,
+    highPressureFormatting,
   };
 };
 

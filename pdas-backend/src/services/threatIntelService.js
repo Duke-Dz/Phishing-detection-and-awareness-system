@@ -2,6 +2,7 @@ const { ThreatIntelligence } = require("../models");
 
 // ── In-memory domain cache (5-minute TTL) ────────────────────────────────────
 const domainCache = new Map();
+const inFlightDomainLookups = new Map();
 const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 
 const builtInBlacklistedDomains = new Set([
@@ -27,15 +28,7 @@ const extractDomain = (rawUrl) => {
   }
 };
 
-const lookupDomain = async (domain) => {
-  if (!domain) return null;
-
-  // Check cache first
-  const cached = domainCache.get(domain);
-  if (cached && cached.expires > Date.now()) {
-    return cached.data;
-  }
-
+const queryDomain = async (domain) => {
   const builtInThreat = builtInBlacklistedDomains.has(domain)
     ? buildBuiltInThreat(domain)
     : null;
@@ -63,6 +56,26 @@ const lookupDomain = async (domain) => {
   // Cache null results too to avoid repeated DB lookups for unknown domains
   domainCache.set(domain, { data: null, expires: Date.now() + CACHE_TTL_MS });
   return null;
+};
+
+const lookupDomain = async (domain) => {
+  if (!domain) return null;
+
+  const cached = domainCache.get(domain);
+  if (cached && cached.expires > Date.now()) {
+    return cached.data;
+  }
+
+  const existingLookup = inFlightDomainLookups.get(domain);
+  if (existingLookup) return existingLookup;
+
+  const lookup = queryDomain(domain).finally(() => {
+    if (inFlightDomainLookups.get(domain) === lookup) {
+      inFlightDomainLookups.delete(domain);
+    }
+  });
+  inFlightDomainLookups.set(domain, lookup);
+  return lookup;
 };
 
 const clearDomainCache = () => domainCache.clear();

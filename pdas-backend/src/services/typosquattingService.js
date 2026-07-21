@@ -6,12 +6,10 @@
  */
 
 /**
- * Trusted brand names that attackers commonly impersonate.
- * Includes global brands and Kenyan financial/government services.
+ * Global brand names that attackers commonly impersonate.
  * @type {string[]}
  */
 const trustedBrands = [
-  // Global brands
   "paypal",
   "google",
   "amazon",
@@ -30,20 +28,15 @@ const trustedBrands = [
   "citibank",
   "youtube",
   "tesla",
-  // Kenyan brands
-  "safaricom",
-  "mpesa",
-  "equity",
-  "kcb",
-  "cooperative",
-  "stanbic",
-  "ncba",
-  "absa",
-  "kra",
-  "nhif",
-  "nssf",
-  "jumia",
 ];
+
+const knownLegitimateBrandDomains = new Set([
+  "amzn.to",
+  "fb.me",
+  "goo.gl",
+  "wa.me",
+  "youtu.be",
+]);
 
 /**
  * Character substitution map for attacker tricks.
@@ -161,6 +154,7 @@ const checkTyposquatting = (domain) => {
   const safe = { isTyposquat: false, matchedBrand: null, editDistance: null, attackType: null };
 
   if (!domain || typeof domain !== "string") return safe;
+  if (knownLegitimateBrandDomains.has(domain.toLowerCase().replace(/^www\./, ""))) return safe;
 
   // Decode Punycode to Unicode (e.g., xn--pypal-4ve.com -> pаypal.com)
   // This exposes homograph attacks to the Levenshtein distance check.

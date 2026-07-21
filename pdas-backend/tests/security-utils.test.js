@@ -10,10 +10,10 @@ const assert = require("node:assert/strict");
 
 // ── Existing Detection Engine Tests ─────────────────────────────────────
 const { buildPaginationMeta, getPagination } = require("../src/utils/pagination");
-const { analyzePageContent } = require("../src/services/contentAnalysisService");
+const { analyzePageContent, isPrivateIp } = require("../src/services/contentAnalysisService");
 const { checkTyposquatting } = require("../src/services/typosquattingService");
 const { extractUrlFeatures, scoreUrlFeatures } = require("../src/services/mlScorerService");
-const { computeFinalScore } = require("../src/services/detectionService");
+const { computeFinalScore, applyUrlEvidenceGates } = require("../src/services/detectionService");
 
 // ── Validators Module Tests ─────────────────────────────────────────────
 
@@ -166,15 +166,20 @@ test("typosquatting detects character substitution in brands", () => {
 
 // ── ML Scorer Tests ─────────────────────────────────────────────────────
 
-test("URL ML scorer gives high risk to credential-harvesting URL patterns", () => {
-  const features = extractUrlFeatures("http://paypa1-secure.com/login/verify-password");
+test("URL feature scorer treats credential-looking paths as supporting evidence", () => {
+  const url = "http://paypa1-secure.com/login/verify-password";
+  const features = extractUrlFeatures(url);
   const score = scoreUrlFeatures(features);
+  const typosquat = checkTyposquatting(new URL(url).hostname);
 
   assert.equal(features.hasHttps, 0);
   assert.equal(features.digitCount, 1);
   assert.equal(features.hyphenCount, 1);
   assert.equal(features.credentialPathKeywordCount >= 3, true);
-  assert.equal(score >= 90, true);
+  // A login path is not independently malicious; the brand impersonation is
+  // the strong signal that the layered detector combines with this evidence.
+  assert.equal(score > 0 && score <= 30, true);
+  assert.equal(typosquat.isTyposquat, true);
 });
 
 test("URL ML scorer assigns low risk to legitimate HTTPS domains", () => {
@@ -232,6 +237,46 @@ test("high ML + high rules without blacklist still flags as risky", () => {
   assert.equal(score >= 40, true);
 });
 
+test("one strong URL deception signal cannot be averaged down to safe", () => {
+  const result = applyUrlEvidenceGates(22, [{
+    name: "subdomain_impersonation",
+    points: 35,
+    strength: "strong",
+    category: "identity",
+    family: "identity",
+  }]);
+
+  assert.equal(result.score, 31);
+  assert.equal(result.reason, "single_strong_signal_review");
+});
+
+test("two independent strong URL evidence families force phishing", () => {
+  const result = applyUrlEvidenceGates(44, [
+    { name: "typosquatting", points: 35, strength: "strong", family: "identity" },
+    { name: "at_trick", points: 40, strength: "strong", family: "link" },
+  ]);
+
+  assert.equal(result.score, 65);
+  assert.equal(result.reason, "corroborated_strong_evidence");
+});
+
+test("external no-match remains neutral in URL evidence gates", () => {
+  const result = applyUrlEvidenceGates(8, [], null);
+
+  assert.equal(result.score, 8);
+  assert.equal(result.reason, "weighted_average");
+});
+
+test("Safe Browsing social engineering verdict forces phishing", () => {
+  const result = applyUrlEvidenceGates(28, [], {
+    is_blacklisted: true,
+    threat_type: "social_engineering",
+  });
+
+  assert.equal(result.score, 70);
+  assert.equal(result.reason, "blacklist_confirmed");
+});
+
 // ── Content Analysis Tests ──────────────────────────────────────────────
 
 test("content analysis detects credential forms and title/domain mismatch", () => {
@@ -274,6 +319,13 @@ test("content analysis detects hidden iframes", () => {
 
   const result = analyzePageContent(html, "https://example.com");
   assert.equal(result.hasHiddenElements, true);
+});
+
+test("content fetch guard blocks hexadecimal IPv4-mapped IPv6 addresses", async () => {
+  assert.equal(await isPrivateIp("::ffff:7f00:1"), true);
+  assert.equal(await isPrivateIp("::ffff:a9fe:a9fe"), true);
+  assert.equal(await isPrivateIp("::ffff:0808:0808"), false);
+  assert.equal(await isPrivateIp("2606:4700:4700::1111"), false);
 });
 
 // ── Cache Service Tests ─────────────────────────────────────────────────

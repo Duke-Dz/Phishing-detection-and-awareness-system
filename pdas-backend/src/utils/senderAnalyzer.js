@@ -1,101 +1,55 @@
-const KENYAN_LEGIT_SHORTCODES = {
-  MPESA: "Safaricom M-Pesa",
-  SAFARICOM: "Safaricom",
-  EQUITY: "Equity Bank",
-  KCB: "KCB Bank",
-  COOPERATIVE: "Co-operative Bank",
-  NCBA: "NCBA Bank",
-  ABSA: "Absa Bank",
-  STANCHART: "Standard Chartered",
-  DTB: "Diamond Trust Bank",
-  "22433": "Safaricom M-Pesa (shortcode)",
-  "40300": "Equity Bank (shortcode)",
-};
-
 const SUSPICIOUS_REPLY_PATTERNS = [
-  /reply\s+(yes|no|1|2|confirm|stop)/i,
-  /text\s+(back|us|here)/i,
-  /respond\s+to\s+this/i,
-  /send\s+us\s+your/i,
+  /reply\s+(?:with\s+)?(?:your\s+)?(?:password|pin|otp|passcode|card|account)/i,
+  /send\s+(?:us\s+)?(?:your\s+)?(?:password|pin|otp|passcode|card|account)/i,
+  /text\s+(?:back\s+)?(?:your\s+)?(?:password|pin|otp|passcode)/i,
 ];
 
-const analyzeSender = (sender, messageContent) => {
-  const signals = [];
-  let score = 0;
+/**
+ * Describe the sender identifier without treating a country, phone-number
+ * format, brand name, or ordinary sender ID as evidence of phishing.
+ * Sender legitimacy requires provider-backed verification that this local
+ * scanner does not have.
+ */
+const analyzeSender = (sender) => {
+  if (!sender) return { score: 0, signals: [], senderType: "unknown" };
 
-  if (!sender) return { score: 0, signals, senderType: "unknown" };
-
-  const senderUpper = sender.trim().toUpperCase();
-  const matchedCode = Object.keys(KENYAN_LEGIT_SHORTCODES).find(
-    (code) => senderUpper === code || senderUpper.includes(code),
-  );
-  const isKnownLegit = Boolean(matchedCode);
-
-  if (isKnownLegit) {
-    if (/password|pin|otp|verify.*account|login/i.test(messageContent)) {
-      score += 40;
-      signals.push({
-        name: "legit_sender_suspicious_content",
-        points: 40,
-        evidence: `Sender "${sender}" appears legitimate but message asks for sensitive data — possible spoofing`,
-      });
-    }
-    return {
-      score,
-      signals,
-      senderType: "known_shortcode",
-      senderName: KENYAN_LEGIT_SHORTCODES[matchedCode],
-    };
-  }
-
-  const isPhoneNumber = /^(\+?254|0)[17]\d{8}$/.test(sender.replace(/\s/g, ""));
-  if (isPhoneNumber) {
-    score += 25;
-    signals.push({
-      name: "regular_number_sender",
-      points: 25,
-      evidence: `Message from regular phone number "${sender}" — legitimate banks use shortcodes, not personal numbers`,
-    });
-  }
-
-  const claimsBrand = /mpesa|equity|kcb|safaricom|cooperative|ncba|absa/i.test(messageContent);
-  if (claimsBrand && !isKnownLegit) {
-    score += 35;
-    signals.push({
-      name: "brand_sender_mismatch",
-      points: 35,
-      evidence: `Message claims to be from a known bank/brand but sender "${sender}" is not a verified shortcode`,
-    });
-  }
+  const normalized = String(sender).trim();
+  const compact = normalized.replace(/[\s()-]/g, "");
+  const isPhoneNumber = /^\+?\d{7,15}$/.test(compact);
+  const isShortcode = /^\d{3,6}$/.test(compact);
+  const isAlphanumericId = /^[a-z0-9][a-z0-9 ._-]{1,20}$/i.test(normalized);
 
   return {
-    score: Math.min(100, score),
-    signals,
-    senderType: isPhoneNumber ? "phone_number" : "unknown",
+    score: 0,
+    signals: [],
+    senderType: isShortcode
+      ? "shortcode"
+      : isPhoneNumber
+        ? "phone_number"
+        : isAlphanumericId
+          ? "alphanumeric_id"
+          : "unknown",
   };
 };
 
 const analyzeReplyBehaviour = (messageContent) => {
-  const signals = [];
-  let score = 0;
-
-  const encouragesReply = SUSPICIOUS_REPLY_PATTERNS.some((pattern) => pattern.test(messageContent));
-  if (encouragesReply) {
-    score += 20;
-    signals.push({
-      name: "suspicious_reply_request",
-      points: 20,
-      evidence: "Message asks you to reply to verify or confirm — legitimate banks never do this via SMS",
-    });
-  }
-
-  const saysNoReply = /do not reply|don'?t reply|this is an automated|do not respond/i.test(messageContent);
+  const text = String(messageContent || "");
+  const asksForSensitiveReply = SUSPICIOUS_REPLY_PATTERNS.some((pattern) => pattern.test(text));
+  const signals = asksForSensitiveReply
+    ? [{
+      name: "sensitive_reply_request",
+      points: 12,
+      strength: "medium",
+      category: "content",
+      evidence: "Message asks for sensitive information in a reply",
+    }]
+    : [];
 
   return {
-    score,
+    score: asksForSensitiveReply ? 12 : 0,
     signals,
-    supportsReply: encouragesReply,
-    explicitlyNoReply: saysNoReply,
+    supportsReply: asksForSensitiveReply,
+    explicitlyNoReply: /do not reply|don'?t reply|this is an automated|do not respond/i.test(text),
   };
 };
 

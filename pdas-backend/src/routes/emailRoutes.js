@@ -2,7 +2,7 @@ const express = require("express");
 const { analyzeEmail, parseHeaders } = require("../controllers/emailController");
 const { asyncHandler } = require("../middleware/errorHandler");
 const { protect } = require("../middleware/authMiddleware");
-const { validate, contentScanValidator } = require("../middleware/validators");
+const { validate, emailContentScanValidator } = require("../middleware/validators");
 
 const router = express.Router();
 
@@ -51,7 +51,7 @@ router.use(protect);
  *       401:
  *         description: Not authenticated
  */
-router.post("/analyze", contentScanValidator, validate, asyncHandler(analyzeEmail));
+router.post("/analyze", emailContentScanValidator, validate, asyncHandler(analyzeEmail));
 
 /**
  * @swagger

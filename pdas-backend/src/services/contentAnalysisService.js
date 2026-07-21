@@ -24,6 +24,40 @@ const KNOWN_BRANDS = [
 
 const PRIVATE_HOSTNAMES = new Set(["localhost", "localhost.localdomain"]);
 
+const parseIpv6Words = (address) => {
+  let input = String(address || "").toLowerCase().split("%", 1)[0];
+  if (input.includes(".")) {
+    const separator = input.lastIndexOf(":");
+    const ipv4 = input.slice(separator + 1);
+    if (net.isIP(ipv4) !== 4) return null;
+    const bytes = ipv4.split(".").map(Number);
+    input = `${input.slice(0, separator)}:${((bytes[0] << 8) | bytes[1]).toString(16)}:${((bytes[2] << 8) | bytes[3]).toString(16)}`;
+  }
+
+  const halves = input.split("::");
+  if (halves.length > 2) return null;
+  const readHalf = (part) => (part ? part.split(":") : []).map((word) => {
+    if (!/^[0-9a-f]{1,4}$/.test(word)) return NaN;
+    return Number.parseInt(word, 16);
+  });
+  const left = readHalf(halves[0]);
+  const right = readHalf(halves[1] || "");
+  if ([...left, ...right].some(Number.isNaN)) return null;
+  const missing = 8 - left.length - right.length;
+  if ((halves.length === 1 && missing !== 0) || (halves.length === 2 && missing < 1)) return null;
+  return [...left, ...Array(Math.max(0, missing)).fill(0), ...right];
+};
+
+const ipv4FromIpv6Tail = (words) => {
+  if (!Array.isArray(words) || words.length !== 8) return null;
+  return [
+    words[6] >> 8,
+    words[6] & 0xff,
+    words[7] >> 8,
+    words[7] & 0xff,
+  ].join(".");
+};
+
 const URGENCY_PHRASES = [
   "act now", "immediately", "within 24 hours", "final warning",
   "your account will be", "verify immediately", "unusual activity",
@@ -53,16 +87,26 @@ const isPrivateAddress = (address) => {
   }
 
   if (ipVersion === 6) {
+    const words = parseIpv6Words(normalized);
+    if (!words) return true;
+    const firstFiveZero = words.slice(0, 5).every((word) => word === 0);
+    if (firstFiveZero && words[5] === 0xffff) {
+      return isPrivateAddress(ipv4FromIpv6Tail(words));
+    }
+    const ipv4Compatible = words.slice(0, 6).every((word) => word === 0);
+
     return (
-      normalized === "::" ||
-      normalized === "::1" ||
-      normalized.startsWith("fc") ||
-      normalized.startsWith("fd") ||
-      normalized.startsWith("fe80:") ||
-      normalized.startsWith("::ffff:127.") ||
-      normalized.startsWith("::ffff:10.") ||
-      normalized.startsWith("::ffff:192.168.") ||
-      /^::ffff:172\.(1[6-9]|2\d|3[01])\./.test(normalized)
+      ipv4Compatible ||
+      words.every((word) => word === 0) ||
+      words.slice(0, 7).every((word) => word === 0) ||
+      (words[0] & 0xfe00) === 0xfc00 ||
+      (words[0] & 0xffc0) === 0xfe80 ||
+      (words[0] & 0xffc0) === 0xfec0 ||
+      (words[0] & 0xff00) === 0xff00 ||
+      (words[0] === 0x0064 && words[1] === 0xff9b) ||
+      words[0] === 0x2002 ||
+      (words[0] === 0x2001 && words[1] === 0x0db8) ||
+      (words[0] === 0x0100 && words.slice(1, 4).every((word) => word === 0))
     );
   }
 
@@ -80,8 +124,27 @@ const isPrivateIp = async (hostname) => {
     const addresses = await dnsLookup(normalized, { all: true });
     return addresses.some(({ address }) => isPrivateAddress(address));
   } catch {
-    return false;
+    return true;
   }
+};
+
+const resolvePublicAddress = async (hostname) => {
+  const normalized = String(hostname || "").toLowerCase().replace(/^\[|\]$/g, "");
+  if (!normalized || PRIVATE_HOSTNAMES.has(normalized)) {
+    throw new Error(`Blocked private host: ${hostname}`);
+  }
+
+  if (net.isIP(normalized)) {
+    if (isPrivateAddress(normalized)) throw new Error(`Blocked private IP: ${hostname}`);
+    return { address: normalized, family: net.isIP(normalized) };
+  }
+
+  const addresses = await dnsLookup(normalized, { all: true, verbatim: true });
+  if (!addresses.length) throw new Error(`No DNS address found for: ${hostname}`);
+  if (addresses.some(({ address }) => isPrivateAddress(address))) {
+    throw new Error(`Blocked private DNS result: ${hostname}`);
+  }
+  return addresses[0];
 };
 
 const clientForProtocol = (protocol) => (protocol === "https:" ? https : http);
@@ -99,16 +162,21 @@ const safeGet = (targetUrl) =>
       return reject(new Error(`Unsupported URL protocol: ${parsed.protocol}`));
     }
 
+    let pinnedAddress;
     try {
-      const blocked = await isPrivateIp(parsed.hostname);
-      if (blocked) {
-        return reject(new Error(`Blocked private IP: ${parsed.hostname}`));
-      }
+      pinnedAddress = await resolvePublicAddress(parsed.hostname);
     } catch {
       return reject(new Error(`Could not verify host safety: ${parsed.hostname}`));
     }
 
-    const req = clientForProtocol(parsed.protocol).get(targetUrl, { timeout: REQUEST_TIMEOUT_MS }, (res) => {
+    const lookup = (_hostname, _options, callback) => {
+      callback(null, pinnedAddress.address, pinnedAddress.family);
+    };
+    const req = clientForProtocol(parsed.protocol).get(targetUrl, {
+      timeout: REQUEST_TIMEOUT_MS,
+      family: pinnedAddress.family,
+      lookup,
+    }, (res) => {
       resolve(res);
     });
 

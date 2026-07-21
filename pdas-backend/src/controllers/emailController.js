@@ -73,22 +73,13 @@ const analyzeEmailWebhook = async (req, res) => {
   const parsed = parseRawEmail(rawEmail);
   const authResults = extractAuthHeaders(parsed.headers);
 
-  // Build content string for detection: combine headers + subject + body
-  const contentParts = [];
-  if (parsed.from) contentParts.push(`From: ${parsed.from}`);
-  if (parsed.to) contentParts.push(`To: ${parsed.to}`);
-  if (parsed.subject) contentParts.push(`Subject: ${parsed.subject}`);
-  if (parsed.body) contentParts.push(parsed.body);
-  if (parsed.htmlBody && !parsed.body) contentParts.push(parsed.htmlBody);
-
-  const content = contentParts.join("\n");
-
-  if (!content.trim()) {
+  if (!parsed.isRawEmail || ![parsed.subject, parsed.normalizedText, parsed.htmlBody].some(Boolean)) {
     throw createError("Could not extract any content from the raw email");
   }
 
-  // Run detection analysis
-  const analysis = await analyzeMessage(content, "email");
+  // Analyze the original MIME message so headers, parts, links, and
+  // attachments remain available to the detector.
+  const analysis = await analyzeMessage(rawEmail, "email");
 
   // Persist scan result
   const scanResult = await persistScanResult({

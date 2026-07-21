@@ -9,7 +9,7 @@ const {
   verifyEmailValidator,
   resendVerificationValidator,
 } = require("./authValidators");
-const { urlScanValidator, contentScanValidator } = require("./scanValidators");
+const { urlScanValidator, contentScanValidator, emailContentScanValidator } = require("./scanValidators");
 const { createReportValidator, updateReportStatusValidator } = require("./reportValidators");
 const {
   updateUserValidator,
@@ -32,6 +32,7 @@ module.exports = {
   resendVerificationValidator,
   urlScanValidator,
   contentScanValidator,
+  emailContentScanValidator,
   createReportValidator,
   updateReportStatusValidator,
   updateUserValidator,

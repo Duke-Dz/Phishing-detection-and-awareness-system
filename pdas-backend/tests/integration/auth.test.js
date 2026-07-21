@@ -1,6 +1,6 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const bcrypt = require("bcryptjs");
+const bcrypt = require("bcrypt");
 const { createAgent, mockDb } = require("./helpers/setup");
 const crypto = require("crypto");
 const { hashToken } = require("../../src/utils/tokenGenerator");

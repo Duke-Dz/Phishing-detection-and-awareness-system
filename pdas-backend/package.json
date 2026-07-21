@@ -1,7 +1,7 @@
 {
   "name": "cybersense-backend",
   "version": "1.0.0",
-  "description": "Backend API for CyberSense — a phishing detection and awareness platform powered by a 4-layer ML detection engine",
+  "description": "Backend API for CyberSense — an evidence-weighted phishing detection and awareness platform",
   "main": "server.js",
   "directories": {
     "test": "tests"
@@ -10,6 +10,7 @@
     "test": "node --test tests/**/*.test.js",
     "test:unit": "node --test tests/security-utils.test.js tests/unit/**/*.test.js",
     "test:integration": "node --test tests/integration/**/*.test.js",
+    "test:detector": "node --test tests/unit/emailParser.test.js tests/unit/externalThreatService.test.js tests/unit/threatIntelService.test.js tests/integration/emailDetection.test.js tests/integration/emailEvidenceCalibration.test.js",
     "test:database": "node --test tests/database/**/*.test.js",
     "check": "node scripts/check-syntax.js",
     "start": "node server.js",
@@ -27,7 +28,7 @@
   "license": "ISC",
   "type": "commonjs",
   "dependencies": {
-    "bcryptjs": "^3.0.3",
+    "bcrypt": "^6.0.0",
     "compression": "^1.8.1",
     "cors": "^2.8.6",
     "csv-stringify": "^6.7.0",
@@ -36,6 +37,7 @@
     "express-rate-limit": "^8.5.2",
     "express-validator": "^7.3.2",
     "file-type": "^22.0.1",
+    "he": "^1.2.0",
     "helmet": "^8.2.0",
     "jsonwebtoken": "^9.0.3",
     "multer": "^2.1.1",
@@ -52,5 +54,8 @@
   "devDependencies": {
     "nodemon": "^3.1.14",
     "sequelize-cli": "^6.6.5"
+  },
+  "allowScripts": {
+    "bcrypt@6.0.0": true
   }
 }

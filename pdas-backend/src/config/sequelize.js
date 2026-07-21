@@ -24,7 +24,7 @@ const sequelize = new Sequelize(config.db.name || "", config.db.user || "", conf
   dialectOptions: config.db.ssl
     ? { ssl: { require: true, rejectUnauthorized: config.db.sslRejectUnauthorized } }
     : undefined,
-  pool: { max: 10, min: 0, acquire: 30000, idle: 10000 },
+  pool: { max: 10, min: 2, acquire: 30000, idle: 10000 },
 });
 
 const testConnection = async () => {

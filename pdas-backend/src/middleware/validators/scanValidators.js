@@ -1,5 +1,8 @@
 const { body } = require("express-validator");
 
+const MAX_EMAIL_BYTES = 2_000_000;
+const EMAIL_BASE64_PREFIX = "data:message/rfc822;base64,";
+
 const urlScanValidator = [
   body("url")
     .trim()
@@ -46,4 +49,29 @@ const contentScanValidator = [
     .withMessage("Sender must be under 50 characters"),
 ];
 
-module.exports = { urlScanValidator, contentScanValidator };
+const emailContentScanValidator = [
+  body("content")
+    .notEmpty()
+    .withMessage("Content is required")
+    .isString()
+    .withMessage("Content must be a string")
+    .isLength({ min: 1, max: 2666700 })
+    .withMessage("Email content exceeds the 2 MB upload limit")
+    .custom((value) => {
+      if (value.startsWith(EMAIL_BASE64_PREFIX)) {
+        const payload = value.slice(EMAIL_BASE64_PREFIX.length);
+        const validBase64 = /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(payload);
+        if (!payload || !validBase64 || Buffer.from(payload, "base64").length > MAX_EMAIL_BYTES) {
+          throw new Error("Email file must be valid and no larger than 2 MB");
+        }
+        return true;
+      }
+
+      if (Buffer.byteLength(value, "utf8") > MAX_EMAIL_BYTES) {
+        throw new Error("Email content must be no larger than 2 MB");
+      }
+      return true;
+    }),
+];
+
+module.exports = { urlScanValidator, contentScanValidator, emailContentScanValidator };

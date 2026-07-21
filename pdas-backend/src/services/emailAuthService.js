@@ -9,40 +9,48 @@
 
 'use strict';
 
-const { kenyanBrands } = require('../data/kenyanPatterns');
-
 // ──────────────────────────────────────────────
 //  Trusted / known brands list
 // ──────────────────────────────────────────────
 
 /**
- * Merged brand reference used for display-name spoofing checks.
- * Each entry maps a canonical brand name to its known domain stems.
- *
- * We reuse the kenyanBrands keywords and supplement with global brands.
- * @type {Array<{ name: string, keywords: string[] }>}
+ * Global brand reference used only for display-name/domain mismatch checks.
+ * A brand mention is never a risk signal by itself. Domains are matched on
+ * label boundaries instead of substring stems.
+ * @type {Array<{ name: string, aliases: string[], domains: string[] }>}
  */
 const trustedBrands = [
-  ...kenyanBrands,
-  // Global brands commonly impersonated worldwide
-  { name: 'PayPal', keywords: ['paypal'] },
-  { name: 'Apple', keywords: ['apple', 'icloud'] },
-  { name: 'Microsoft', keywords: ['microsoft', 'outlook', 'office365'] },
-  { name: 'Google', keywords: ['google', 'gmail'] },
-  { name: 'Amazon', keywords: ['amazon', 'aws'] },
-  { name: 'Netflix', keywords: ['netflix'] },
-  { name: 'Facebook', keywords: ['facebook', 'meta'] },
-  { name: 'DHL', keywords: ['dhl'] },
-  { name: 'FedEx', keywords: ['fedex'] },
-  { name: 'WhatsApp', keywords: ['whatsapp'] },
+  { name: 'PayPal', aliases: ['paypal'], domains: ['paypal.com'] },
+  { name: 'Apple', aliases: ['apple', 'icloud'], domains: ['apple.com', 'icloud.com'] },
+  { name: 'Microsoft', aliases: ['microsoft', 'outlook', 'office 365'], domains: ['microsoft.com', 'outlook.com', 'office.com', 'live.com'] },
+  { name: 'Google', aliases: ['google', 'gmail'], domains: ['google.com', 'gmail.com'] },
+  { name: 'Amazon', aliases: ['amazon', 'amazon web services', 'aws'], domains: ['amazon.com', 'amazonaws.com'] },
+  { name: 'Netflix', aliases: ['netflix'], domains: ['netflix.com'] },
+  { name: 'Meta', aliases: ['facebook', 'instagram', 'whatsapp', 'meta'], domains: ['facebook.com', 'facebookmail.com', 'instagram.com', 'whatsapp.com', 'meta.com'] },
+  { name: 'DHL', aliases: ['dhl'], domains: ['dhl.com', 'dhl.de', 'dhl.co.uk'] },
+  { name: 'FedEx', aliases: ['fedex'], domains: ['fedex.com'] },
+  { name: 'OpenAI', aliases: ['openai', 'chatgpt'], domains: ['openai.com', 'chatgpt.com'] },
 ];
+
+const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+const containsAlias = (text, alias) => {
+  const escaped = escapeRegex(alias).replace(/\s+/g, '\\s+');
+  return new RegExp(`(^|[^a-z0-9])${escaped}([^a-z0-9]|$)`, 'i').test(text);
+};
+
+const domainMatches = (actualDomain, expectedDomain) =>
+  actualDomain === expectedDomain || actualDomain.endsWith(`.${expectedDomain}`);
+
+const domainsRelated = (left, right) =>
+  domainMatches(left, right) || domainMatches(right, left);
 
 // ──────────────────────────────────────────────
 //  1. parseAuthenticationResults
 // ──────────────────────────────────────────────
 
 /**
- * @typedef {'pass'|'fail'|'softfail'|'none'|'missing'} AuthVerdict
+ * @typedef {'pass'|'fail'|'softfail'|'neutral'|'none'|'temperror'|'permerror'|'policy'|'missing'} AuthVerdict
  */
 
 /**
@@ -70,9 +78,9 @@ const parseAuthenticationResults = (headerText) => {
   const lower = headerText.toLowerCase();
 
   // Accepted verdict values per protocol
-  const spfVerdicts = ['pass', 'fail', 'softfail', 'none'];
-  const dkimVerdicts = ['pass', 'fail', 'none'];
-  const dmarcVerdicts = ['pass', 'fail', 'none'];
+  const spfVerdicts = ['pass', 'fail', 'softfail', 'neutral', 'none', 'temperror', 'permerror'];
+  const dkimVerdicts = ['pass', 'fail', 'neutral', 'none', 'temperror', 'permerror', 'policy'];
+  const dmarcVerdicts = ['pass', 'fail', 'none', 'temperror', 'permerror'];
 
   /**
    * Search for `protocol=verdict` in the text and return the first
@@ -161,7 +169,7 @@ const checkDisplayNameSpoofing = (fromHeader) => {
   let claimedBrand = null;
 
   for (const brand of trustedBrands) {
-    const mentioned = brand.keywords.some((kw) => lowerDisplay.includes(kw));
+    const mentioned = brand.aliases.some((alias) => containsAlias(lowerDisplay, alias));
     if (mentioned) {
       claimedBrand = brand.name;
       break;
@@ -175,7 +183,7 @@ const checkDisplayNameSpoofing = (fromHeader) => {
   // ── Check if the actual domain matches the claimed brand ──
   const matchingBrand = trustedBrands.find((b) => b.name === claimedBrand);
   const domainMatchesBrand = matchingBrand
-    ? matchingBrand.keywords.some((kw) => actualDomain.includes(kw))
+    ? matchingBrand.domains.some((domain) => domainMatches(actualDomain, domain))
     : false;
 
   return {
@@ -244,7 +252,7 @@ const checkEmbeddedLinkMismatch = (content) => {
 
     for (const dd of displayDomains) {
       const cleanDisplayDomain = dd.replace(/^www\./, '').toLowerCase();
-      if (cleanDisplayDomain !== hrefDomain && hrefDomain !== '') {
+      if (!domainsRelated(cleanDisplayDomain, hrefDomain) && hrefDomain !== '') {
         mismatches.push({
           displayText: displayText.slice(0, 200),
           actualUrl: hrefUrl,

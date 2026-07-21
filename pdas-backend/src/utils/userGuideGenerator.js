@@ -1,16 +1,13 @@
 const SIGNAL_MESSAGES = {
-  urgency_pressure: "Creates panic by claiming your account is compromised",
-  asks_for_sensitive_data: "Asks you to provide sensitive personal information",
-  contains_link: "Contains a link; verify it before opening",
   missing_https: "The link does not use HTTPS",
   embedded_url_missing_https: "An embedded link does not use HTTPS",
-  phishing_language: "Uses language commonly found in phishing messages",
   embedded_url_financial_keyword_domain: "The link domain mimics a financial service",
-  kenyan_impersonation: "Claims to be from a known Kenyan organization",
-  brand_sender_mismatch: "The claimed brand does not match the sender",
-  regular_number_sender: "Sent from a regular number instead of a registered shortcode",
-  suspicious_reply_request: "Asks for a reply containing potentially sensitive information",
-  legit_sender_suspicious_content: "The sender looks legitimate but the content is suspicious",
+  display_name_domain_mismatch: "The claimed brand does not match the From domain",
+  reply_to_domain_mismatch: "Replies go to a different domain than the sender",
+  link_text_domain_mismatch: "Visible link text and the actual destination domain differ",
+  sensitive_reply_request: "Asks for a reply containing sensitive information",
+  dangerous_attachment: "Contains an executable or script attachment",
+  macro_enabled_attachment: "Contains a macro-enabled document",
 };
 
 const titleFor = (scanType, classification) => {
@@ -96,9 +93,9 @@ const generateUserGuide = (...args) => {
     const [scanType, classification, _score, details = {}] = args;
     return buildGuide({ scanType, classification, details });
   }
-  const [classification, signals = [], senderAnalysis = null, replyAnalysis = null] = args;
+  const [classification, signals = [], senderAnalysis = null, replyAnalysis = null, scanType = "email"] = args;
   return buildGuide({
-    scanType: senderAnalysis ? "sms" : "email",
+    scanType,
     classification,
     signals,
     senderAnalysis,

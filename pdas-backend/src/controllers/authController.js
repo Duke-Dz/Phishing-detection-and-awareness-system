@@ -1,5 +1,5 @@
-const bcrypt = require("bcryptjs");
-const { Op } = require("sequelize");
+const bcrypt = require("bcrypt");
+const { Op, literal } = require("sequelize");
 const {
   User,
   PasswordResetToken,
@@ -127,7 +127,7 @@ const register = async (req, res) => {
     throw createError("Username already taken.", 409, "USERNAME_TAKEN");
   }
 
-  const passwordHash = await bcrypt.hash(req.body.password, 12);
+  const passwordHash = await bcrypt.hash(req.body.password, 10);
   const token = generateToken();
 
   await PendingRegistration.create({
@@ -174,11 +174,11 @@ const login = async (req, res) => {
 
   // Check if account is currently locked
   if (user.locked_until && new Date() < user.locked_until) {
-    await User.increment("failed_login_attempts", {
-      where: { user_id: user.user_id },
-    });
     await User.update(
-      { last_failed_login: new Date() },
+      {
+        failed_login_attempts: literal('failed_login_attempts + 1'),
+        last_failed_login: new Date(),
+      },
       { where: { user_id: user.user_id } },
     );
     throw createError(genericErrorMsg, 401, "INVALID_CREDENTIALS");
@@ -187,16 +187,17 @@ const login = async (req, res) => {
   const isMatch = await bcrypt.compare(req.body.password, user.password_hash);
 
   if (!isMatch) {
-    // Increment failed attempts and update last failed login atomically
-    await User.increment("failed_login_attempts", {
-      where: { user_id: user.user_id },
-    });
-    await User.update(
-      { last_failed_login: new Date() },
-      { where: { user_id: user.user_id } },
+    // Increment failed attempts and update last failed login in a single query
+    const [, [updatedUser]] = await User.update(
+      {
+        failed_login_attempts: literal('failed_login_attempts + 1'),
+        last_failed_login: new Date(),
+      },
+      {
+        where: { user_id: user.user_id },
+        returning: true,
+      },
     );
-
-    const updatedUser = await User.findByPk(user.user_id);
     const attempts = updatedUser.failed_login_attempts;
 
     let lockoutMinutes = 0;
@@ -411,7 +412,7 @@ const resetPassword = async (req, res) => {
       "PASSWORD_REUSE",
     );
   }
-  const passwordHash = await bcrypt.hash(new_password, 12);
+  const passwordHash = await bcrypt.hash(new_password, 10);
   user.password_hash = passwordHash;
   await user.save();
 
@@ -456,7 +457,7 @@ const changePassword = async (req, res) => {
       "PASSWORD_REUSE",
     );
   }
-  user.password_hash = await bcrypt.hash(new_password, 12);
+  user.password_hash = await bcrypt.hash(new_password, 10);
   await user.save();
 
   logSecurityEvent(req.user.user_id, "PASSWORD_CHANGED", req);
