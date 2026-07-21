@@ -10,17 +10,17 @@ import {
 } from "../components/layout/PublicPageLayout";
 
 const tableOfContents = [
-  { id: "scope", label: "Scope" },
-  { id: "collection", label: "Data collected" },
-  { id: "use", label: "How data is used" },
-  { id: "scans", label: "Scan content" },
-  { id: "sharing", label: "Sharing" },
-  { id: "retention", label: "Retention" },
-  { id: "security", label: "Security" },
-  { id: "rights", label: "Your rights" },
-  { id: "children", label: "Children" },
-  { id: "updates", label: "Policy updates" },
-  { id: "contact", label: "Contact" },
+  { id: "scope", label: "Scope of this policy" },
+  { id: "collection", label: "Information we collect" },
+  { id: "use", label: "How we use information" },
+  { id: "scans", label: "Security submissions" },
+  { id: "sharing", label: "When information is shared" },
+  { id: "retention", label: "Data retention" },
+  { id: "security", label: "How we protect information" },
+  { id: "rights", label: "Your choices and rights" },
+  { id: "children", label: "Children's privacy" },
+  { id: "updates", label: "Changes to this policy" },
+  { id: "contact", label: "Contact our privacy team" },
 ];
 
 export default function PrivacyPolicy() {
@@ -44,11 +44,11 @@ export default function PrivacyPolicy() {
       <LegalSection id="collection" number="2" title="Information we collect" summary="Information you provide and technical data generated through use.">
         <p>Depending on how you use CyberSense, we may process:</p>
         <LegalList>
-          <LegalListItem><strong className="text-slate-900">Account information:</strong> your name, email address, password hash, role, preferences, and account status.</LegalListItem>
-          <LegalListItem><strong className="text-slate-900">Security submissions:</strong> URLs, email text, SMS content, report notes, and attachments you intentionally submit.</LegalListItem>
-          <LegalListItem><strong className="text-slate-900">Analysis records:</strong> risk scores, classifications, detected indicators, scan history, and report outcomes.</LegalListItem>
-          <LegalListItem><strong className="text-slate-900">Usage and device data:</strong> IP address, browser or device information, request timestamps, session records, and security-event logs.</LegalListItem>
-          <LegalListItem><strong className="text-slate-900">Communications:</strong> support requests, notification preferences, and messages you send to us.</LegalListItem>
+          <LegalListItem><strong className="text-slate-900 dark:text-slate-100">Account information:</strong> your name, email address, password hash, role, preferences, and account status.</LegalListItem>
+          <LegalListItem><strong className="text-slate-900 dark:text-slate-100">Security submissions:</strong> URLs, email text, SMS content, report notes, and attachments you intentionally submit.</LegalListItem>
+          <LegalListItem><strong className="text-slate-900 dark:text-slate-100">Analysis records:</strong> risk scores, classifications, detected indicators, scan history, and report outcomes.</LegalListItem>
+          <LegalListItem><strong className="text-slate-900 dark:text-slate-100">Usage and device data:</strong> IP address, browser or device information, request timestamps, session records, and security-event logs.</LegalListItem>
+          <LegalListItem><strong className="text-slate-900 dark:text-slate-100">Communications:</strong> support requests, notification preferences, and messages you send to us.</LegalListItem>
         </LegalList>
       </LegalSection>
 
@@ -106,7 +106,7 @@ export default function PrivacyPolicy() {
       </LegalSection>
 
       <LegalSection id="contact" number="11" title="Contact our privacy team" summary="Questions, requests, or concerns.">
-        <p>Contact <a className="font-bold text-cyber-700 underline decoration-cyber-200 underline-offset-4" href="mailto:privacy@cybersense.io">privacy@cybersense.io</a> with privacy questions or rights requests. We may need to verify your identity before completing a request.</p>
+        <p>Contact <a className="font-bold text-cyber-700 underline decoration-cyber-200 underline-offset-4 transition hover:text-cyber-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyber-500 dark:text-sky-400 dark:decoration-sky-800 dark:hover:text-sky-300" href="mailto:privacy@cybersense.io">privacy@cybersense.io</a> with privacy questions or rights requests. We may need to verify your identity before completing a request.</p>
       </LegalSection>
     </PublicPageLayout>
   );

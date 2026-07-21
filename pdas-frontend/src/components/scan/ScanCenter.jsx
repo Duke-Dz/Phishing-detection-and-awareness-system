@@ -8,6 +8,25 @@ import { scanService } from "../../services/scanService";
 import ScanResultPanel from "./ScanResultPanel";
 import EmailFileGuide from "./EmailFileGuide";
 
+const MAX_EMAIL_FILE_SIZE = 2_000_000;
+
+const bytesToBase64 = (bytes) => {
+  let binary = "";
+  const chunkSize = 0x8000;
+  for (let offset = 0; offset < bytes.length; offset += chunkSize) {
+    binary += String.fromCharCode(...bytes.subarray(offset, offset + chunkSize));
+  }
+  return window.btoa(binary);
+};
+
+const decodeEmailPreview = (bytes) => {
+  try {
+    return new TextDecoder("utf-8", { fatal: true }).decode(bytes);
+  } catch (_error) {
+    return new TextDecoder("windows-1252").decode(bytes);
+  }
+};
+
 const tabs = [
   ["url", "URL"],
   ["email", "Email"],
@@ -37,6 +56,7 @@ const scannerCopy = {
 export default function ScanCenter({ onComplete, initialTab = "url", lockedTab = false }) {
   const [tab, setTab] = useState(initialTab);
   const [content, setContent] = useState("");
+  const [emailFilePayload, setEmailFilePayload] = useState(null);
   const [reportType, setReportType] = useState("url");
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState(null);
@@ -45,6 +65,7 @@ export default function ScanCenter({ onComplete, initialTab = "url", lockedTab =
     if (["url", "email", "sms"].includes(initialTab)) {
       setTab(initialTab);
       setContent("");
+      setEmailFilePayload(null);
       setResult(null);
     }
   }, [initialTab]);
@@ -62,7 +83,9 @@ export default function ScanCenter({ onComplete, initialTab = "url", lockedTab =
       let response;
       if (tab === "url") response = await scanService.scanUrl(content.trim());
       if (tab === "sms") response = await scanService.scanSms(content.trim());
-      if (tab === "email") response = await emailService.analyze(content.trim());
+      if (tab === "email") response = await emailService.analyze(
+        emailFilePayload || content.trim(),
+      );
       if (tab === "report") response = await reportService.create({ report_type: reportType, content: content.trim() });
       const scanResult = tab === "report" ? null : response?.data;
       setResult(scanResult);
@@ -72,6 +95,7 @@ export default function ScanCenter({ onComplete, initialTab = "url", lockedTab =
         id: "scan-complete",
       });
       setContent("");
+      setEmailFilePayload(null);
       onComplete?.(scanResult);
     } catch (error) {
       toast.error(getErrorMessage(error, "Could not complete scan."), {
@@ -95,11 +119,11 @@ export default function ScanCenter({ onComplete, initialTab = "url", lockedTab =
         <p className="mt-1.5 text-sm text-slate-600 dark:text-slate-400">{copy.description}</p>
       </div>
       <div>
-        {!lockedTab && <div className="dashboard-theme-divider flex gap-1 overflow-x-auto border-b border-slate-100 p-3" role="tablist">{tabs.map(([id, text]) => <button key={id} type="button" onClick={() => { setTab(id); setContent(""); setResult(null); }} className={`min-h-10 shrink-0 rounded-xl px-4 text-sm font-bold ${tab === id ? "bg-cyber-600 text-white" : "dashboard-theme-hover text-slate-500 hover:bg-slate-100"}`} role="tab" aria-selected={tab === id}>{text}</button>)}</div>}
+        {!lockedTab && <div className="dashboard-theme-divider flex gap-1 overflow-x-auto border-b border-slate-100 p-3" role="tablist">{tabs.map(([id, text]) => <button key={id} type="button" onClick={() => { setTab(id); setContent(""); setEmailFilePayload(null); setResult(null); }} className={`min-h-10 shrink-0 rounded-xl px-4 text-sm font-bold ${tab === id ? "bg-cyber-600 text-white" : "dashboard-theme-hover text-slate-500 hover:bg-slate-100"}`} role="tab" aria-selected={tab === id}>{text}</button>)}</div>}
         <form onSubmit={submit} className="space-y-5 p-5 sm:p-8">
           {tab === "report" && <label className="block text-sm font-bold">Threat type<select value={reportType} onChange={(event) => setReportType(event.target.value)} className="dashboard-theme-control mt-2 block min-h-11 w-full rounded-xl border border-slate-200 bg-white px-4"><option value="url">URL</option><option value="email">Email</option><option value="sms">SMS</option></select></label>}
-          {tab === "email" && <div className="space-y-3"><div className="dashboard-theme-card flex flex-wrap items-center justify-between gap-3 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3"><div><p className="text-sm font-bold text-slate-900 dark:text-white">Have the original email file?</p><p className="mt-0.5 text-xs text-slate-600 dark:text-slate-400">Upload an .eml or .txt file to preserve headers and template content.</p></div><label className="dashboard-theme-control inline-flex min-h-10 cursor-pointer items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 text-sm font-bold text-slate-700 transition hover:border-cyber-400 hover:text-cyber-800 dark:text-slate-200 dark:hover:border-cyber-500 dark:hover:text-cyber-300"><FileUp size={16} />Choose file<input type="file" accept=".eml,.txt,message/rfc822,text/plain" className="sr-only" onChange={async (event) => { const file = event.target.files?.[0]; if (!file) return; setContent(await file.text()); setResult(null); toast.success("Email file loaded.", { id: "email-file-loaded" }); event.target.value = ""; }} /></label></div><EmailFileGuide /></div>}
-          <label className="block text-sm font-bold">{label}<span className="mt-1.5 block text-xs font-normal text-slate-500">{inputGuidance.hint}</span>{tab === "url" ? <input required type="url" value={content} onChange={(event) => { setContent(event.target.value); setResult(null); }} placeholder={inputGuidance.placeholder} className={`${fieldClassName} min-h-12`} /> : <textarea required rows={tab === "sms" ? 5 : 6} value={content} onChange={(event) => { setContent(event.target.value); setResult(null); }} placeholder={inputGuidance.placeholder} className={`${fieldClassName} resize-y`} />}<span className="mt-2 block text-xs font-normal text-slate-500">Only submit content you are authorized to analyze.</span></label>
+          {tab === "email" && <div className="space-y-3"><div className="dashboard-theme-card flex flex-wrap items-center justify-between gap-3 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3"><div><p className="text-sm font-bold text-slate-900 dark:text-white">Have the original email file?</p><p className="mt-0.5 text-xs text-slate-600 dark:text-slate-400">Upload an .eml or .txt file to preserve headers and template content (maximum 2 MB).</p></div><label className="dashboard-theme-control inline-flex min-h-10 cursor-pointer items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 text-sm font-bold text-slate-700 transition hover:border-cyber-400 hover:text-cyber-800 dark:text-slate-200 dark:hover:border-cyber-500 dark:hover:text-cyber-300"><FileUp size={16} />Choose file<input type="file" accept=".eml,.txt,message/rfc822,text/plain" className="sr-only" onChange={async (event) => { const file = event.target.files?.[0]; if (!file) return; if (file.size > MAX_EMAIL_FILE_SIZE) { toast.error("Email file must be 2 MB or smaller.", { id: "email-file-too-large" }); event.target.value = ""; return; } const bytes = new Uint8Array(await file.arrayBuffer()); setContent(decodeEmailPreview(bytes)); setEmailFilePayload(`data:message/rfc822;base64,${bytesToBase64(bytes)}`); setResult(null); toast.success("Email file loaded.", { id: "email-file-loaded" }); event.target.value = ""; }} /></label></div><EmailFileGuide /></div>}
+          <label className="block text-sm font-bold">{label}<span className="mt-1.5 block text-xs font-normal text-slate-500">{inputGuidance.hint}</span>{tab === "url" ? <input required type="url" value={content} onChange={(event) => { setContent(event.target.value); setResult(null); }} placeholder={inputGuidance.placeholder} className={`${fieldClassName} min-h-12`} /> : <textarea required rows={tab === "sms" ? 5 : 6} value={content} onChange={(event) => { setContent(event.target.value); if (tab === "email") setEmailFilePayload(null); setResult(null); }} placeholder={inputGuidance.placeholder} className={`${fieldClassName} resize-y`} />}<span className="mt-2 block text-xs font-normal text-slate-500">Only submit content you are authorized to analyze.</span></label>
           <button disabled={submitting || !content.trim()} className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#087CF0] px-5 text-[15px] font-bold text-white shadow-[0_6px_16px_rgba(8,124,240,0.24)] transition-all hover:bg-[#0068D7] hover:shadow-[0_8px_20px_rgba(8,124,240,0.32)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#45A3FF] focus-visible:ring-offset-2 active:translate-y-px disabled:cursor-not-allowed disabled:bg-[#1682E8] disabled:text-white disabled:shadow-[0_4px_12px_rgba(22,130,232,0.18)] sm:w-auto">{submitting ? <Loader2 className="animate-spin" size={19} strokeWidth={2.4} /> : <Send size={19} strokeWidth={2.4} />}{submitting ? "Processing…" : tab === "report" ? "Submit report" : "Run scan"}</button>
         </form>
         <div ref={resultRef}><ScanResultPanel result={result} /></div>

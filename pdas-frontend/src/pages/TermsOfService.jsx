@@ -10,18 +10,18 @@ import {
 } from "../components/layout/PublicPageLayout";
 
 const tableOfContents = [
-  { id: "agreement", label: "Agreement" },
-  { id: "service", label: "Our service" },
-  { id: "accounts", label: "Accounts" },
+  { id: "agreement", label: "Agreement to these terms" },
+  { id: "service", label: "The CyberSense service" },
+  { id: "accounts", label: "Accounts and access" },
   { id: "acceptable-use", label: "Acceptable use" },
-  { id: "submitted-content", label: "Submitted content" },
+  { id: "submitted-content", label: "Content you submit" },
   { id: "accuracy", label: "Detection results" },
-  { id: "availability", label: "Availability" },
+  { id: "availability", label: "Service availability" },
   { id: "intellectual-property", label: "Intellectual property" },
   { id: "liability", label: "Liability" },
-  { id: "termination", label: "Termination" },
-  { id: "changes", label: "Changes" },
-  { id: "contact", label: "Contact" },
+  { id: "termination", label: "Suspension and termination" },
+  { id: "changes", label: "Changes to these terms" },
+  { id: "contact", label: "Contact us" },
 ];
 
 export default function TermsOfService() {
@@ -103,7 +103,7 @@ export default function TermsOfService() {
       </LegalSection>
 
       <LegalSection id="contact" number="12" title="Contact us" summary="Questions about this agreement.">
-        <p>For questions about these terms, contact <a className="font-bold text-cyber-700 underline decoration-cyber-200 underline-offset-4" href="mailto:legal@cybersense.io">legal@cybersense.io</a>.</p>
+        <p>For questions about these terms, contact <a className="font-bold text-cyber-700 underline decoration-cyber-200 underline-offset-4 transition hover:text-cyber-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyber-500 dark:text-sky-400 dark:decoration-sky-800 dark:hover:text-sky-300" href="mailto:legal@cybersense.io">legal@cybersense.io</a>.</p>
       </LegalSection>
     </PublicPageLayout>
   );
