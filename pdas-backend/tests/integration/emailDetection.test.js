@@ -33,6 +33,60 @@ test("calibrated email detection regressions", async (t) => {
     assert.ok(result.risk_score <= 30);
   });
 
+  await t.test("gift-card code business-email compromise is phishing", async () => {
+    const result = await scan([
+      'From: "Chief Executive" <chief@external.example>',
+      "Subject: Confidential request - act now",
+      "",
+      "Buy ten gift cards immediately and send the scratched codes to me.",
+    ].join("\r\n"));
+
+    assert.equal(result.classification, "phishing");
+    assert.equal(result.detection_details.layers.rules.signals.some(
+      (signal) => signal.name === "gift_card_code_request",
+    ), true);
+  });
+
+  await t.test("explicit macro-enabling attachment instruction is phishing", async () => {
+    const result = await scan([
+      "From: Billing <billing@unknown.example>",
+      "MIME-Version: 1.0",
+      'Content-Type: multipart/mixed; boundary="mixed"',
+      "Subject: Overdue invoice",
+      "",
+      "--mixed",
+      "Content-Type: text/plain; charset=utf-8",
+      "",
+      "Open the attached invoice and enable macros to view it.",
+      "--mixed",
+      'Content-Type: application/octet-stream; name="invoice.xlsm"',
+      'Content-Disposition: attachment; filename="invoice.xlsm"',
+      "Content-Transfer-Encoding: base64",
+      "",
+      "VEVTVA==",
+      "--mixed--",
+    ].join("\r\n"));
+
+    assert.equal(result.classification, "phishing");
+    assert.ok(result.risk_score >= 61);
+  });
+
+  await t.test("linked subscription renewal threat with data deletion is phishing", async () => {
+    const result = await scan([
+      "From: Cloud Secure <no-reply@unrelated.example>",
+      "Subject: Your photos and videos will be deleted today",
+      "Content-Type: text/html; charset=utf-8",
+      "",
+      "<p>Your cloud storage account is locked and your files will be deleted today.</p>",
+      '<a href="https://storage.googleapis.com/untrusted-bucket/renew.html">Upgrade storage and renew your subscription</a>',
+    ].join("\r\n"));
+
+    assert.equal(result.classification, "phishing");
+    assert.equal(result.detection_details.layers.rules.signals.some(
+      (signal) => signal.name === "account_deletion_renewal_threat",
+    ), true);
+  });
+
   await t.test("regional names and SHA text are neutral", async () => {
     const result = await scan([
       "From: Newsletter <news@example.com>",

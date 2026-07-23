@@ -68,6 +68,7 @@ const MSG_WEIGHTS = {
   hasHttpOnly:                { threshold: 1, weight: 4,  direction: 'equals' },
   hasSuspiciousDomain:        { threshold: 1, weight: 12, direction: 'equals' },
   highPressureFormatting:     { threshold: 1, weight: 5,  direction: 'equals' },
+  accessLoginRequestWithUrl:  { threshold: 1, weight: 25, direction: 'equals' },
 };
 
 // ───────────────────── helper utilities ──────────────────────
@@ -254,6 +255,7 @@ const extractMessageFeatures = (text) => {
     claimsCompromisedWithUrl: 0,
     claimsPrizeWithUrl: 0,
     highPressureFormatting: 0,
+    accessLoginRequestWithUrl: 0,
   };
 
   if (!text || typeof text !== 'string') return defaults;
@@ -316,6 +318,11 @@ const extractMessageFeatures = (text) => {
   const claimsCompromisedWithUrl = claimsCompromised && urlCount > 0 ? 1 : 0;
   const claimsPrizeWithUrl = claimsPrize && urlCount > 0 ? 1 : 0;
   const highPressureFormatting = urgencyWordCount >= 2 && (exclamationCount >= 4 || allCapsWordCount >= 3) ? 1 : 0;
+  const accessLoginRequestWithUrl = urlCount > 0
+    && /\b(?:sign|log)[ -]?in\b/i.test(text)
+    && /\b(?:account|access|session|vpn|mailbox|portal)\b/i.test(text)
+    ? 1
+    : 0;
 
   return {
     textLength,
@@ -341,6 +348,7 @@ const extractMessageFeatures = (text) => {
     claimsCompromisedWithUrl,
     claimsPrizeWithUrl,
     highPressureFormatting,
+    accessLoginRequestWithUrl,
   };
 };
 

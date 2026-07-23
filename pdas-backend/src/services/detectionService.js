@@ -246,9 +246,20 @@ const computeMessageScore = (
 
     // Content-only lexical, formatting, or marketing evidence cannot cross
     // into a warning verdict without at least one strong indicator.
-    if (strongCount === 0) {
+    if (strongCount === 0 && corroboratedCategoryCount < 2) {
       score = Math.min(score, 30);
       reason = "weak_evidence_cap";
+    }
+
+    // Several independent medium-strength observations are meaningful even
+    // when no single observation is decisive by itself. This is common in
+    // business-email compromise and credential-harvest messages.
+    if (strongCount === 0 && corroboratedCategoryCount >= 3) {
+      score = Math.max(65, score);
+      reason = "multi_family_corroboration";
+    } else if (strongCount === 0 && corroboratedCategoryCount >= 2) {
+      score = Math.max(31, Math.min(score, 60));
+      reason = "corroborated_review";
     }
 
     // One meaningful signal merits review but cannot alone assert phishing.
@@ -660,6 +671,31 @@ const runMessageRules = (text, scanType, context = {}) => {
   // ── Email-specific checks ──
   if (scanType !== "email") return { score: 0, signals };
 
+  if (/\b(?:buy|purchase|get)\b[\s\S]{0,80}\bgift cards?\b/i.test(text)
+    && /\b(?:send|share|reply with)\b[\s\S]{0,80}\b(?:codes?|pins?|numbers?)\b/i.test(text)) {
+    addSignal(
+      signals,
+      "gift_card_code_request",
+      40,
+      "Message requests gift cards and asks the recipient to send the redemption codes",
+      { strength: "strong", category: "fraud", family: "gift_card_bec" },
+    );
+  }
+
+  const threatensAccountOrDataLoss = /\b(?:account|subscription|storage|files?|photos?|videos?|backups?)\b[\s\S]{0,100}\b(?:blocked|locked|deleted|removed|expired|suspended|paused)\b/i.test(text)
+    || /\b(?:deleted|removed|locked|blocked)\b[\s\S]{0,100}\b(?:files?|photos?|videos?|account|storage|backups?)\b/i.test(text);
+  const demandsSubscriptionAction = /\b(?:renew|upgrade|reactivate|restore)\b[\s\S]{0,60}\b(?:subscription|storage|account|access)\b/i.test(text)
+    || /\b(?:subscription|storage|account|access)\b[\s\S]{0,60}\b(?:renew|upgrade|reactivate|restore)\b/i.test(text);
+  if ((context.urls || []).length > 0 && threatensAccountOrDataLoss && demandsSubscriptionAction) {
+    addSignal(
+      signals,
+      "account_deletion_renewal_threat",
+      70,
+      "Message threatens account or data loss and directs the recipient to renew or upgrade through a link",
+      { strength: "strong", category: "fraud", family: "subscription_extortion" },
+    );
+  }
+
   const authentication = context.authentication || {};
   const trustedAuthentication = authentication.trusted === true;
   const dmarcFailed = trustedAuthentication && authentication.dmarc === "fail";
@@ -736,12 +772,15 @@ const runMessageRules = (text, scanType, context = {}) => {
         { strength: "strong", category: "attachment" },
       );
     } else if (MACRO_ATTACHMENT_EXTENSIONS.has(extension)) {
+      const explicitlyEnablesMacros = /\benable\s+(?:content|editing|macros?)\b/i.test(text);
       addSignal(
         signals,
         "macro_enabled_attachment",
-        24,
-        `Attachment "${filename}" is a macro-enabled document and requires review`,
-        { strength: "medium", category: "attachment" },
+        explicitlyEnablesMacros ? 70 : 24,
+        explicitlyEnablesMacros
+          ? `Message instructs the recipient to enable macros in attachment "${filename}"`
+          : `Attachment "${filename}" is a macro-enabled document and requires review`,
+        { strength: explicitlyEnablesMacros ? "strong" : "medium", category: "attachment" },
       );
     }
   }
@@ -867,6 +906,7 @@ const MESSAGE_MODEL_EVIDENCE = {
   hasHttpOnly: [4, "Message uses an unencrypted HTTP link", "weak", "transport", "transport"],
   hasSuspiciousDomain: [12, "Message contains a heavily hyphenated domain", "medium", "link", "link_shape"],
   highPressureFormatting: [5, "Urgency is combined with high-pressure formatting", "weak", "pressure", "pressure"],
+  accessLoginRequestWithUrl: [25, "Message directs the reader to sign in through an embedded access link", "medium", "link_action", "credential_action"],
 };
 
 const runMessageMlScoring = (text) => {

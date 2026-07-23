@@ -30,6 +30,8 @@ const trustedBrands = [
   { name: 'DHL', aliases: ['dhl'], domains: ['dhl.com', 'dhl.de', 'dhl.co.uk'] },
   { name: 'FedEx', aliases: ['fedex'], domains: ['fedex.com'] },
   { name: 'OpenAI', aliases: ['openai', 'chatgpt'], domains: ['openai.com', 'chatgpt.com'] },
+  { name: 'Kenya Revenue Authority', aliases: ['kenya revenue authority', 'kra'], domains: ['kra.go.ke'] },
+  { name: 'CyberSense', aliases: ['cybersense'], domains: ['cybersense.local'] },
 ];
 
 const escapeRegex = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
